@@ -32,6 +32,7 @@ $header-height: 42px;
     opacity: 0.95;
 
     &__title {
+        font-size: $smallfontsize * 0.7;
         letter-spacing: 0.15em;
         opacity: 0.6;
         flex-shrink: 0;
