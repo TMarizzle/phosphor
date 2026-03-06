@@ -117,7 +117,7 @@ class App extends Component<any, AppState> {
         return (
             <>
                 <header className="phosphor-header">
-                    <span className="phosphor-header__title">PHOSPHOR</span>
+                    <span className="phosphor-header__title">PHOSPHOR v1.1</span>
 
                     <div className="phosphor-header__controls">
                         {uploadError && (
