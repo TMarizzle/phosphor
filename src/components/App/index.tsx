@@ -181,7 +181,7 @@ class App extends Component<any, AppState> {
                             onClick={this._handleClearData}
                             title="Clear all saved data and reload"
                         >
-                            [ CLEAR DATA ]
+                            [ RESET ]
                         </button>
 
                         <a
