@@ -1,4 +1,4 @@
-import React, { SFC, useEffect } from "react";
+import React, { FC, useEffect } from "react";
 
 export interface TextProps {
     text: string;
@@ -6,7 +6,7 @@ export interface TextProps {
     onRendered?: () => void;
 }
 
-const Text: SFC<TextProps> = (props) => {
+const Text: FC<TextProps> = (props) => {
     const { text, className, onRendered } = props;
     const css = [
         "__text__",

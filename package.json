@@ -3,28 +3,26 @@
   "version": "0.1.0",
   "private": true,
   "devDependencies": {
-    "@babel/plugin-proposal-private-property-in-object": "^7.21.11",
+    "@vitejs/plugin-react": "^4.7.0",
+    "sass": "^1.92.1",
+    "vite": "^7.1.4",
     "wrangler": "^4.0.0"
   },
   "dependencies": {
-    "@testing-library/jest-dom": "^4.2.4",
-    "@types/react": "^16.9.0",
-    "@types/react-dom": "^16.9.0",
+    "@types/react": "^18.3.24",
+    "@types/react-dom": "^18.3.7",
     "nanoid": "^3.1.31",
-    "react": "^16.13.1",
-    "react-dom": "^16.13.1",
-    "react-scripts": "5.0.1",
-    "typescript": "~3.7.2"
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1",
+    "typescript": "^5.9.2"
   },
   "scripts": {
-    "start": "react-scripts start",
-    "build": "react-scripts build",
+    "start": "vite",
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview",
     "deploy:worker": "npm run build && npx wrangler deploy",
-    "test": "react-scripts test",
-    "eject": "react-scripts eject"
-  },
-  "eslintConfig": {
-    "extends": "react-app"
+    "test": "echo \"No tests configured\""
   },
   "browserslist": {
     "production": [

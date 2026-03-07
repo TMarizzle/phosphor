@@ -1,4 +1,4 @@
-import React, { SFC, useCallback, useEffect, useState } from "react";
+import React, { FC, useCallback, useEffect, useState } from "react";
 
 import "./style.scss";
 
@@ -16,7 +16,7 @@ export interface ToggleProps {
     onClick?: (state?: ToggleState) => void;
 }
 
-const Toggle: SFC<ToggleProps> = (props) => {
+const Toggle: FC<ToggleProps> = (props) => {
     const { className, states, onRendered, onClick } = props;
     const css = [
         "__toggle__",

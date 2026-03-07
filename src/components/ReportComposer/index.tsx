@@ -1,4 +1,4 @@
-import React, { SFC, useEffect, useState } from "react";
+import React, { FC, useEffect, useState } from "react";
 
 import "./style.scss";
 
@@ -10,7 +10,7 @@ export interface ReportComposerProps {
     onCancel?: () => void;
 }
 
-const ReportComposer: SFC<ReportComposerProps> = (props) => {
+const ReportComposer: FC<ReportComposerProps> = (props) => {
     const { template, className, onRendered, onSave, onCancel } = props;
     const css = ["__report_composer__", className ? className : null].join(" ").trim();
     const [value, setValue] = useState(template || "");

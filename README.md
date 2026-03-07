@@ -5,6 +5,8 @@ This is a fork of [redhg's original Phosphor project](https://github.com/redhg/p
 
 Pull requests and issues are welcome.
 
+[View the terminal in action here.](https://dunninganddragons.com/phosphor/)
+
 ---
 
 ## What's new in this fork
@@ -83,21 +85,21 @@ npm install
 
 ## Available Scripts
 
-### `yarn start`
+### `npm start`
 
-Runs the app in development mode. Open [http://localhost:3000](http://localhost:3000) to view it in the browser. The page reloads on edits.
+Runs the app in development mode with Vite. Open the local URL printed in the terminal (typically [http://localhost:3000](http://localhost:3000)). The page reloads on edits.
 
-### `yarn build`
+### `npm run build`
 
 Builds the app for production to the `build/` folder.
 
-### `yarn test`
+### `npm test`
 
-Launches the test runner. Note: there are currently no tests in this project.
+No automated tests are currently configured.
 
-### `yarn eject`
+### `npm run preview`
 
-**One-way operation — cannot be undone.** Ejects from Create React App, copying all build config into the project for full manual control.
+Serves the production build locally for quick verification.
 
 ## Learn More
 

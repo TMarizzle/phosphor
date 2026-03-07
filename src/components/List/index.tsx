@@ -1,4 +1,4 @@
-import React, { SFC, useCallback, useEffect, useMemo, useState } from "react";
+import React, { FC, useCallback, useEffect, useMemo, useState } from "react";
 
 import "./style.scss";
 
@@ -14,7 +14,7 @@ export interface ListProps {
     onClick?: () => void;
 }
 
-const List: SFC<ListProps> = (props) => {
+const List: FC<ListProps> = (props) => {
     const { className, states, onRendered, onClick } = props;
     const css = [
         "__list__",

@@ -1,5 +1,5 @@
-@import "../../assets/sass/fonts";
-@import "../../assets/sass/colors";
+@use "../../assets/sass/fonts" as *;
+@use "../../assets/sass/colors" as *;
 
 html, body {
     font-family: $font-family;

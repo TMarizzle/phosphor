@@ -1,4 +1,4 @@
-@import "../../assets/sass/colors";
+@use "../../assets/sass/colors" as *;
 
 .__scanlines__ {
     position: fixed;
