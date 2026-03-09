@@ -42,9 +42,9 @@ The original project loaded a single hardcoded JSON file (sample.json by default
 
 When you open the app you'll see a small toolbar fixed to the top of the screen with three controls:
 
-- **`[ SCRIPT: ... ▼ ]`** — click to open a dropdown listing the bundled scripts. Select one to load it, or choose `[ UPLOAD JSON ]` at the bottom of the dropdown to load a JSON file from your computer.
-- **`[ THEME: ... → ]`** — click to cycle through the four color themes.
-- **`[ GITHUB ]`** — links to this repository.
+- **`[SCRIPT:...▼]`** — click to open a dropdown listing the bundled scripts. Select one to load it, or choose `[ UPLOAD JSON ]` at the bottom of the dropdown to load a JSON file from your computer.
+- **`[THEME:...]`** — click to cycle through the four color themes.
+- **`[GITHUB]`** — links to this repository.
 
 The terminal itself works the same as the original: click links to navigate between screens, use `Shift+Space` to skip the teletype animation on the current screen.
 

@@ -374,7 +374,7 @@ class App extends Component<any, AppState> {
                             onClick={this._handleThemeCycle}
                             title="Cycle color theme"
                         >
-                            [THEME:{activeTheme.name}→]
+                            [THEME:{activeTheme.name}]
                         </button>
 
                         {!previewMode && (
