@@ -40,6 +40,70 @@ const ADDABLE_ELEMENT_OPTIONS: AddableElementOption[] = [
     { value: "dialogLink", label: "Dialog Link (+ Dialog)" },
 ];
 
+const TEXT_CLASSNAME_OPTIONS = [
+    "",
+    "alert",
+    "notice",
+    "emphasis",
+    "aphelion",
+    "center",
+    "title",
+    "small",
+    "script-hidden",
+];
+
+const LINK_CLASSNAME_OPTIONS = [
+    "",
+    "alert",
+    "inline",
+    "center",
+    "small",
+    "script-hidden",
+];
+
+const PROMPT_CLASSNAME_OPTIONS = [
+    "",
+    "cursor",
+    "alert",
+    "notice",
+    "emphasis",
+    "aphelion",
+    "small",
+    "script-hidden",
+];
+
+const TOGGLE_LIST_CLASSNAME_OPTIONS = [
+    "",
+    "alert",
+    "notice",
+    "emphasis",
+    "aphelion",
+    "small",
+    "script-hidden",
+];
+
+const BITMAP_CLASSNAME_OPTIONS = [
+    "",
+    "aphelion-eye-footer",
+    "monochrome",
+    "luminosity",
+    "light",
+    "lighten",
+    "multiply",
+    "screen",
+    "overlay",
+    "darken",
+    "color-dodge",
+    "color-burn",
+    "hard-light",
+    "soft-light",
+    "difference",
+    "exclusion",
+    "hue",
+    "saturation",
+    "color",
+];
+
 const createDefaultScript = () => ({
     config: {
         name: "Custom Script",
@@ -304,6 +368,56 @@ const getInitialSelectedElementIndex = (initialScript: any, screenId: string): n
     return Math.min(maxIndex, Math.max(0, Math.floor(preferred)));
 };
 
+const getClassNameOptionsForElementType = (elementType: string): string[] => {
+    switch (elementType) {
+        case "text":
+            return TEXT_CLASSNAME_OPTIONS;
+
+        case "link":
+        case "href":
+            return LINK_CLASSNAME_OPTIONS;
+
+        case "prompt":
+            return PROMPT_CLASSNAME_OPTIONS;
+
+        case "toggle":
+        case "list":
+            return TOGGLE_LIST_CLASSNAME_OPTIONS;
+
+        case "bitmap":
+        case "image":
+            return BITMAP_CLASSNAME_OPTIONS;
+
+        default:
+            return [""];
+    }
+};
+
+const getElementListLabel = (entry: any): string => {
+    if (typeof entry === "string") {
+        return `text line: ${entry.slice(0, 24) || "(empty)"}`;
+    }
+
+    if (!entry || typeof entry !== "object") {
+        return "object: (invalid)";
+    }
+
+    const type = (typeof entry.type === "string" ? entry.type : "object").toLowerCase();
+    const headline = (entry.text || entry.prompt || entry.src || entry.id || "").toString().slice(0, 24) || "(empty)";
+    const className = (typeof entry.className === "string" ? entry.className.trim() : "");
+
+    if (type === "text" && className.length) {
+        return `${className} text: ${headline}`;
+    }
+
+    if ((type === "link" || type === "href" || type === "prompt" || type === "toggle" || type === "list" || type === "bitmap" || type === "image")
+        && className.length) {
+        return `${className} ${type}: ${headline}`;
+    }
+
+    return `${type}: ${headline}`;
+};
+
 const ScriptCreator: FC<ScriptCreatorProps> = ({ initialScript, onApply, onPreview, onClose }) => {
     const initialSelectedScreenId = getInitialSelectedScreenId(initialScript);
     const [script, setScript] = useState<any>(() => ensureScriptShape(initialScript));
@@ -322,6 +436,14 @@ const ScriptCreator: FC<ScriptCreatorProps> = ({ initialScript, onApply, onPrevi
     }, [script, selectedScreenId]);
 
     const selectedElement = selectedScreen?.content?.[selectedElementIndex];
+    const selectedElementType = (
+        selectedElement
+        && typeof selectedElement === "object"
+        && typeof selectedElement.type === "string"
+    ) ? selectedElement.type.toLowerCase() : "";
+    const classNameOptions = useMemo(() => {
+        return getClassNameOptionsForElementType(selectedElementType);
+    }, [selectedElementType]);
     const schemaData = useMemo(() => buildScreenConnectionMap(script), [script]);
     const effectiveSchemaRootId = useMemo(() => {
         if (!schemaData.screenIds.length) {
@@ -823,9 +945,7 @@ const ScriptCreator: FC<ScriptCreatorProps> = ({ initialScript, onApply, onPrevi
                                 <div className="script-creator__element-layout">
                                     <div className="script-creator__list script-creator__list--elements">
                                         {selectedScreen.content.map((entry: any, index: number) => {
-                                            const label = typeof entry === "string"
-                                                ? `text: ${entry.slice(0, 24) || "(empty)"}`
-                                                : `${entry?.type || "object"}: ${(entry?.text || entry?.prompt || entry?.src || "").toString().slice(0, 24)}`;
+                                            const label = getElementListLabel(entry);
                                             return (
                                                 <button
                                                     key={`${selectedScreen.id}-${index}`}
@@ -845,14 +965,41 @@ const ScriptCreator: FC<ScriptCreatorProps> = ({ initialScript, onApply, onPrevi
                                         {elementEditorMode === "fields" && (
                                             <>
                                                 {typeof selectedElement === "string" && (
-                                                    <label className="script-creator__field script-creator__field--fill">
-                                                        <span>Text</span>
-                                                        <textarea
-                                                            className="script-creator__textarea-fill"
-                                                            value={selectedElement}
-                                                            onChange={(e) => updateElement(e.target.value)}
-                                                        />
-                                                    </label>
+                                                    <>
+                                                        <label className="script-creator__field script-creator__field--fill">
+                                                            <span>Text</span>
+                                                            <textarea
+                                                                className="script-creator__textarea-fill"
+                                                                value={selectedElement}
+                                                                onChange={(e) => updateElement(e.target.value)}
+                                                            />
+                                                        </label>
+
+                                                        <label className="script-creator__field">
+                                                            <span>Class Name (Apply Style)</span>
+                                                            <select
+                                                                value=""
+                                                                onChange={(e) => {
+                                                                    const nextClassName = e.target.value;
+                                                                    if (!nextClassName.length) {
+                                                                        return;
+                                                                    }
+                                                                    updateElement({
+                                                                        type: "text",
+                                                                        text: selectedElement,
+                                                                        className: nextClassName,
+                                                                    });
+                                                                }}
+                                                            >
+                                                                <option value="">(unstyled text line)</option>
+                                                                {TEXT_CLASSNAME_OPTIONS.filter((option) => option.length > 0).map((option) => (
+                                                                    <option key={option} value={option}>
+                                                                        {option}
+                                                                    </option>
+                                                                ))}
+                                                            </select>
+                                                        </label>
+                                                    </>
                                                 )}
 
                                                 {selectedElement && typeof selectedElement === "object" && (selectedElement.type === "link" || selectedElement.type === "href") && (
@@ -883,6 +1030,96 @@ const ScriptCreator: FC<ScriptCreatorProps> = ({ initialScript, onApply, onPrevi
                                                             value={selectedElement.text || ""}
                                                             onChange={(e) => updateElement({ ...selectedElement, text: e.target.value })}
                                                         />
+                                                    </label>
+                                                )}
+
+                                                {selectedElement && typeof selectedElement === "object" && (selectedElement.type === "bitmap" || selectedElement.type === "image") && (
+                                                    <>
+                                                        <label className="script-creator__field">
+                                                            <span>Source Path</span>
+                                                            <input
+                                                                value={selectedElement.src || ""}
+                                                                onChange={(e) => updateElement({ ...selectedElement, src: e.target.value })}
+                                                            />
+                                                        </label>
+
+                                                        <label className="script-creator__field">
+                                                            <span>Alt Text</span>
+                                                            <input
+                                                                value={selectedElement.alt || ""}
+                                                                onChange={(e) => updateElement({ ...selectedElement, alt: e.target.value })}
+                                                            />
+                                                        </label>
+
+                                                        <label className="script-creator__field">
+                                                            <span>Fill Width</span>
+                                                            <select
+                                                                value={selectedElement.fillWidth ? "true" : "false"}
+                                                                onChange={(e) => updateElement({
+                                                                    ...selectedElement,
+                                                                    fillWidth: e.target.value === "true",
+                                                                })}
+                                                            >
+                                                                <option value="false">false</option>
+                                                                <option value="true">true</option>
+                                                            </select>
+                                                        </label>
+
+                                                        <label className="script-creator__field">
+                                                            <span>Scale</span>
+                                                            <input
+                                                                type="number"
+                                                                step="0.1"
+                                                                min="0"
+                                                                value={selectedElement.scale ?? ""}
+                                                                onChange={(e) => {
+                                                                    const nextValue = e.target.value;
+                                                                    if (!nextValue.length) {
+                                                                        const nextElement = { ...selectedElement };
+                                                                        delete nextElement.scale;
+                                                                        updateElement(nextElement);
+                                                                        return;
+                                                                    }
+
+                                                                    const parsed = Number(nextValue);
+                                                                    if (!Number.isFinite(parsed)) {
+                                                                        return;
+                                                                    }
+                                                                    updateElement({
+                                                                        ...selectedElement,
+                                                                        scale: parsed,
+                                                                    });
+                                                                }}
+                                                            />
+                                                        </label>
+                                                    </>
+                                                )}
+
+                                                {selectedElement && typeof selectedElement === "object" && classNameOptions.length > 0 && (
+                                                    <label className="script-creator__field">
+                                                        <span>Class Name</span>
+                                                        <select
+                                                            value={selectedElement.className || ""}
+                                                            onChange={(e) => {
+                                                                const nextValue = e.target.value;
+                                                                if (!nextValue.length) {
+                                                                    const nextElement = { ...selectedElement };
+                                                                    delete nextElement.className;
+                                                                    updateElement(nextElement);
+                                                                    return;
+                                                                }
+                                                                updateElement({
+                                                                    ...selectedElement,
+                                                                    className: nextValue,
+                                                                });
+                                                            }}
+                                                        >
+                                                            {classNameOptions.map((option) => (
+                                                                <option key={option || "__none__"} value={option}>
+                                                                    {option || "(none)"}
+                                                                </option>
+                                                            ))}
+                                                        </select>
                                                     </label>
                                                 )}
                                             </>

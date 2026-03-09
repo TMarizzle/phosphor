@@ -171,7 +171,7 @@ $creator-label-font-size: 14pt;
         gap: 0.6rem;
         flex: 1;
         min-height: 0;
-        overflow: hidden;
+        overflow: auto;
     }
 
     &__field--fill {
