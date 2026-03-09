@@ -45,7 +45,7 @@ const TEXT_CLASSNAME_OPTIONS = [
     "alert",
     "notice",
     "emphasis",
-    "aphelion",
+    "ai",
     "center",
     "title",
     "small",
@@ -67,7 +67,7 @@ const PROMPT_CLASSNAME_OPTIONS = [
     "alert",
     "notice",
     "emphasis",
-    "aphelion",
+    "ai",
     "small",
     "script-hidden",
 ];
@@ -77,14 +77,14 @@ const TOGGLE_LIST_CLASSNAME_OPTIONS = [
     "alert",
     "notice",
     "emphasis",
-    "aphelion",
+    "ai",
     "small",
     "script-hidden",
 ];
 
 const BITMAP_CLASSNAME_OPTIONS = [
     "",
-    "aphelion-eye-footer",
+    "ai-eye-footer",
     "monochrome",
     "luminosity",
     "light",

@@ -1,6 +1,6 @@
 import { TerminalScript, TerminalScriptApi } from "./types";
 
-const APHELION_SCREEN = "aphelion";
+const APHELION_SCREEN = "ai";
 const COMMS_SCREEN = "comms";
 const EVACUATE_SCREEN = "evacuate";
 const APHELION_STATUS_SCRIPT_ID = "aphelionCoreStatus";
@@ -76,7 +76,7 @@ const APHELION_EYE_FOOTER_ELEMENT = {
     type: "bitmap",
     src: "img/Aphelion_glitch.gif",
     alt: "Aphelion eye",
-    className: "aphelion-eye-footer",
+    className: "ai-eye-footer",
     animated: false,
     scale: 0.5,
 };

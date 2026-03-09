@@ -114,12 +114,12 @@ body {
     }
 }
 
-.aphelion {
-    color: $aphelion;
-    text-shadow: $aphelion-glow;
+.ai {
+    color: $ai;
+    text-shadow: $ai-glow;
 
     & > span.cursor {
-        color: $aphelion;
-        background-color: rgba($aphelion, 0.75);
+        color: $ai;
+        background-color: rgba($ai, 0.75);
     }
 }
