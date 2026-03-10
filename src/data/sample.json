@@ -579,23 +579,25 @@
                 },
                 "",
                 "Bitmap classnames:",
-                "aphelion-eye-footer, monochrome, luminosity, lighten, multiply, screen, overlay, darken, color-dodge, color-burn, hard-light, soft-light, difference, exclusion, hue, saturation, color",
+                "monochrome, luminosity, lighten, multiply, screen, overlay, darken, color-dodge, color-burn, hard-light, soft-light, difference, exclusion, hue, saturation, color",
                 "",
+                "original",
                 {
                     "type": "bitmap",
-                    "src": "https://i.imgur.com/rDjphNY.jpg",
+                    "src": "img/ypsilon-map.png",
+                    "scale": 0.45
+                },
+                "\nlighten",
+                {
+                    "type": "bitmap",
+                    "src": "img/ypsilon-map.png",
                     "className": "lighten",
                     "scale": 0.45
                 },
+                "\nmonochrome",
                 {
                     "type": "bitmap",
-                    "src": "https://i.imgur.com/rDjphNY.jpg",
-                    "className": "luminosity",
-                    "scale": 0.45
-                },
-                {
-                    "type": "bitmap",
-                    "src": "https://i.imgur.com/rDjphNY.jpg",
+                    "src": "img/ypsilon-map.png",
                     "className": "monochrome",
                     "scale": 0.45
                 },
