@@ -262,7 +262,11 @@ const TEXT_LINE_STYLE_OPTIONS: CreatorSelectOption[] = [
         .map((option) => ({ value: option, label: option })),
 ];
 
-const createDefaultScript = () => ({
+const createDefaultScript = (): {
+    config: { name: string; author: string };
+    screens: Array<{ id: string; type: string; content: any[] }>;
+    dialogs: any[];
+} => ({
     config: {
         name: "Custom Script",
         author: "",
@@ -415,8 +419,8 @@ const readScreenTargetsFromElement = (element: any): string[] => {
 
 const buildScreenConnectionMap = (script: any): { screenIds: string[]; connectionMap: Record<string, string[]> } => {
     const screens = Array.isArray(script?.screens) ? script.screens : [];
-    const screenIds = screens
-        .map((screen: any) => (typeof screen?.id === "string" ? screen.id : ""))
+    const screenIds: string[] = screens
+        .map((screen: any): string => (typeof screen?.id === "string" ? screen.id : ""))
         .filter((id: string) => id.length > 0);
     const idSet = new Set(screenIds);
 
@@ -600,6 +604,9 @@ const ScriptCreator: FC<ScriptCreatorProps> = ({ initialScript, onApply, onPrevi
     const selectedScreen = useMemo(() => {
         return script.screens.find((screen: any) => screen.id === selectedScreenId) || null;
     }, [script, selectedScreenId]);
+    const selectedScreenIndex = script.screens.findIndex((screen: any) => screen.id === selectedScreenId);
+    const canMoveScreenUp = selectedScreenIndex > 0;
+    const canMoveScreenDown = selectedScreenIndex >= 0 && selectedScreenIndex < (script.screens.length - 1);
 
     const selectedElement = selectedScreen?.content?.[selectedElementIndex];
     const selectedElementType = (
@@ -695,6 +702,23 @@ const ScriptCreator: FC<ScriptCreatorProps> = ({ initialScript, onApply, onPrevi
         }));
         setSelectedScreenId(nextScreens[0].id);
         setSelectedElementIndex(0);
+    };
+
+    const moveScreen = (direction: -1 | 1) => {
+        updateScript((prev) => {
+            const from = prev.screens.findIndex((screen: any) => screen.id === selectedScreenId);
+            const to = from + direction;
+            if (from < 0 || to < 0 || to >= prev.screens.length) {
+                return prev;
+            }
+
+            const nextScreens = [...prev.screens];
+            [nextScreens[from], nextScreens[to]] = [nextScreens[to], nextScreens[from]];
+            return {
+                ...prev,
+                screens: nextScreens,
+            };
+        });
     };
 
     const addElement = () => {
@@ -1031,28 +1055,30 @@ const ScriptCreator: FC<ScriptCreatorProps> = ({ initialScript, onApply, onPrevi
                 <div className={"script-creator__body" + (activeView === "schema" ? " script-creator__body--single" : "")}>
                     {activeView === "editor" && (
                     <aside className="script-creator__sidebar">
-                        <label className="script-creator__field">
-                            <span>Name</span>
-                            <input
-                                value={script.config?.name || ""}
-                                onChange={(e) => updateConfig("name", e.target.value)}
-                            />
-                        </label>
+                        <div className="script-creator__meta-fields">
+                            <label className="script-creator__field">
+                                <span>Name</span>
+                                <input
+                                    value={script.config?.name || ""}
+                                    onChange={(e) => updateConfig("name", e.target.value)}
+                                />
+                            </label>
 
-                        <label className="script-creator__field">
-                            <span>Author</span>
-                            <input
-                                value={script.config?.author || ""}
-                                onChange={(e) => updateConfig("author", e.target.value)}
-                            />
-                        </label>
+                            <label className="script-creator__field">
+                                <span>Author</span>
+                                <input
+                                    value={script.config?.author || ""}
+                                    onChange={(e) => updateConfig("author", e.target.value)}
+                                />
+                            </label>
+                        </div>
 
                         <div className="script-creator__list-header">
                             <span>Screens</span>
                             <button className="script-creator__btn" onClick={addScreen}>[+ SCREEN]</button>
                         </div>
 
-                        <div className="script-creator__list">
+                        <div className="script-creator__list script-creator__list--screens">
                             {script.screens.map((screen: any) => (
                                 <button
                                     key={screen.id}
@@ -1068,7 +1094,11 @@ const ScriptCreator: FC<ScriptCreatorProps> = ({ initialScript, onApply, onPrevi
                             ))}
                         </div>
 
-                        <button className="script-creator__btn" onClick={removeScreen} disabled={script.screens.length <= 1}>[DELETE SCREEN]</button>
+                        <div className="script-creator__actions script-creator__actions--screen-controls">
+                            <button className="script-creator__btn" onClick={() => moveScreen(-1)} disabled={!canMoveScreenUp}>[MOVE SCREEN UP]</button>
+                            <button className="script-creator__btn" onClick={() => moveScreen(1)} disabled={!canMoveScreenDown}>[MOVE SCREEN DOWN]</button>
+                            <button className="script-creator__btn" onClick={removeScreen} disabled={script.screens.length <= 1}>[DELETE SCREEN]</button>
+                        </div>
                     </aside>
                     )}
 

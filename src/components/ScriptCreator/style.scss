@@ -166,6 +166,12 @@ $creator-dark-control-bg: rgba($creator-dark-bg, 0.92);
         border-right: 1px solid var(--fg);
     }
 
+    &__meta-fields {
+        display: flex;
+        flex-direction: column;
+        gap: 0.15rem;
+    }
+
     &__row {
         display: grid;
         grid-template-columns: 1fr 160px;
@@ -175,10 +181,10 @@ $creator-dark-control-bg: rgba($creator-dark-bg, 0.92);
     &__field {
         display: flex;
         flex-direction: column;
-        gap: 0.2rem;
+        gap: 0rem;
 
         span {
-            opacity: 0.8;
+            opacity: 1;
             letter-spacing: 0.08em;
             font-size: $creator-label-font-size;
             text-transform: uppercase;
@@ -198,7 +204,7 @@ $creator-dark-control-bg: rgba($creator-dark-bg, 0.92);
 
         textarea {
             resize: vertical;
-            min-height: 80px;
+            min-height: 40px;
         }
     }
 
@@ -225,6 +231,10 @@ $creator-dark-control-bg: rgba($creator-dark-bg, 0.92);
         padding-right: 0.2rem;
         scrollbar-gutter: stable;
         @include creator-scrollbar;
+    }
+
+    &__list--screens {
+        min-height: 220px;
     }
 
     &__list-item {
@@ -288,6 +298,10 @@ $creator-dark-control-bg: rgba($creator-dark-bg, 0.92);
         display: flex;
         flex-wrap: wrap;
         gap: 0.35rem;
+    }
+
+    &__actions--screen-controls {
+        margin-top: 0;
     }
 
     &__actions--footer {
