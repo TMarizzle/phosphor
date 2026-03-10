@@ -820,6 +820,9 @@ class Phosphor extends Component<PhosphorProps, AppState> {
     // we're off to the races!
     private _activateScreen(): void {
         const screen = this._getScreen(this.state.activeScreenId);
+        if (!screen || !screen.content || !screen.content.length) {
+            return;
+        }
 
         // update the app status
         const status = AppStatus.Active;
@@ -827,9 +830,17 @@ class Phosphor extends Component<PhosphorProps, AppState> {
         // depending on the screen type, we perform different actions here
         switch (screen.type) {
             case ScreenType.Static:
+                screen.content.forEach((element) => {
+                    element.state = ScreenDataState.Done;
+                });
+
                 this.setState({
-                    status,
-                }, () => this._persistSession());
+                    status: AppStatus.Done,
+                    activeElementId: null,
+                }, () => {
+                    this._persistSession();
+                    this._handleScreenDone(screen.id);
+                });
                 break;
 
             case ScreenType.Screen:
@@ -1365,17 +1376,12 @@ class Phosphor extends Component<PhosphorProps, AppState> {
             this._unloadScreen();
         }
 
-        // active the first element in the screen's content collection
-        const activeElement = screen.content[0];
-        activeElement.state = ScreenDataState.Active;
-
         this.setState({
             activeScreenId: targetScreen,
-            activeElementId: activeElement.id,
-            status: AppStatus.Active,
+            activeElementId: null,
             skipTextAnimation: false,
         }, () => {
-            this._persistSession();
+            this._activateScreen();
             this._notifyScriptScreenChanged(targetScreen);
         });
     }
