@@ -49,6 +49,11 @@ const CREATOR_COLOR_MODE_LABELS: Record<CreatorColorMode, string> = {
     light: "LIGHT",
 };
 
+const DEFAULT_SIDEBAR_WIDTH = 340;
+const MIN_SIDEBAR_WIDTH = 220;
+const MIN_EDITOR_WIDTH = 360;
+const RESIZE_HANDLE_WIDTH = 8;
+
 const getNextCreatorColorMode = (mode: CreatorColorMode): CreatorColorMode => {
     if (mode === "theme") {
         return "dark";
@@ -600,6 +605,12 @@ const ScriptCreator: FC<ScriptCreatorProps> = ({ initialScript, onApply, onPrevi
     const [elementEditorMode, setElementEditorMode] = useState<"fields" | "raw">("fields");
     const [activeView, setActiveView] = useState<"editor" | "schema">("editor");
     const [creatorColorMode, setCreatorColorMode] = useState<CreatorColorMode>("theme");
+    const [sidebarWidth, setSidebarWidth] = useState<number>(DEFAULT_SIDEBAR_WIDTH);
+    const [isResizingSidebar, setIsResizingSidebar] = useState<boolean>(false);
+    const bodyRef = useRef<HTMLDivElement | null>(null);
+    const resizePointerIdRef = useRef<number | null>(null);
+    const resizeStartXRef = useRef<number>(0);
+    const resizeStartWidthRef = useRef<number>(DEFAULT_SIDEBAR_WIDTH);
 
     const selectedScreen = useMemo(() => {
         return script.screens.find((screen: any) => screen.id === selectedScreenId) || null;
@@ -639,6 +650,14 @@ const ScriptCreator: FC<ScriptCreatorProps> = ({ initialScript, onApply, onPrevi
     const schemaRootSelectOptions = useMemo(() => {
         return schemaData.screenIds.map((id) => ({ value: id, label: id }));
     }, [schemaData.screenIds]);
+
+    const clampSidebarWidth = (nextWidth: number): number => {
+        const bodyWidth = bodyRef.current?.clientWidth || 0;
+        const maxWidth = bodyWidth
+            ? Math.max(MIN_SIDEBAR_WIDTH, bodyWidth - MIN_EDITOR_WIDTH - RESIZE_HANDLE_WIDTH)
+            : nextWidth;
+        return Math.max(MIN_SIDEBAR_WIDTH, Math.min(nextWidth, maxWidth));
+    };
 
     const updateScript = (updater: (prev: any) => any) => {
         setScript((prev: any) => ensureScriptShape(updater(prev)));
@@ -1009,8 +1028,51 @@ const ScriptCreator: FC<ScriptCreatorProps> = ({ initialScript, onApply, onPrevi
         URL.revokeObjectURL(url);
     };
 
+    const handleSidebarResizePointerDown = (event: React.PointerEvent<HTMLDivElement>) => {
+        if (event.button !== 0) {
+            return;
+        }
+
+        event.preventDefault();
+        resizePointerIdRef.current = event.pointerId;
+        resizeStartXRef.current = event.clientX;
+        resizeStartWidthRef.current = sidebarWidth;
+        setIsResizingSidebar(true);
+        event.currentTarget.setPointerCapture(event.pointerId);
+    };
+
+    const handleSidebarResizePointerMove = (event: React.PointerEvent<HTMLDivElement>) => {
+        if (resizePointerIdRef.current !== event.pointerId) {
+            return;
+        }
+
+        const deltaX = event.clientX - resizeStartXRef.current;
+        setSidebarWidth(clampSidebarWidth(resizeStartWidthRef.current + deltaX));
+    };
+
+    const stopSidebarResize = (event: React.PointerEvent<HTMLDivElement>) => {
+        if (resizePointerIdRef.current !== event.pointerId) {
+            return;
+        }
+
+        if (event.currentTarget.hasPointerCapture(event.pointerId)) {
+            event.currentTarget.releasePointerCapture(event.pointerId);
+        }
+
+        resizePointerIdRef.current = null;
+        setIsResizingSidebar(false);
+    };
+
+    const handleSidebarResizeLostPointerCapture = () => {
+        resizePointerIdRef.current = null;
+        setIsResizingSidebar(false);
+    };
+
     return (
-        <section className={`script-creator script-creator--${creatorColorMode}`} onClick={onClose}>
+        <section
+            className={`script-creator script-creator--${creatorColorMode}${isResizingSidebar ? " script-creator--resizing" : ""}`}
+            onClick={onClose}
+        >
             <div className="script-creator__panel" onClick={(e) => e.stopPropagation()}>
                 <div className="script-creator__header">
                     <strong>Script Creator</strong>
@@ -1052,7 +1114,13 @@ const ScriptCreator: FC<ScriptCreatorProps> = ({ initialScript, onApply, onPrevi
                     </div>
                 </div>
 
-                <div className={"script-creator__body" + (activeView === "schema" ? " script-creator__body--single" : "")}>
+                <div
+                    ref={bodyRef}
+                    className={"script-creator__body" + (activeView === "schema" ? " script-creator__body--single" : "")}
+                    style={activeView === "editor"
+                        ? ({ "--creator-sidebar-width": `${sidebarWidth}px` } as React.CSSProperties)
+                        : undefined}
+                >
                     {activeView === "editor" && (
                     <aside className="script-creator__sidebar">
                         <div className="script-creator__meta-fields">
@@ -1095,11 +1163,25 @@ const ScriptCreator: FC<ScriptCreatorProps> = ({ initialScript, onApply, onPrevi
                         </div>
 
                         <div className="script-creator__actions script-creator__actions--screen-controls">
-                            <button className="script-creator__btn" onClick={() => moveScreen(-1)} disabled={!canMoveScreenUp}>[MOVE SCREEN UP]</button>
-                            <button className="script-creator__btn" onClick={() => moveScreen(1)} disabled={!canMoveScreenDown}>[MOVE SCREEN DOWN]</button>
+                            <button className="script-creator__btn" onClick={() => moveScreen(-1)} disabled={!canMoveScreenUp}>[MOVE UP]</button>
+                            <button className="script-creator__btn" onClick={() => moveScreen(1)} disabled={!canMoveScreenDown}>[MOVE DOWN]</button>
                             <button className="script-creator__btn" onClick={removeScreen} disabled={script.screens.length <= 1}>[DELETE SCREEN]</button>
                         </div>
                     </aside>
+                    )}
+
+                    {activeView === "editor" && (
+                    <div
+                        className={"script-creator__resize-handle" + (isResizingSidebar ? " script-creator__resize-handle--active" : "")}
+                        role="separator"
+                        aria-orientation="vertical"
+                        aria-label="Resize sidebar"
+                        onPointerDown={handleSidebarResizePointerDown}
+                        onPointerMove={handleSidebarResizePointerMove}
+                        onPointerUp={stopSidebarResize}
+                        onPointerCancel={stopSidebarResize}
+                        onLostPointerCapture={handleSidebarResizeLostPointerCapture}
+                    />
                     )}
 
                     {activeView === "editor" && (
