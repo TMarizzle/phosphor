@@ -101,11 +101,13 @@ $font-bump: 4pt;
         border: 1px solid var(--fg);
         z-index: 200;
         min-width: 14em;
+        overflow: hidden;
     }
 
     &__dropdown-item {
         display: block;
         width: 100%;
+        box-sizing: border-box;
         background: none;
         border: none;
         border-bottom: 1px solid rgba(255, 255, 255, 0.08);

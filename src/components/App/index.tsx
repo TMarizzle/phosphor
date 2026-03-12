@@ -13,6 +13,7 @@ interface AppState {
     activeScript: BundledScript;
     customScripts: BundledScript[];
     activeTheme: Theme;
+    soundEnabled: boolean;
     scriptDropdownOpen: boolean;
     creatorOpen: boolean;
     previewMode: boolean;
@@ -29,6 +30,7 @@ class App extends Component<any, AppState> {
             activeScript: DEFAULT_SCRIPT,
             customScripts,
             activeTheme: persistedTheme,
+            soundEnabled: true,
             scriptDropdownOpen: false,
             creatorOpen: false,
             previewMode: false,
@@ -41,6 +43,7 @@ class App extends Component<any, AppState> {
         this._handleDropdownToggle  = this._handleDropdownToggle.bind(this);
         this._handleClickOutside    = this._handleClickOutside.bind(this);
         this._handleClearData       = this._handleClearData.bind(this);
+        this._handleSoundToggle     = this._handleSoundToggle.bind(this);
         this._handleCreatorOpen     = this._handleCreatorOpen.bind(this);
         this._handleCreatorClose    = this._handleCreatorClose.bind(this);
         this._handleCreatorApply    = this._handleCreatorApply.bind(this);
@@ -140,6 +143,12 @@ class App extends Component<any, AppState> {
         localStorage.clear();
         sessionStorage.clear();
         window.location.reload();
+    }
+
+    private _handleSoundToggle(): void {
+        this.setState((prev) => ({
+            soundEnabled: !prev.soundEnabled,
+        }));
     }
 
     private _handleCreatorOpen(): void {
@@ -287,13 +296,13 @@ class App extends Component<any, AppState> {
     }
 
     public render(): ReactElement {
-        const { activeScript, customScripts, activeTheme, scriptDropdownOpen, creatorOpen, previewMode, uploadError } = this.state;
+        const { activeScript, customScripts, activeTheme, soundEnabled, scriptDropdownOpen, creatorOpen, previewMode, uploadError } = this.state;
         const availableScripts = [...BUNDLED_SCRIPTS, ...customScripts];
 
         return (
             <>
                 <header className="phosphor-header">
-                    <span className="phosphor-header__title">PHOSPHOR v5.3</span>
+                    <span className="phosphor-header__title">PHOSPHOR v5.4</span>
 
                     <div className="phosphor-header__controls">
                         {uploadError && (
@@ -377,6 +386,14 @@ class App extends Component<any, AppState> {
                             [THEME:{activeTheme.name}]
                         </button>
 
+                        <button
+                            className="phosphor-header__btn"
+                            onClick={this._handleSoundToggle}
+                            title="Toggle sound effects and ambient audio"
+                        >
+                            [SOUND:{soundEnabled ? "ON" : "OFF"}]
+                        </button>
+
                         {!previewMode && (
                             <button
                                 className="phosphor-header__btn"
@@ -414,6 +431,7 @@ class App extends Component<any, AppState> {
                 <Phosphor
                     key={activeScript.id}
                     json={activeScript.json}
+                    soundEnabled={soundEnabled}
                 />
 
                 {creatorOpen && (

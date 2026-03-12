@@ -142,6 +142,7 @@ const USER_REPORT_SCREEN_PREFIX = "userReport:";
 
 interface PhosphorProps {
     json: any;
+    soundEnabled?: boolean;
 }
 
 class Phosphor extends Component<PhosphorProps, AppState> {
@@ -260,7 +261,26 @@ class Phosphor extends Component<PhosphorProps, AppState> {
         this._teardownAudio();
     }
 
+    public componentDidUpdate(prevProps: PhosphorProps): void {
+        const wasSoundEnabled = prevProps.soundEnabled !== false;
+        const isSoundEnabled = this._isSoundEnabled();
+        if (wasSoundEnabled === isSoundEnabled) {
+            return;
+        }
+
+        if (!isSoundEnabled) {
+            this._teardownAudio();
+            return;
+        }
+
+        this._playAmbient();
+    }
+
     // private methods
+    private _isSoundEnabled(): boolean {
+        return this.props.soundEnabled !== false;
+    }
+
     private _buildAudio(src: string, volume: number, loop = false): HTMLAudioElement {
         const audio = new Audio(src);
         audio.preload = "auto";
@@ -324,7 +344,7 @@ class Phosphor extends Component<PhosphorProps, AppState> {
     }
 
     private _playAudio(audio: HTMLAudioElement): void {
-        if (!audio) {
+        if (!audio || !this._isSoundEnabled()) {
             return;
         }
 
@@ -335,7 +355,7 @@ class Phosphor extends Component<PhosphorProps, AppState> {
     }
 
     private _playAudioFromPool(pool: HTMLAudioElement[]): void {
-        if (!pool.length) {
+        if (!pool.length || !this._isSoundEnabled()) {
             return;
         }
 
@@ -345,7 +365,7 @@ class Phosphor extends Component<PhosphorProps, AppState> {
     }
 
     private _playAmbient(): void {
-        if (!this._ambientAudio || document.hidden) {
+        if (!this._ambientAudio || document.hidden || !this._isSoundEnabled()) {
             return;
         }
 
@@ -377,12 +397,18 @@ class Phosphor extends Component<PhosphorProps, AppState> {
     }
 
     private _handleFirstInteraction(): void {
-        if (this._audioUnlocked) {
+        if (!this._isSoundEnabled()) {
             return;
         }
 
-        this._playPowerOn();
-        this._playAmbient();
+        if (!this._audioUnlocked) {
+            this._playPowerOn();
+        }
+
+        // Ambient can still be paused even when another SFX already unlocked audio.
+        if (this._ambientAudio && this._ambientAudio.paused) {
+            this._playAmbient();
+        }
     }
 
     private _handleGlobalKeyDown(e: KeyboardEvent): void {
@@ -419,7 +445,7 @@ class Phosphor extends Component<PhosphorProps, AppState> {
             return;
         }
 
-        if (document.hidden) {
+        if (document.hidden || !this._isSoundEnabled()) {
             this._ambientAudio.pause();
             return;
         }
