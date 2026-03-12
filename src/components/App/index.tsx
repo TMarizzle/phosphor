@@ -37,6 +37,7 @@ interface AppState {
 
 class App extends Component<any, AppState> {
     private _headerRef: React.RefObject<HTMLElement>;
+    private _titleRef: React.RefObject<HTMLSpanElement>;
     private _controlsRef: React.RefObject<HTMLDivElement>;
     private _headerLayoutRafId: number | null = null;
 
@@ -47,6 +48,7 @@ class App extends Component<any, AppState> {
         const customTheme = loadPersistedCustomTheme();
         const customScripts = this._loadCustomScripts();
         this._headerRef = React.createRef<HTMLElement>();
+        this._titleRef = React.createRef<HTMLSpanElement>();
         this._controlsRef = React.createRef<HTMLDivElement>();
         this.state = {
             activeScript: DEFAULT_SCRIPT,
@@ -170,8 +172,9 @@ class App extends Component<any, AppState> {
         this._headerLayoutRafId = null;
 
         const header = this._headerRef.current;
+        const title = this._titleRef.current;
         const controls = this._controlsRef.current;
-        if (!header || !controls) {
+        if (!header || !title || !controls) {
             return;
         }
 
@@ -181,7 +184,31 @@ class App extends Component<any, AppState> {
             header.classList.remove("phosphor-header--compact");
         }
 
-        const shouldCompact = header.scrollWidth > header.clientWidth + 1
+        const headerRect = header.getBoundingClientRect();
+        const titleRect = title.getBoundingClientRect();
+        const controlsRect = controls.getBoundingClientRect();
+        const controlChildren = Array.from(controls.children)
+            .filter((child): child is HTMLElement => child instanceof HTMLElement)
+            .filter((child) => child.offsetParent !== null);
+
+        let controlsVisualLeft = controlsRect.left;
+        let controlsVisualRight = controlsRect.right;
+        controlChildren.forEach((child) => {
+            const childRect = child.getBoundingClientRect();
+            controlsVisualLeft = Math.min(controlsVisualLeft, childRect.left);
+            controlsVisualRight = Math.max(controlsVisualRight, childRect.right);
+        });
+
+        // scrollWidth catches right-side overflow, but when controls are right-aligned
+        // they can overflow to the left and overlap the title without changing scrollWidth.
+        const titleOverlap = controlsVisualLeft < titleRect.right + 8;
+        const controlsOutsideHeader = controlsVisualLeft < headerRect.left + 1
+            || controlsVisualRight > headerRect.right - 1;
+        const narrowViewport = window.innerWidth <= 900;
+        const shouldCompact = titleOverlap
+            || controlsOutsideHeader
+            || narrowViewport
+            || header.scrollWidth > header.clientWidth + 1
             || controls.scrollWidth > controls.clientWidth + 1;
 
         if (hadCompactClass) {
@@ -250,7 +277,7 @@ class App extends Component<any, AppState> {
     }
 
     private _handleMobileMenuToggle(): void {
-        if (!this.state.headerCompact) {
+        if (!this.state.headerCompact && window.innerWidth > 900) {
             return;
         }
 
@@ -557,7 +584,7 @@ class App extends Component<any, AppState> {
                     ref={this._headerRef}
                     className={"phosphor-header" + (headerCompact ? " phosphor-header--compact" : "")}
                 >
-                    <span className="phosphor-header__title">PHOSPHOR v5.5</span>
+                    <span ref={this._titleRef} className="phosphor-header__title">PHOSPHOR v5.5</span>
 
                     <button
                         className="phosphor-header__btn phosphor-header__menu-btn"
