@@ -362,7 +362,7 @@ class App extends Component<any, AppState> {
     }
 
     private _handleThemeColorChange(
-        key: "fgHex" | "alertHex" | "emphasisHex" | "noticeHex" | "systemHex",
+        key: "fgHex" | "alertHex" | "emphasisHex" | "noticeHex" | "hyperlinkHex" | "systemHex",
         value: string
     ): void {
         this.setState((prev): Pick<AppState, "customTheme" | "activeTheme"> => {
@@ -779,6 +779,15 @@ class App extends Component<any, AppState> {
                                                     aria-label="Custom notice color"
                                                     value={customTheme.noticeHex}
                                                     onChange={(e) => this._handleThemeColorChange("noticeHex", e.target.value)}
+                                                />
+                                            </label>
+                                            <label className="phosphor-header__theme-color-field">
+                                                <span>HYPERLINK</span>
+                                                <input
+                                                    type="color"
+                                                    aria-label="Custom hyperlink color"
+                                                    value={customTheme.hyperlinkHex}
+                                                    onChange={(e) => this._handleThemeColorChange("hyperlinkHex", e.target.value)}
                                                 />
                                             </label>
                                             <label className="phosphor-header__theme-color-field">

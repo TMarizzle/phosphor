@@ -1,0 +1,297 @@
+import { ReactNode } from "react";
+
+type InlineTokenType = "link" | "bold" | "underline" | "italic";
+
+interface InlineTokenMatch {
+    kind: InlineTokenType;
+    index: number;
+    raw: string;
+    content: string;
+    href?: string;
+}
+
+const HEADING_PATTERN = /^(#{1,6})\s+(.+)$/;
+const BULLET_PATTERN = /^\s*[-*+]\s+(.+)$/;
+const BLOCKQUOTE_PATTERN = /^\s*>\s?(.*)$/;
+const HORIZONTAL_RULE_PATTERN = /^\s*([-*_])(?:\s*\1){2,}\s*$/;
+
+const decodeEscapedMarkdown = (value: string): string => {
+    return value.replace(/\\([\\`*_{}\[\]()#+\-.!>~|])/g, "$1");
+};
+
+const sanitizeHref = (value: string): string | null => {
+    const href = value.trim();
+    if (!href.length) {
+        return null;
+    }
+
+    const schemeMatch = href.match(/^([a-zA-Z][a-zA-Z0-9+.-]*):/);
+    if (schemeMatch) {
+        const scheme = schemeMatch[1].toLowerCase();
+        if (scheme !== "http" && scheme !== "https" && scheme !== "mailto" && scheme !== "tel") {
+            return null;
+        }
+        return href;
+    }
+
+    if (
+        href.startsWith("#")
+        || href.startsWith("/")
+        || href.startsWith("./")
+        || href.startsWith("../")
+    ) {
+        return href;
+    }
+
+    return href;
+};
+
+const findFirstInlineToken = (value: string): InlineTokenMatch | null => {
+    const patterns: Array<{ kind: InlineTokenType; regex: RegExp }> = [
+        { kind: "link", regex: /\[([^\]\n]+)\]\(([^)\n]+)\)/ },
+        { kind: "bold", regex: /\*\*([^*\n]+)\*\*/ },
+        { kind: "bold", regex: /__([^_\n]+)__/ },
+        { kind: "underline", regex: /\+\+([^+\n]+)\+\+/ },
+        { kind: "italic", regex: /\*([^*\n]+)\*/ },
+        { kind: "italic", regex: /_([^_\n]+)_/ },
+    ];
+
+    let best: InlineTokenMatch | null = null;
+
+    patterns.forEach((pattern) => {
+        const match = pattern.regex.exec(value);
+        if (!match || typeof match.index !== "number") {
+            return;
+        }
+
+        const candidate: InlineTokenMatch = {
+            kind: pattern.kind,
+            index: match.index,
+            raw: match[0],
+            content: match[1] || "",
+            href: pattern.kind === "link" ? (match[2] || "") : undefined,
+        };
+
+        if (!best || candidate.index < best.index) {
+            best = candidate;
+        }
+    });
+
+    return best;
+};
+
+const renderInlineMarkdown = (value: string, keyPrefix: string): ReactNode[] => {
+    if (!value.length) {
+        return [""];
+    }
+
+    const output: ReactNode[] = [];
+    let rest = value;
+    let keyIndex = 0;
+
+    while (rest.length) {
+        const match = findFirstInlineToken(rest);
+        if (!match) {
+            output.push(decodeEscapedMarkdown(rest));
+            break;
+        }
+
+        if (match.index > 0) {
+            output.push(decodeEscapedMarkdown(rest.slice(0, match.index)));
+        }
+
+        const key = `${keyPrefix}-${keyIndex++}`;
+
+        if (match.kind === "link") {
+            const href = sanitizeHref(match.href || "");
+            if (href) {
+                output.push(
+                    <a
+                        key={key}
+                        className="__md-link"
+                        href={href}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                    >
+                        {renderInlineMarkdown(match.content, `${key}-label`)}
+                    </a>
+                );
+            } else {
+                output.push(decodeEscapedMarkdown(match.raw));
+            }
+        } else if (match.kind === "bold") {
+            output.push(
+                <strong key={key}>
+                    {renderInlineMarkdown(match.content, `${key}-bold`)}
+                </strong>
+            );
+        } else if (match.kind === "underline") {
+            output.push(
+                <span key={key} className="__md-underline">
+                    {renderInlineMarkdown(match.content, `${key}-underline`)}
+                </span>
+            );
+        } else {
+            output.push(
+                <em key={key}>
+                    {renderInlineMarkdown(match.content, `${key}-italic`)}
+                </em>
+            );
+        }
+
+        rest = rest.slice(match.index + match.raw.length);
+    }
+
+    return output;
+};
+
+export const renderMarkdown = (text: string): ReactNode[] => {
+    const normalized = (text || "").replace(/\0/g, "").replace(/\r\n?/g, "\n");
+    const lines = normalized.split("\n");
+    const blocks: ReactNode[] = [];
+    let lineIndex = 0;
+    let blockIndex = 0;
+
+    while (lineIndex < lines.length) {
+        const line = lines[lineIndex];
+        const trimmed = line.trim();
+
+        if (!trimmed.length) {
+            blocks.push(
+                <div key={`md-empty-${blockIndex++}`} className="__md-empty" aria-hidden="true">
+                    {"\u00A0"}
+                </div>
+            );
+            lineIndex++;
+            continue;
+        }
+
+        if (HORIZONTAL_RULE_PATTERN.test(trimmed)) {
+            blocks.push(<hr key={`md-hr-${blockIndex++}`} className="__md-hr" />);
+            lineIndex++;
+            continue;
+        }
+
+        const headingMatch = HEADING_PATTERN.exec(trimmed);
+        if (headingMatch) {
+            const level = Math.min(6, headingMatch[1].length);
+            blocks.push(
+                <div
+                    key={`md-heading-${blockIndex++}`}
+                    className={`__md-heading __md-heading--h${level}`}
+                >
+                    {renderInlineMarkdown(headingMatch[2], `md-heading-inline-${lineIndex}`)}
+                </div>
+            );
+            lineIndex++;
+            continue;
+        }
+
+        const bulletMatch = BULLET_PATTERN.exec(line);
+        if (bulletMatch) {
+            const items: ReactNode[] = [];
+            let bulletIndex = 0;
+
+            while (lineIndex < lines.length) {
+                const bulletLineMatch = BULLET_PATTERN.exec(lines[lineIndex]);
+                if (!bulletLineMatch) {
+                    break;
+                }
+                items.push(
+                    <li key={`md-list-item-${blockIndex}-${bulletIndex++}`} className="__md-list-item">
+                        {renderInlineMarkdown(bulletLineMatch[1], `md-list-inline-${lineIndex}`)}
+                    </li>
+                );
+                lineIndex++;
+            }
+
+            blocks.push(
+                <ul key={`md-list-${blockIndex++}`} className="__md-list">
+                    {items}
+                </ul>
+            );
+            continue;
+        }
+
+        const quoteMatch = BLOCKQUOTE_PATTERN.exec(line);
+        if (quoteMatch) {
+            const quoteLines: ReactNode[] = [];
+            let quoteIndex = 0;
+
+            while (lineIndex < lines.length) {
+                const quoteLineMatch = BLOCKQUOTE_PATTERN.exec(lines[lineIndex]);
+                if (!quoteLineMatch) {
+                    break;
+                }
+
+                quoteLines.push(
+                    <div key={`md-quote-line-${blockIndex}-${quoteIndex++}`} className="__md-quote-line">
+                        {renderInlineMarkdown(quoteLineMatch[1], `md-quote-inline-${lineIndex}`)}
+                    </div>
+                );
+                lineIndex++;
+            }
+
+            blocks.push(
+                <blockquote key={`md-quote-${blockIndex++}`} className="__md-blockquote">
+                    {quoteLines}
+                </blockquote>
+            );
+            continue;
+        }
+
+        blocks.push(
+            <div key={`md-line-${blockIndex++}`} className="__md-line">
+                {renderInlineMarkdown(line, `md-line-inline-${lineIndex}`)}
+            </div>
+        );
+        lineIndex++;
+    }
+
+    return blocks.length ? blocks : [text];
+};
+
+const stripInlineMarkdown = (value: string): string => {
+    let output = value;
+    output = output.replace(/\[([^\]\n]+)\]\(([^)\n]+)\)/g, "$1");
+    output = output.replace(/\+\+([^+\n]+)\+\+/g, "$1");
+    output = output.replace(/\*\*([^*\n]+)\*\*/g, "$1");
+    output = output.replace(/__([^_\n]+)__/g, "$1");
+    output = output.replace(/\*([^*\n]+)\*/g, "$1");
+    output = output.replace(/_([^_\n]+)_/g, "$1");
+    return decodeEscapedMarkdown(output);
+};
+
+export const markdownToPlainText = (text: string): string => {
+    const normalized = (text || "").replace(/\0/g, "").replace(/\r\n?/g, "\n");
+    const lines = normalized.split("\n").map((line) => {
+        const trimmed = line.trim();
+
+        if (!trimmed.length) {
+            return "";
+        }
+
+        if (HORIZONTAL_RULE_PATTERN.test(trimmed)) {
+            return "----------------";
+        }
+
+        const headingMatch = HEADING_PATTERN.exec(trimmed);
+        if (headingMatch) {
+            return stripInlineMarkdown(headingMatch[2]);
+        }
+
+        const bulletMatch = BULLET_PATTERN.exec(line);
+        if (bulletMatch) {
+            return `• ${stripInlineMarkdown(bulletMatch[1])}`;
+        }
+
+        const quoteMatch = BLOCKQUOTE_PATTERN.exec(line);
+        if (quoteMatch) {
+            return stripInlineMarkdown(quoteMatch[1]);
+        }
+
+        return stripInlineMarkdown(line);
+    });
+
+    return lines.join("\n");
+};

@@ -1258,6 +1258,9 @@ const ScriptCreator: FC<ScriptCreatorProps> = ({ initialScript, onApply, onPrevi
                                                                 value={selectedElement}
                                                                 onChange={(e) => updateElement(e.target.value)}
                                                             />
+                                                            <small className="script-creator__markdown-hint">
+                                                                Markdown: `#`, `**bold**`, `*italic*`, `++underline++`, `[label](url)`, `- bullets`, `&gt; quote`, `---`
+                                                            </small>
                                                         </label>
 
                                                         <label className="script-creator__field">
@@ -1308,6 +1311,9 @@ const ScriptCreator: FC<ScriptCreatorProps> = ({ initialScript, onApply, onPrevi
                                                             value={selectedElement.text || ""}
                                                             onChange={(e) => updateElement({ ...selectedElement, text: e.target.value })}
                                                         />
+                                                        <small className="script-creator__markdown-hint">
+                                                            Markdown: `#`, `**bold**`, `*italic*`, `++underline++`, `[label](url)`, `- bullets`, `&gt; quote`, `---`
+                                                        </small>
                                                     </label>
                                                 )}
 

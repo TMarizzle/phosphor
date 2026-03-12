@@ -10,6 +10,7 @@ export interface CustomThemeConfig {
     alertHex: string;
     emphasisHex: string;
     noticeHex: string;
+    hyperlinkHex: string;
     systemHex: string;
 }
 
@@ -60,6 +61,7 @@ interface AccentColorConfig {
     alertHex: string;
     emphasisHex: string;
     noticeHex: string;
+    hyperlinkHex: string;
     systemHex: string;
 }
 
@@ -67,6 +69,7 @@ const DEFAULT_ACCENT_COLORS: AccentColorConfig = {
     alertHex: "#ff3c00",
     emphasisHex: "#f39557",
     noticeHex: "#00c721",
+    hyperlinkHex: "#b58cff",
     systemHex: "#15fff3",
 };
 
@@ -74,22 +77,26 @@ const buildAccentVars = (accents: AccentColorConfig): Record<string, string> => 
     const alertRgb = hexToRgb(accents.alertHex);
     const emphasisRgb = hexToRgb(accents.emphasisHex);
     const noticeRgb = hexToRgb(accents.noticeHex);
+    const hyperlinkRgb = hexToRgb(accents.hyperlinkHex);
     const systemRgb = hexToRgb(accents.systemHex);
 
     return {
         "--alert-rgb": rgbToCssValue(alertRgb),
         "--emphasis-rgb": rgbToCssValue(emphasisRgb),
         "--notice-rgb": rgbToCssValue(noticeRgb),
+        "--hyperlink-rgb": rgbToCssValue(hyperlinkRgb),
         "--system-rgb": rgbToCssValue(systemRgb),
         "--ai-rgb": rgbToCssValue(systemRgb),
         "--alert": `rgb(${rgbToCssValue(alertRgb)})`,
         "--emphasis": `rgb(${rgbToCssValue(emphasisRgb)})`,
         "--notice": `rgb(${rgbToCssValue(noticeRgb)})`,
+        "--hyperlink": `rgb(${rgbToCssValue(hyperlinkRgb)})`,
         "--system": `rgb(${rgbToCssValue(systemRgb)})`,
         "--ai": `rgb(${rgbToCssValue(systemRgb)})`,
         "--alert-glow": `0 0 5px rgba(${rgbToCssValue(alertRgb)}, 0.5)`,
         "--emphasis-glow": `0 0 5px rgba(${rgbToCssValue(emphasisRgb)}, 0.5)`,
         "--notice-glow": `0 0 5px rgba(${rgbToCssValue(noticeRgb)}, 0.5)`,
+        "--hyperlink-glow": `0 0 5px rgba(${rgbToCssValue(hyperlinkRgb)}, 0.5)`,
         "--system-glow": `0 0 5px rgba(${rgbToCssValue(systemRgb)}, 0.5)`,
         "--ai-glow": `0 0 5px rgba(${rgbToCssValue(systemRgb)}, 0.5)`,
     };
@@ -168,6 +175,7 @@ const sanitizeCustomTheme = (customTheme: Partial<CustomThemeConfig> | null | un
         alertHex: sanitizeHexColor(legacyTheme.alertHex || "", DEFAULT_CUSTOM_THEME.alertHex),
         emphasisHex: sanitizeHexColor(legacyTheme.emphasisHex || "", DEFAULT_CUSTOM_THEME.emphasisHex),
         noticeHex: sanitizeHexColor(legacyTheme.noticeHex || "", DEFAULT_CUSTOM_THEME.noticeHex),
+        hyperlinkHex: sanitizeHexColor(legacyTheme.hyperlinkHex || "", DEFAULT_CUSTOM_THEME.hyperlinkHex),
         systemHex: sanitizeHexColor(legacyTheme.systemHex || legacyTheme.aiHex || "", DEFAULT_CUSTOM_THEME.systemHex),
     };
 };

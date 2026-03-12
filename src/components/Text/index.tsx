@@ -1,4 +1,5 @@
 import React, { FC, useEffect } from "react";
+import { renderMarkdown } from "../../utils/markdown";
 
 export interface TextProps {
     text: string;
@@ -19,7 +20,7 @@ const Text: FC<TextProps> = (props) => {
     // this should fire on mount/update
     useEffect(() => handleRendered());
 
-    return <div className={css}>{text}</div>;
+    return <div className={css}>{renderMarkdown(text)}</div>;
 };
 
 export default Text;

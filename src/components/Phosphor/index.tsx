@@ -39,6 +39,7 @@ import {
     TerminalScriptActionMeta,
     TerminalScriptApi,
 } from "../../scripts/terminal";
+import { markdownToPlainText } from "../../utils/markdown";
 
 interface AppState {
     screens: Screen[];
@@ -1172,7 +1173,10 @@ class Phosphor extends Component<PhosphorProps, AppState> {
         // teletype component
         if (type === ScreenDataType.Text || type === ScreenDataType.Link || type === ScreenDataType.Prompt
         ) {
-            const text = type === ScreenDataType.Prompt ? element.prompt : element.text;
+            const sourceText = type === ScreenDataType.Prompt ? element.prompt : element.text;
+            const text = (type === ScreenDataType.Text || type === ScreenDataType.Link)
+                ? markdownToPlainText(sourceText || "")
+                : (sourceText || "");
             const handleRendered = () => this._activateNextScreenData();
             return (
                 <Teletype

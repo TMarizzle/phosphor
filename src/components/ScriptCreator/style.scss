@@ -240,6 +240,14 @@ $creator-dark-control-bg: rgba($creator-dark-bg, 0.92);
         }
     }
 
+    &__markdown-hint {
+        margin-top: 0.18rem;
+        font-size: 12pt;
+        opacity: 0.78;
+        letter-spacing: 0.02em;
+        text-transform: none;
+    }
+
     &__list-header {
         display: flex;
         justify-content: space-between;
