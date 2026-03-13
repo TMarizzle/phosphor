@@ -1,6 +1,6 @@
-import { ReactNode } from "react";
+import { CSSProperties, ReactNode } from "react";
 
-type InlineTokenType = "link" | "bold" | "underline" | "italic";
+type InlineTokenType = "link" | "bold" | "underline" | "italic" | "strikethrough";
 
 interface InlineTokenMatch {
     kind: InlineTokenType;
@@ -12,8 +12,39 @@ interface InlineTokenMatch {
 
 const HEADING_PATTERN = /^(#{1,6})\s+(.+)$/;
 const BULLET_PATTERN = /^\s*[-*+]\s+(.+)$/;
-const BLOCKQUOTE_PATTERN = /^\s*>\s?(.*)$/;
 const HORIZONTAL_RULE_PATTERN = /^\s*([-*_])(?:\s*\1){2,}\s*$/;
+
+interface BlockquoteLine {
+    level: number;
+    text: string;
+}
+
+const parseBlockquoteLine = (line: string): BlockquoteLine | null => {
+    const length = line.length;
+    let index = 0;
+
+    while (index < length && (line[index] === " " || line[index] === "\t")) {
+        index++;
+    }
+
+    let level = 0;
+    while (index < length && line[index] === ">") {
+        level++;
+        index++;
+        while (index < length && (line[index] === " " || line[index] === "\t")) {
+            index++;
+        }
+    }
+
+    if (!level) {
+        return null;
+    }
+
+    return {
+        level,
+        text: line.slice(index),
+    };
+};
 
 const decodeEscapedMarkdown = (value: string): string => {
     return value.replace(/\\([\\`*_{}\[\]()#+\-.!>~|])/g, "$1");
@@ -50,8 +81,9 @@ const findFirstInlineToken = (value: string): InlineTokenMatch | null => {
     const patterns: Array<{ kind: InlineTokenType; regex: RegExp }> = [
         { kind: "link", regex: /\[([^\]\n]+)\]\(([^)\n]+)\)/ },
         { kind: "bold", regex: /\*\*([^*\n]+)\*\*/ },
-        { kind: "bold", regex: /__([^_\n]+)__/ },
-        { kind: "underline", regex: /\+\+([^+\n]+)\+\+/ },
+        { kind: "underline", regex: /__([^_\n]+)__/ },
+        { kind: "underline", regex: /\+\+([^+\n]+)\+\+/ }, // legacy support
+        { kind: "strikethrough", regex: /~~([^~\n]+)~~/ },
         { kind: "italic", regex: /\*([^*\n]+)\*/ },
         { kind: "italic", regex: /_([^_\n]+)_/ },
     ];
@@ -130,6 +162,12 @@ const renderInlineMarkdown = (value: string, keyPrefix: string): ReactNode[] => 
                 <span key={key} className="__md-underline">
                     {renderInlineMarkdown(match.content, `${key}-underline`)}
                 </span>
+            );
+        } else if (match.kind === "strikethrough") {
+            output.push(
+                <del key={key}>
+                    {renderInlineMarkdown(match.content, `${key}-strikethrough`)}
+                </del>
             );
         } else {
             output.push(
@@ -213,20 +251,28 @@ export const renderMarkdown = (text: string): ReactNode[] => {
             continue;
         }
 
-        const quoteMatch = BLOCKQUOTE_PATTERN.exec(line);
+        const quoteMatch = parseBlockquoteLine(line);
         if (quoteMatch) {
             const quoteLines: ReactNode[] = [];
             let quoteIndex = 0;
 
             while (lineIndex < lines.length) {
-                const quoteLineMatch = BLOCKQUOTE_PATTERN.exec(lines[lineIndex]);
+                const quoteLineMatch = parseBlockquoteLine(lines[lineIndex]);
                 if (!quoteLineMatch) {
                     break;
                 }
 
+                const quoteStyle = {
+                    "--md-quote-level": String(Math.max(1, Math.floor(quoteLineMatch.level))),
+                } as CSSProperties;
+
                 quoteLines.push(
-                    <div key={`md-quote-line-${blockIndex}-${quoteIndex++}`} className="__md-quote-line">
-                        {renderInlineMarkdown(quoteLineMatch[1], `md-quote-inline-${lineIndex}`)}
+                    <div
+                        key={`md-quote-line-${blockIndex}-${quoteIndex++}`}
+                        className="__md-quote-line"
+                        style={quoteStyle}
+                    >
+                        {renderInlineMarkdown(quoteLineMatch.text, `md-quote-inline-${lineIndex}`)}
                     </div>
                 );
                 lineIndex++;
@@ -254,9 +300,10 @@ export const renderMarkdown = (text: string): ReactNode[] => {
 const stripInlineMarkdown = (value: string): string => {
     let output = value;
     output = output.replace(/\[([^\]\n]+)\]\(([^)\n]+)\)/g, "$1");
+    output = output.replace(/~~([^~\n]+)~~/g, "$1");
+    output = output.replace(/__([^_\n]+)__/g, "$1");
     output = output.replace(/\+\+([^+\n]+)\+\+/g, "$1");
     output = output.replace(/\*\*([^*\n]+)\*\*/g, "$1");
-    output = output.replace(/__([^_\n]+)__/g, "$1");
     output = output.replace(/\*([^*\n]+)\*/g, "$1");
     output = output.replace(/_([^_\n]+)_/g, "$1");
     return decodeEscapedMarkdown(output);
@@ -285,9 +332,9 @@ export const markdownToPlainText = (text: string): string => {
             return `• ${stripInlineMarkdown(bulletMatch[1])}`;
         }
 
-        const quoteMatch = BLOCKQUOTE_PATTERN.exec(line);
+        const quoteMatch = parseBlockquoteLine(line);
         if (quoteMatch) {
-            return stripInlineMarkdown(quoteMatch[1]);
+            return stripInlineMarkdown(quoteMatch.text);
         }
 
         return stripInlineMarkdown(line);

@@ -172,13 +172,26 @@ body {
 
     .__md-blockquote {
         margin: 0.12em 0;
-        padding: 0.05em 0 0.05em 0.65em;
-        border-left: 1px solid var(--fg);
         opacity: 0.9;
     }
 
     .__md-quote-line {
+        --md-quote-level: 1;
+        --md-quote-gap: 0.55em;
+        --md-quote-line-width: 1px;
         margin: 0;
+        padding-left: calc(0.65em + ((var(--md-quote-level) - 1) * var(--md-quote-gap)));
+        background-image: repeating-linear-gradient(
+            to right,
+            currentColor 0,
+            currentColor var(--md-quote-line-width),
+            transparent var(--md-quote-line-width),
+            transparent var(--md-quote-gap)
+        );
+        background-repeat: no-repeat;
+        background-position: 0 0.08em;
+        // width is (N - 1) gaps plus one line width, so depth N renders exactly N bars.
+        background-size: calc(((var(--md-quote-level) - 1) * var(--md-quote-gap)) + var(--md-quote-line-width)) calc(100% - 0.16em);
     }
 
     .__md-hr {

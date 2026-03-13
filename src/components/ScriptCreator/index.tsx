@@ -82,10 +82,16 @@ const DEFAULT_SIDEBAR_WIDTH = 340;
 const MIN_SIDEBAR_WIDTH = 220;
 const MIN_EDITOR_WIDTH = 360;
 const RESIZE_HANDLE_WIDTH = 8;
-const MARKDOWN_SHORTCUT_WRAPPERS: Record<string, string> = {
-    b: "**",
-    i: "*",
-    u: "++",
+interface MarkdownShortcut {
+    wrapper: string;
+    requiresShift?: boolean;
+}
+
+const MARKDOWN_SHORTCUTS: Record<string, MarkdownShortcut> = {
+    b: { wrapper: "**" },
+    i: { wrapper: "*" },
+    u: { wrapper: "__" },
+    x: { wrapper: "~~", requiresShift: true },
 };
 
 const getCyclerStateBehavior = (state: any): CyclerStateBehavior => {
@@ -970,10 +976,16 @@ const ScriptCreator: FC<ScriptCreatorProps> = ({ initialScript, onApply, onPrevi
             return;
         }
 
-        const wrapper = MARKDOWN_SHORTCUT_WRAPPERS[event.key.toLowerCase()];
-        if (!wrapper) {
+        const shortcutKey = event.key.toLowerCase();
+        const shortcut = MARKDOWN_SHORTCUTS[shortcutKey];
+        if (!shortcut) {
             return;
         }
+
+        if (shortcut.requiresShift && !event.shiftKey) {
+            return;
+        }
+        const wrapper = shortcut.wrapper;
 
         const target = event.target;
         if (!(target instanceof HTMLTextAreaElement || target instanceof HTMLInputElement)) {
@@ -1001,26 +1013,59 @@ const ScriptCreator: FC<ScriptCreatorProps> = ({ initialScript, onApply, onPrevi
             return;
         }
 
-        event.preventDefault();
-
         const value = target.value || "";
         const selectionStart = typeof target.selectionStart === "number" ? target.selectionStart : value.length;
         const selectionEnd = typeof target.selectionEnd === "number" ? target.selectionEnd : selectionStart;
         const selectedText = value.slice(selectionStart, selectionEnd);
-        const insertedText = `${wrapper}${selectedText}${wrapper}`;
-        const nextValue = `${value.slice(0, selectionStart)}${insertedText}${value.slice(selectionEnd)}`;
+        const hasWrappedSelection = selectedText.length >= (wrapper.length * 2)
+            && selectedText.startsWith(wrapper)
+            && selectedText.endsWith(wrapper);
+        const hasWrapperAroundSelection = !hasWrappedSelection
+            && selectionStart >= wrapper.length
+            && value.slice(selectionStart - wrapper.length, selectionStart) === wrapper
+            && value.slice(selectionEnd, selectionEnd + wrapper.length) === wrapper;
 
-        const valueSetter = Object.getOwnPropertyDescriptor(Object.getPrototypeOf(target), "value")?.set;
-        if (valueSetter) {
-            valueSetter.call(target, nextValue);
-        } else {
-            target.value = nextValue;
+        let replaceStart = selectionStart;
+        let replaceEnd = selectionEnd;
+        let replacement = `${wrapper}${selectedText}${wrapper}`;
+        let nextSelectionStart = selectionStart + wrapper.length;
+        let nextSelectionEnd = nextSelectionStart + selectedText.length;
+
+        if (hasWrappedSelection) {
+            replacement = selectedText.slice(wrapper.length, selectedText.length - wrapper.length);
+            nextSelectionStart = selectionStart;
+            nextSelectionEnd = selectionStart + replacement.length;
+        } else if (hasWrapperAroundSelection) {
+            replaceStart = selectionStart - wrapper.length;
+            replaceEnd = selectionEnd + wrapper.length;
+            replacement = selectedText;
+            nextSelectionStart = replaceStart;
+            nextSelectionEnd = replaceStart + selectedText.length;
         }
 
-        target.dispatchEvent(new Event("input", { bubbles: true }));
+        event.preventDefault();
 
-        const nextSelectionStart = selectionStart + wrapper.length;
-        const nextSelectionEnd = nextSelectionStart + selectedText.length;
+        target.focus();
+        target.setSelectionRange(replaceStart, replaceEnd);
+
+        let usedExecCommand = false;
+        try {
+            usedExecCommand = document.execCommand("insertText", false, replacement);
+        } catch {
+            usedExecCommand = false;
+        }
+
+        if (!usedExecCommand) {
+            const nextValue = `${value.slice(0, replaceStart)}${replacement}${value.slice(replaceEnd)}`;
+            const valueSetter = Object.getOwnPropertyDescriptor(Object.getPrototypeOf(target), "value")?.set;
+            if (valueSetter) {
+                valueSetter.call(target, nextValue);
+            } else {
+                target.value = nextValue;
+            }
+            target.dispatchEvent(new Event("input", { bubbles: true }));
+        }
+
         window.requestAnimationFrame(() => {
             if (document.activeElement === target) {
                 target.setSelectionRange(nextSelectionStart, nextSelectionEnd);
@@ -2203,7 +2248,7 @@ const ScriptCreator: FC<ScriptCreatorProps> = ({ initialScript, onApply, onPrevi
                                                                 onChange={(e) => updateElement(e.target.value)}
                                                             />
                                                             <small className="script-creator__markdown-hint">
-                                                                Markdown: `#`, `**bold**`, `*italic*`, `++underline++`, `[label](url)`, `- bullets`, `&gt; quote`, `---`
+                                                                Markdown: `#`, `**bold**`, `*italic*`, `__underline__`, `~~strikethrough~~`, `[label](url)`, `- bullets`, `&gt; quote`, `---`
                                                             </small>
                                                         </label>
 
@@ -2398,7 +2443,7 @@ const ScriptCreator: FC<ScriptCreatorProps> = ({ initialScript, onApply, onPrevi
                                                             onChange={(e) => updateElement({ ...selectedElement, text: e.target.value })}
                                                         />
                                                         <small className="script-creator__markdown-hint">
-                                                            Markdown: `#`, `**bold**`, `*italic*`, `++underline++`, `[label](url)`, `- bullets`, `&gt; quote`, `---`
+                                                            Markdown: `#`, `**bold**`, `*italic*`, `__underline__`, `~~strikethrough~~`, `[label](url)`, `- bullets`, `&gt; quote`, `---`
                                                         </small>
                                                     </label>
                                                 )}
@@ -2797,7 +2842,7 @@ const ScriptCreator: FC<ScriptCreatorProps> = ({ initialScript, onApply, onPrevi
                                                         }}
                                                     />
                                                     <small className="script-creator__markdown-hint">
-                                                        Markdown: `#`, `**bold**`, `*italic*`, `++underline++`, `[label](url)`, `- bullets`, `&gt; quote`, `---`
+                                                        Markdown: `#`, `**bold**`, `*italic*`, `__underline__`, `~~strikethrough~~`, `[label](url)`, `- bullets`, `&gt; quote`, `---`
                                                     </small>
                                                 </label>
 
