@@ -17,10 +17,12 @@ import {
 } from "../../themes";
 
 const CUSTOM_SCRIPTS_STORAGE_KEY = "phosphor:custom-scripts:v1";
+const ACTIVE_SCRIPT_STORAGE_KEY = "phosphor:active-script:v1";
 const MAX_CUSTOM_SCRIPTS = 50;
 
 interface AppState {
     activeScript: BundledScript;
+    activeScriptRevision: number;
     customScripts: BundledScript[];
     activeTheme: Theme;
     customTheme: CustomThemeConfig;
@@ -47,11 +49,13 @@ class App extends Component<any, AppState> {
         const persistedTheme = loadPersistedTheme();
         const customTheme = loadPersistedCustomTheme();
         const customScripts = this._loadCustomScripts();
+        const activeScript = this._resolveInitialActiveScript(customScripts);
         this._headerRef = React.createRef<HTMLElement>();
         this._titleRef = React.createRef<HTMLSpanElement>();
         this._controlsRef = React.createRef<HTMLDivElement>();
         this.state = {
-            activeScript: DEFAULT_SCRIPT,
+            activeScript,
+            activeScriptRevision: 0,
             customScripts,
             activeTheme: persistedTheme,
             customTheme,
@@ -94,8 +98,11 @@ class App extends Component<any, AppState> {
         this._scheduleHeaderLayoutUpdate();
     }
 
-    public componentDidUpdate(): void {
+    public componentDidUpdate(_prevProps: any, prevState: AppState): void {
         this._scheduleHeaderLayoutUpdate();
+        if (prevState.activeScript.id !== this.state.activeScript.id) {
+            this._persistActiveScriptId(this.state.activeScript.id);
+        }
     }
 
     public componentWillUnmount(): void {
@@ -154,6 +161,40 @@ class App extends Component<any, AppState> {
     private _upsertCustomScripts(currentScripts: BundledScript[], nextScript: BundledScript): BundledScript[] {
         const withoutExisting = currentScripts.filter((script) => script.id !== nextScript.id);
         return [nextScript, ...withoutExisting].slice(0, MAX_CUSTOM_SCRIPTS);
+    }
+
+    private _resolveInitialActiveScript(customScripts: BundledScript[]): BundledScript {
+        const persistedId = this._readPersistedActiveScriptId();
+        if (!persistedId) {
+            return DEFAULT_SCRIPT;
+        }
+
+        const availableScripts = [...BUNDLED_SCRIPTS, ...customScripts];
+        const restored = availableScripts.find((script) => script.id === persistedId);
+        return restored || DEFAULT_SCRIPT;
+    }
+
+    private _readPersistedActiveScriptId(): string | null {
+        try {
+            const raw = localStorage.getItem(ACTIVE_SCRIPT_STORAGE_KEY);
+            if (!raw) {
+                return null;
+            }
+            return raw;
+        } catch {
+            return null;
+        }
+    }
+
+    private _persistActiveScriptId(scriptId: string): void {
+        if (!scriptId || scriptId.startsWith("custom:preview:")) {
+            return;
+        }
+        try {
+            localStorage.setItem(ACTIVE_SCRIPT_STORAGE_KEY, scriptId);
+        } catch {
+            // ignore storage write failures
+        }
     }
 
     private _handleWindowResize(): void {
@@ -311,15 +352,16 @@ class App extends Component<any, AppState> {
             });
             return;
         }
-        this.setState({
+        this.setState((prev) => ({
             activeScript: script,
+            activeScriptRevision: prev.activeScriptRevision + 1,
             scriptDropdownOpen: false,
             optionsDropdownOpen: false,
             customThemeEditorOpen: false,
             mobileMenuOpen: false,
             previewMode: false,
-            uploadError: null,
-        });
+            uploadError: null as string | null,
+        }));
     }
 
     private _handleThemeSelect(themeId: string): void {
@@ -362,7 +404,7 @@ class App extends Component<any, AppState> {
     }
 
     private _handleThemeColorChange(
-        key: "fgHex" | "alertHex" | "emphasisHex" | "noticeHex" | "systemHex",
+        key: "fgHex" | "alertHex" | "emphasisHex" | "noticeHex" | "hyperlinkHex" | "systemHex",
         value: string
     ): void {
         this.setState((prev): Pick<AppState, "customTheme" | "activeTheme"> => {
@@ -409,7 +451,7 @@ class App extends Component<any, AppState> {
             customThemeEditorOpen: false,
             mobileMenuOpen: false,
             previewMode: false,
-            uploadError: null,
+            uploadError: null as string | null,
         });
     }
 
@@ -427,6 +469,7 @@ class App extends Component<any, AppState> {
         if (cleanedJson?.config && typeof cleanedJson.config === "object") {
             delete cleanedJson.config.previewStartScreen;
             delete cleanedJson.config.previewSelectedElementIndex;
+            delete cleanedJson.config.previewSidebarListMode;
         }
 
         const label = (cleanedJson?.config?.name || "CUSTOM").toString();
@@ -443,6 +486,7 @@ class App extends Component<any, AppState> {
             this._persistCustomScripts(customScripts);
             return {
                 activeScript: customScript,
+                activeScriptRevision: prev.activeScriptRevision + 1,
                 customScripts,
                 creatorOpen: false,
                 scriptDropdownOpen: false,
@@ -455,7 +499,12 @@ class App extends Component<any, AppState> {
         });
     }
 
-    private _handleCreatorPreview(scriptJson: any, screenId: string, elementIndex: number): void {
+    private _handleCreatorPreview(
+        scriptJson: any,
+        screenId: string,
+        elementIndex: number,
+        sidebarListMode: "screens" | "dialogs"
+    ): void {
         if (!Array.isArray(scriptJson?.screens) || !scriptJson.screens.length) {
             this.setState({ uploadError: "Invalid JSON: missing 'screens' array." });
             return;
@@ -482,6 +531,7 @@ class App extends Component<any, AppState> {
             ...(previewJson.config || {}),
             previewStartScreen: screenId,
             previewSelectedElementIndex: safeElementIndex,
+            previewSidebarListMode: sidebarListMode,
         };
 
         const label = (previewJson?.config?.name || "PREVIEW").toString();
@@ -491,16 +541,17 @@ class App extends Component<any, AppState> {
             json: previewJson,
         };
 
-        this.setState({
+        this.setState((prev) => ({
             activeScript: previewScript,
+            activeScriptRevision: prev.activeScriptRevision + 1,
             creatorOpen: false,
             scriptDropdownOpen: false,
             optionsDropdownOpen: false,
             customThemeEditorOpen: false,
             mobileMenuOpen: false,
             previewMode: true,
-            uploadError: null,
-        });
+            uploadError: null as string | null,
+        }));
     }
 
     private _handlePreviewReturn(): void {
@@ -511,7 +562,7 @@ class App extends Component<any, AppState> {
             customThemeEditorOpen: false,
             mobileMenuOpen: false,
             previewMode: false,
-            uploadError: null,
+            uploadError: null as string | null,
         });
     }
 
@@ -541,6 +592,7 @@ class App extends Component<any, AppState> {
                     this._persistCustomScripts(customScripts);
                     return {
                         activeScript: customScript,
+                        activeScriptRevision: prev.activeScriptRevision + 1,
                         customScripts,
                         scriptDropdownOpen: false,
                         optionsDropdownOpen: false,
@@ -563,6 +615,7 @@ class App extends Component<any, AppState> {
     public render(): ReactElement {
         const {
             activeScript,
+            activeScriptRevision,
             customScripts,
             activeTheme,
             customTheme,
@@ -584,7 +637,7 @@ class App extends Component<any, AppState> {
                     ref={this._headerRef}
                     className={"phosphor-header" + (headerCompact ? " phosphor-header--compact" : "")}
                 >
-                    <span ref={this._titleRef} className="phosphor-header__title">PHOSPHOR v5.6</span>
+                    <span ref={this._titleRef} className="phosphor-header__title">PHOSPHOR v6.0</span>
 
                     <button
                         className="phosphor-header__btn phosphor-header__menu-btn"
@@ -782,6 +835,15 @@ class App extends Component<any, AppState> {
                                                 />
                                             </label>
                                             <label className="phosphor-header__theme-color-field">
+                                                <span>HYPERLINK</span>
+                                                <input
+                                                    type="color"
+                                                    aria-label="Custom hyperlink color"
+                                                    value={customTheme.hyperlinkHex}
+                                                    onChange={(e) => this._handleThemeColorChange("hyperlinkHex", e.target.value)}
+                                                />
+                                            </label>
+                                            <label className="phosphor-header__theme-color-field">
                                                 <span>SYSTEM</span>
                                                 <input
                                                     type="color"
@@ -821,7 +883,7 @@ class App extends Component<any, AppState> {
                 </header>
 
                 <Phosphor
-                    key={activeScript.id}
+                    key={`${activeScript.id}:${activeScriptRevision}`}
                     json={activeScript.json}
                     soundEnabled={soundEnabled}
                 />

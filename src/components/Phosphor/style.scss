@@ -124,3 +124,97 @@ body {
         background-color: rgba(var(--system-rgb), 0.75);
     }
 }
+
+.__text__ {
+    .__md-line {
+        margin: 0;
+    }
+
+    .__md-empty {
+        line-height: 0.85;
+    }
+
+    .__md-heading {
+        margin: 0.15em 0;
+        letter-spacing: 0.06em;
+        text-transform: uppercase;
+    }
+
+    .__md-heading--h1 {
+        font-size: 1.45em;
+        border-bottom: 1px solid var(--fg);
+        padding-bottom: 0.12em;
+    }
+
+    .__md-heading--h2 {
+        font-size: 1.28em;
+    }
+
+    .__md-heading--h3 {
+        font-size: 1.16em;
+    }
+
+    .__md-heading--h4,
+    .__md-heading--h5,
+    .__md-heading--h6 {
+        font-size: 1.05em;
+    }
+
+    .__md-list {
+        margin: 0.1em 0 0.1em 1.35em;
+        padding: 0;
+        list-style-type: square;
+    }
+
+    .__md-list-item {
+        margin: 0.08em 0;
+    }
+
+    .__md-blockquote {
+        margin: 0.12em 0;
+        opacity: 0.9;
+    }
+
+    .__md-quote-line {
+        --md-quote-level: 1;
+        --md-quote-gap: 0.55em;
+        --md-quote-line-width: 1px;
+        margin: 0;
+        padding-left: calc(0.65em + ((var(--md-quote-level) - 1) * var(--md-quote-gap)));
+        background-image: repeating-linear-gradient(
+            to right,
+            currentColor 0,
+            currentColor var(--md-quote-line-width),
+            transparent var(--md-quote-line-width),
+            transparent var(--md-quote-gap)
+        );
+        background-repeat: no-repeat;
+        background-position: 0 0.08em;
+        // width is (N - 1) gaps plus one line width, so depth N renders exactly N bars.
+        background-size: calc(((var(--md-quote-level) - 1) * var(--md-quote-gap)) + var(--md-quote-line-width)) calc(100% - 0.16em);
+    }
+
+    .__md-hr {
+        border: none;
+        border-top: 1px solid var(--fg);
+        margin: 0.25em 0;
+        opacity: 0.7;
+    }
+
+    .__md-underline {
+        text-decoration: underline;
+    }
+
+    .__md-link {
+        color: var(--hyperlink);
+        text-shadow: var(--hyperlink-glow);
+        text-decoration: underline;
+        text-underline-offset: 0.12em;
+
+        &:hover {
+            color: var(--bg);
+            background: var(--fg);
+            text-shadow: var(--bg-glow);
+        }
+    }
+}

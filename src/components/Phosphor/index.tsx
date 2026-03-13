@@ -39,6 +39,7 @@ import {
     TerminalScriptActionMeta,
     TerminalScriptApi,
 } from "../../scripts/terminal";
+import { markdownToPlainText } from "../../utils/markdown";
 
 interface AppState {
     screens: Screen[];
@@ -1137,6 +1138,19 @@ class Phosphor extends Component<PhosphorProps, AppState> {
         return candidate && candidate.text ? candidate.text : "";
     }
 
+    private _getCyclerClassName(className: string | undefined, states: any[]): string {
+        if (!states || !states.length) {
+            return className || "";
+        }
+
+        const active = states.find((item: any) => item && typeof item === "object" && item.active === true)
+            || states.find((item: any) => item && typeof item === "object")
+            || null;
+
+        const stateClassName = active && typeof active.className === "string" ? active.className : "";
+        return [className || "", stateClassName].filter(Boolean).join(" ").trim();
+    }
+
     private _parseScreenContentElement(element: any): any {
         // if the element is a string, we'll want to
         // split it into chunks based on the new line character
@@ -1172,7 +1186,10 @@ class Phosphor extends Component<PhosphorProps, AppState> {
         // teletype component
         if (type === ScreenDataType.Text || type === ScreenDataType.Link || type === ScreenDataType.Prompt
         ) {
-            const text = type === ScreenDataType.Prompt ? element.prompt : element.text;
+            const sourceText = type === ScreenDataType.Prompt ? element.prompt : element.text;
+            const text = (type === ScreenDataType.Text)
+                ? markdownToPlainText(sourceText || "")
+                : (sourceText || "");
             const handleRendered = () => this._activateNextScreenData();
             return (
                 <Teletype
@@ -1191,6 +1208,7 @@ class Phosphor extends Component<PhosphorProps, AppState> {
         // the toggle gets its text from the states array
         if (type === ScreenDataType.Toggle) {
             const text = this._getCyclerText(element.states);
+            const className = this._getCyclerClassName(element.className, element.states);
             const handleRendered = () => this._activateNextScreenData();
             return (
                 <Teletype
@@ -1200,13 +1218,14 @@ class Phosphor extends Component<PhosphorProps, AppState> {
                     onNewLine={this._handleTeletypeNewLine}
                     onCharDrawn={this._handleTeletypeCharDrawn}
                     autocomplete={this.state.skipTextAnimation}
-                    className={element.className}
+                    className={className}
                 />
             );
         }
 
         if (type === ScreenDataType.List) {
             const text = this._getCyclerText(element.states);
+            const className = this._getCyclerClassName(element.className, element.states);
             const handleRendered = () => this._activateNextScreenData();
             return (
                 <Teletype
@@ -1216,7 +1235,7 @@ class Phosphor extends Component<PhosphorProps, AppState> {
                     onNewLine={this._handleTeletypeNewLine}
                     onCharDrawn={this._handleTeletypeCharDrawn}
                     autocomplete={this.state.skipTextAnimation}
-                    className={element.className}
+                    className={className}
                 />
             );
         }

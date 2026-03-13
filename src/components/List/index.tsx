@@ -5,32 +5,42 @@ import "./style.scss";
 export interface ListState {
     text: string;
     active?: boolean;
+    target?: string;
+    action?: string;
+    className?: string;
 }
 
 export interface ListProps {
     states: Array<ListState | string>;
     className?: string;
     onRendered?: () => void;
-    onClick?: () => void;
+    onClick?: (state?: ListState) => void;
 }
 
 const List: FC<ListProps> = (props) => {
     const { className, states, onRendered, onClick } = props;
-    const css = [
-        "__list__",
-        className ? className : null,
-    ].join(" ").trim();
-
     const normalized = useMemo(() => {
         return (states || []).map((state) => {
             if (typeof state === "string") {
                 return { text: state, active: false };
             }
 
-            return {
+            const normalizedState: ListState = {
                 text: state.text || "",
                 active: !!state.active,
             };
+
+            if (typeof state.target === "string") {
+                normalizedState.target = state.target;
+            }
+            if (typeof state.action === "string") {
+                normalizedState.action = state.action;
+            }
+            if (typeof state.className === "string") {
+                normalizedState.className = state.className;
+            }
+
+            return normalizedState;
         }).filter((state) => state.text.length > 0);
     }, [states]);
 
@@ -47,17 +57,25 @@ const List: FC<ListProps> = (props) => {
 
     const handleRendered = () => (onRendered && onRendered());
     const handleClick = useCallback(() => {
-        onClick && onClick();
         if (!normalized.length) {
+            onClick && onClick();
             return;
         }
 
-        setIndex((current) => ((current + 1) % normalized.length));
-    }, [normalized, onClick]);
+        const nextIndex = ((index + 1) % normalized.length);
+        const nextState = normalized[nextIndex];
+        setIndex(nextIndex);
+        onClick && onClick(nextState);
+    }, [normalized, onClick, index]);
 
     useEffect(() => handleRendered());
 
     const active = normalized.length ? normalized[index] : { text: "" };
+    const css = [
+        "__list__",
+        className ? className : null,
+        active.className ? active.className : null,
+    ].join(" ").trim();
 
     return <div className={css} onClick={handleClick}>{active.text}</div>;
 };
