@@ -7,6 +7,7 @@ export interface ToggleState {
     active?: boolean;
     target?: string;
     action?: string;
+    className?: string;
 }
 
 export interface ToggleProps {
@@ -18,17 +19,22 @@ export interface ToggleProps {
 
 const Toggle: FC<ToggleProps> = (props) => {
     const { className, states, onRendered, onClick } = props;
+    const [active, setActive] = useState<ToggleState | undefined>(() => {
+        return states.find((element) => element.active === true) || states[0];
+    });
+
+    const state = active || states.find((element) => element.active === true) || states[0];
+    const text = (state && state.text) || "";
     const css = [
         "__toggle__",
         className ? className : null,
+        state?.className ? state.className : null,
     ].join(" ").trim();
 
-    // find the active state
-    const state = states.find(element => element.active === true);
-    const text = (state && state.text) || "";
-
-    // set the new active one
-    const [active, setActive] = useState(state);
+    useEffect(() => {
+        const nextActive = states.find((element) => element.active === true) || states[0];
+        setActive(nextActive);
+    }, [states]);
 
     // events
     const handleRendered = () => (onRendered && onRendered());

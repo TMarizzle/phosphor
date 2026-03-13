@@ -76,7 +76,7 @@ const APHELION_EYE_FOOTER_ELEMENT = {
     type: "bitmap",
     src: "img/Aphelion_glitch.gif",
     alt: "Aphelion eye",
-    className: "ai-eye-footer",
+    className: "footer",
     animated: false,
     scale: 0.5,
 };

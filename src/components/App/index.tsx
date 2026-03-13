@@ -21,6 +21,7 @@ const MAX_CUSTOM_SCRIPTS = 50;
 
 interface AppState {
     activeScript: BundledScript;
+    activeScriptRevision: number;
     customScripts: BundledScript[];
     activeTheme: Theme;
     customTheme: CustomThemeConfig;
@@ -52,6 +53,7 @@ class App extends Component<any, AppState> {
         this._controlsRef = React.createRef<HTMLDivElement>();
         this.state = {
             activeScript: DEFAULT_SCRIPT,
+            activeScriptRevision: 0,
             customScripts,
             activeTheme: persistedTheme,
             customTheme,
@@ -311,15 +313,16 @@ class App extends Component<any, AppState> {
             });
             return;
         }
-        this.setState({
+        this.setState((prev) => ({
             activeScript: script,
+            activeScriptRevision: prev.activeScriptRevision + 1,
             scriptDropdownOpen: false,
             optionsDropdownOpen: false,
             customThemeEditorOpen: false,
             mobileMenuOpen: false,
             previewMode: false,
-            uploadError: null,
-        });
+            uploadError: null as string | null,
+        }));
     }
 
     private _handleThemeSelect(themeId: string): void {
@@ -409,7 +412,7 @@ class App extends Component<any, AppState> {
             customThemeEditorOpen: false,
             mobileMenuOpen: false,
             previewMode: false,
-            uploadError: null,
+            uploadError: null as string | null,
         });
     }
 
@@ -443,6 +446,7 @@ class App extends Component<any, AppState> {
             this._persistCustomScripts(customScripts);
             return {
                 activeScript: customScript,
+                activeScriptRevision: prev.activeScriptRevision + 1,
                 customScripts,
                 creatorOpen: false,
                 scriptDropdownOpen: false,
@@ -491,16 +495,17 @@ class App extends Component<any, AppState> {
             json: previewJson,
         };
 
-        this.setState({
+        this.setState((prev) => ({
             activeScript: previewScript,
+            activeScriptRevision: prev.activeScriptRevision + 1,
             creatorOpen: false,
             scriptDropdownOpen: false,
             optionsDropdownOpen: false,
             customThemeEditorOpen: false,
             mobileMenuOpen: false,
             previewMode: true,
-            uploadError: null,
-        });
+            uploadError: null as string | null,
+        }));
     }
 
     private _handlePreviewReturn(): void {
@@ -511,7 +516,7 @@ class App extends Component<any, AppState> {
             customThemeEditorOpen: false,
             mobileMenuOpen: false,
             previewMode: false,
-            uploadError: null,
+            uploadError: null as string | null,
         });
     }
 
@@ -541,6 +546,7 @@ class App extends Component<any, AppState> {
                     this._persistCustomScripts(customScripts);
                     return {
                         activeScript: customScript,
+                        activeScriptRevision: prev.activeScriptRevision + 1,
                         customScripts,
                         scriptDropdownOpen: false,
                         optionsDropdownOpen: false,
@@ -563,6 +569,7 @@ class App extends Component<any, AppState> {
     public render(): ReactElement {
         const {
             activeScript,
+            activeScriptRevision,
             customScripts,
             activeTheme,
             customTheme,
@@ -584,7 +591,7 @@ class App extends Component<any, AppState> {
                     ref={this._headerRef}
                     className={"phosphor-header" + (headerCompact ? " phosphor-header--compact" : "")}
                 >
-                    <span ref={this._titleRef} className="phosphor-header__title">PHOSPHOR v5.6</span>
+                    <span ref={this._titleRef} className="phosphor-header__title">PHOSPHOR v6.0</span>
 
                     <button
                         className="phosphor-header__btn phosphor-header__menu-btn"
@@ -830,7 +837,7 @@ class App extends Component<any, AppState> {
                 </header>
 
                 <Phosphor
-                    key={activeScript.id}
+                    key={`${activeScript.id}:${activeScriptRevision}`}
                     json={activeScript.json}
                     soundEnabled={soundEnabled}
                 />

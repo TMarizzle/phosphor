@@ -322,6 +322,32 @@ $creator-dark-control-bg: rgba($creator-dark-bg, 0.92);
         @include creator-scrollbar;
     }
 
+    &__cycler {
+        display: flex;
+        flex-direction: column;
+        gap: 0.35rem;
+    }
+
+    &__cycler-list {
+        display: flex;
+        flex-direction: column;
+        gap: 0.35rem;
+    }
+
+    &__cycler-state {
+        border: 1px solid var(--fg);
+        padding: 0.25rem;
+        display: flex;
+        flex-direction: column;
+        gap: 0.25rem;
+    }
+
+    &__cycler-state-row {
+        display: grid;
+        grid-template-columns: minmax(0, 170px) minmax(0, 1fr);
+        gap: 0.35rem;
+    }
+
     &__field--fill {
         flex: 1;
         min-height: 0;
@@ -347,6 +373,10 @@ $creator-dark-control-bg: rgba($creator-dark-bg, 0.92);
 
     &__actions--footer {
         margin-top: auto;
+    }
+
+    &__actions--cycler-state {
+        gap: 0.1rem;
     }
 
     &__schema-view {
@@ -664,7 +694,8 @@ $creator-dark-control-bg: rgba($creator-dark-bg, 0.92);
         }
 
         &__row,
-        &__element-layout {
+        &__element-layout,
+        &__cycler-state-row {
             grid-template-columns: 1fr;
         }
     }

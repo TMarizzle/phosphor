@@ -13,6 +13,8 @@ type AddableElementType =
     | "text"
     | "alertText"
     | "noticeText"
+    | "emphasisText"
+    | "systemText"
     | "link"
     | "bitmap"
     | "prompt"
@@ -42,6 +44,7 @@ interface CreatorSelectProps {
 }
 
 type CreatorColorMode = "theme" | "dark" | "light";
+type CyclerStateBehavior = "none" | "link" | "action";
 
 const CREATOR_COLOR_MODE_LABELS: Record<CreatorColorMode, string> = {
     theme: "THEME",
@@ -49,10 +52,86 @@ const CREATOR_COLOR_MODE_LABELS: Record<CreatorColorMode, string> = {
     light: "LIGHT",
 };
 
+const CYCLER_STATE_BEHAVIOR_OPTIONS: CreatorSelectOption[] = [
+    { value: "none", label: "none" },
+    { value: "link", label: "link" },
+    { value: "action", label: "action" },
+];
+
 const DEFAULT_SIDEBAR_WIDTH = 340;
 const MIN_SIDEBAR_WIDTH = 220;
 const MIN_EDITOR_WIDTH = 360;
 const RESIZE_HANDLE_WIDTH = 8;
+const MARKDOWN_SHORTCUT_WRAPPERS: Record<string, string> = {
+    b: "**",
+    i: "*",
+    u: "++",
+};
+
+const getCyclerStateBehavior = (state: any): CyclerStateBehavior => {
+    if (typeof state?.action === "string" && state.action.trim().length) {
+        return "action";
+    }
+    if (typeof state?.target === "string" && state.target.trim().length) {
+        return "link";
+    }
+    return "none";
+};
+
+const normalizeCyclerStates = (states: any[], fallbackLabel: string): any[] => {
+    const source = Array.isArray(states) ? states : [];
+    const normalized = source.map((entry: any, index: number) => {
+        if (typeof entry === "string") {
+            return {
+                text: entry,
+                active: index === 0,
+            };
+        }
+
+        if (!entry || typeof entry !== "object") {
+            return {
+                text: `${fallbackLabel} ${index + 1}`,
+                active: index === 0,
+            };
+        }
+
+        const next: any = {
+            text: typeof entry.text === "string" ? entry.text : `${fallbackLabel} ${index + 1}`,
+            active: !!entry.active,
+        };
+
+        if (typeof entry.className === "string") {
+            next.className = entry.className;
+        }
+        if (typeof entry.target === "string") {
+            next.target = entry.target;
+        }
+        if (typeof entry.action === "string") {
+            next.action = entry.action;
+        }
+
+        return next;
+    });
+
+    if (!normalized.length) {
+        return [{ text: `${fallbackLabel} 1`, active: true }];
+    }
+
+    let hasActive = false;
+    normalized.forEach((state) => {
+        if (!hasActive && state.active) {
+            hasActive = true;
+            state.active = true;
+            return;
+        }
+        state.active = false;
+    });
+    if (!hasActive) {
+        normalized[0].active = true;
+    }
+
+    return normalized;
+};
 
 const getNextCreatorColorMode = (mode: CreatorColorMode): CreatorColorMode => {
     if (mode === "theme") {
@@ -177,6 +256,8 @@ const ADDABLE_ELEMENT_OPTIONS: AddableElementOption[] = [
     { value: "text", label: "Text Block" },
     { value: "alertText", label: "Alert Text" },
     { value: "noticeText", label: "Notice Text" },
+    { value: "emphasisText", label: "Emphasis Text" },
+    { value: "systemText", label: "System Text" },
     { value: "link", label: "Link Button" },
     { value: "bitmap", label: "Bitmap/Image" },
     { value: "prompt", label: "Prompt Input" },
@@ -230,7 +311,7 @@ const TOGGLE_LIST_CLASSNAME_OPTIONS = [
 
 const BITMAP_CLASSNAME_OPTIONS = [
     "",
-    "ai-eye-footer",
+    "footer",
     "monochrome",
     "luminosity",
     "light",
@@ -612,6 +693,74 @@ const ScriptCreator: FC<ScriptCreatorProps> = ({ initialScript, onApply, onPrevi
     const resizeStartXRef = useRef<number>(0);
     const resizeStartWidthRef = useRef<number>(DEFAULT_SIDEBAR_WIDTH);
 
+    const handleEditorMarkdownShortcut = (event: React.KeyboardEvent<HTMLElement>): void => {
+        if (event.defaultPrevented || event.isComposing) {
+            return;
+        }
+
+        const usesShortcutModifier = event.ctrlKey || event.metaKey;
+        if (!usesShortcutModifier || event.altKey) {
+            return;
+        }
+
+        const wrapper = MARKDOWN_SHORTCUT_WRAPPERS[event.key.toLowerCase()];
+        if (!wrapper) {
+            return;
+        }
+
+        const target = event.target;
+        if (!(target instanceof HTMLTextAreaElement || target instanceof HTMLInputElement)) {
+            return;
+        }
+
+        if (target instanceof HTMLInputElement) {
+            const inputType = (target.type || "text").toLowerCase();
+            const isTextInput = inputType === "text"
+                || inputType === "search"
+                || inputType === "url"
+                || inputType === "email"
+                || inputType === "tel"
+                || inputType === "password";
+            if (!isTextInput) {
+                return;
+            }
+        }
+
+        if (target.disabled || target.readOnly) {
+            return;
+        }
+
+        if (elementEditorMode === "raw" && target.closest(".script-creator__element-editor")) {
+            return;
+        }
+
+        event.preventDefault();
+
+        const value = target.value || "";
+        const selectionStart = typeof target.selectionStart === "number" ? target.selectionStart : value.length;
+        const selectionEnd = typeof target.selectionEnd === "number" ? target.selectionEnd : selectionStart;
+        const selectedText = value.slice(selectionStart, selectionEnd);
+        const insertedText = `${wrapper}${selectedText}${wrapper}`;
+        const nextValue = `${value.slice(0, selectionStart)}${insertedText}${value.slice(selectionEnd)}`;
+
+        const valueSetter = Object.getOwnPropertyDescriptor(Object.getPrototypeOf(target), "value")?.set;
+        if (valueSetter) {
+            valueSetter.call(target, nextValue);
+        } else {
+            target.value = nextValue;
+        }
+
+        target.dispatchEvent(new Event("input", { bubbles: true }));
+
+        const nextSelectionStart = selectionStart + wrapper.length;
+        const nextSelectionEnd = nextSelectionStart + selectedText.length;
+        window.requestAnimationFrame(() => {
+            if (document.activeElement === target) {
+                target.setSelectionRange(nextSelectionStart, nextSelectionEnd);
+            }
+        });
+    };
+
     const selectedScreen = useMemo(() => {
         return script.screens.find((screen: any) => screen.id === selectedScreenId) || null;
     }, [script, selectedScreenId]);
@@ -625,6 +774,14 @@ const ScriptCreator: FC<ScriptCreatorProps> = ({ initialScript, onApply, onPrevi
         && typeof selectedElement === "object"
         && typeof selectedElement.type === "string"
     ) ? selectedElement.type.toLowerCase() : "";
+    const selectedElementIsCycler = selectedElementType === "toggle" || selectedElementType === "list";
+    const selectedCyclerStates = useMemo(() => {
+        if (!selectedElementIsCycler) {
+            return [];
+        }
+        const fallbackLabel = selectedElementType === "list" ? "ITEM" : "OPTION";
+        return normalizeCyclerStates((selectedElement as any)?.states, fallbackLabel);
+    }, [selectedElement, selectedElementIsCycler, selectedElementType]);
     const classNameOptions = useMemo(() => {
         return getClassNameOptionsForElementType(selectedElementType);
     }, [selectedElementType]);
@@ -647,6 +804,9 @@ const ScriptCreator: FC<ScriptCreatorProps> = ({ initialScript, onApply, onPrevi
     const classNameSelectOptions = useMemo(() => {
         return toCreatorSelectOptions(classNameOptions, "(none)");
     }, [classNameOptions]);
+    const cyclerStateClassNameSelectOptions = useMemo(() => {
+        return toCreatorSelectOptions(TOGGLE_LIST_CLASSNAME_OPTIONS, "(none)");
+    }, []);
     const schemaRootSelectOptions = useMemo(() => {
         return schemaData.screenIds.map((id) => ({ value: id, label: id }));
     }, [schemaData.screenIds]);
@@ -772,6 +932,22 @@ const ScriptCreator: FC<ScriptCreatorProps> = ({ initialScript, onApply, onPrevi
                     type: "text",
                     text: "Notice message",
                     className: "notice",
+                };
+                break;
+
+            case "emphasisText":
+                element = {
+                    type: "text",
+                    text: "Emphasis text",
+                    className: "emphasis",
+                };
+                break;
+
+            case "systemText":
+                element = {
+                    type: "text",
+                    text: "System message",
+                    className: "system",
                 };
                 break;
 
@@ -928,6 +1104,57 @@ const ScriptCreator: FC<ScriptCreatorProps> = ({ initialScript, onApply, onPrevi
         updateScreen({ content: nextContent });
     };
 
+    const updateCyclerStates = (updater: (prevStates: any[]) => any[]) => {
+        if (!selectedElement || typeof selectedElement !== "object" || !selectedElementIsCycler) {
+            return;
+        }
+
+        const fallbackLabel = selectedElementType === "list" ? "ITEM" : "OPTION";
+        const currentStates = normalizeCyclerStates((selectedElement as any).states, fallbackLabel);
+        const candidate = updater(currentStates);
+        const nextStates = normalizeCyclerStates(candidate, fallbackLabel);
+        updateElement({
+            ...selectedElement,
+            states: nextStates,
+        });
+    };
+
+    const addCyclerState = () => {
+        const label = selectedElementType === "list" ? "ITEM" : "OPTION";
+        updateCyclerStates((prevStates) => {
+            const nextIndex = prevStates.length + 1;
+            return [
+                ...prevStates,
+                {
+                    text: `> ${label} ${nextIndex}`,
+                    active: false,
+                },
+            ];
+        });
+    };
+
+    const removeCyclerState = (index: number) => {
+        updateCyclerStates((prevStates) => {
+            if (prevStates.length <= 1) {
+                return prevStates;
+            }
+            return prevStates.filter((_: any, stateIndex: number) => stateIndex !== index);
+        });
+    };
+
+    const moveCyclerState = (index: number, direction: -1 | 1) => {
+        updateCyclerStates((prevStates) => {
+            const toIndex = index + direction;
+            if (index < 0 || toIndex < 0 || index >= prevStates.length || toIndex >= prevStates.length) {
+                return prevStates;
+            }
+
+            const nextStates = [...prevStates];
+            [nextStates[index], nextStates[toIndex]] = [nextStates[toIndex], nextStates[index]];
+            return nextStates;
+        });
+    };
+
     const renameScreenId = (nextIdRaw: string) => {
         if (!selectedScreen) {
             return;
@@ -1071,6 +1298,7 @@ const ScriptCreator: FC<ScriptCreatorProps> = ({ initialScript, onApply, onPrevi
     return (
         <section
             className={`script-creator script-creator--${creatorColorMode}${isResizingSidebar ? " script-creator--resizing" : ""}`}
+            onKeyDown={handleEditorMarkdownShortcut}
             onClick={onClose}
         >
             <div className="script-creator__panel" onClick={(e) => e.stopPropagation()}>
@@ -1315,6 +1543,187 @@ const ScriptCreator: FC<ScriptCreatorProps> = ({ initialScript, onApply, onPrevi
                                                             Markdown: `#`, `**bold**`, `*italic*`, `++underline++`, `[label](url)`, `- bullets`, `&gt; quote`, `---`
                                                         </small>
                                                     </label>
+                                                )}
+
+                                                {selectedElement && typeof selectedElement === "object" && (selectedElement.type === "toggle" || selectedElement.type === "list") && (
+                                                    <div className="script-creator__cycler">
+                                                        <div className="script-creator__list-header">
+                                                            <span>States</span>
+                                                            <button className="script-creator__btn" onClick={addCyclerState}>[+ STATE]</button>
+                                                        </div>
+
+                                                        <div className="script-creator__cycler-list">
+                                                            {selectedCyclerStates.map((state: any, stateIndex: number) => {
+                                                                const behavior = getCyclerStateBehavior(state);
+                                                                return (
+                                                                    <div key={`state-${stateIndex}`} className="script-creator__cycler-state">
+                                                                        <label className="script-creator__field">
+                                                                            <span>Text</span>
+                                                                            <input
+                                                                                value={state.text || ""}
+                                                                                onChange={(e) => {
+                                                                                    const nextText = e.target.value;
+                                                                                    updateCyclerStates((prevStates) => {
+                                                                                        return prevStates.map((entry: any, index: number) => {
+                                                                                            return index === stateIndex
+                                                                                                ? { ...entry, text: nextText }
+                                                                                                : entry;
+                                                                                        });
+                                                                                    });
+                                                                                }}
+                                                                            />
+                                                                        </label>
+
+                                                                        <div className="script-creator__cycler-state-row">
+                                                                            <label className="script-creator__field">
+                                                                                <span>Behavior</span>
+                                                                                <CreatorSelect
+                                                                                    value={behavior}
+                                                                                    options={CYCLER_STATE_BEHAVIOR_OPTIONS}
+                                                                                    onChange={(nextBehaviorRaw) => {
+                                                                                        const nextBehavior = nextBehaviorRaw as CyclerStateBehavior;
+                                                                                        updateCyclerStates((prevStates) => {
+                                                                                            return prevStates.map((entry: any, index: number) => {
+                                                                                                if (index !== stateIndex) {
+                                                                                                    return entry;
+                                                                                                }
+
+                                                                                                const nextState: any = { ...entry };
+                                                                                                if (nextBehavior === "none") {
+                                                                                                    delete nextState.target;
+                                                                                                    delete nextState.action;
+                                                                                                    return nextState;
+                                                                                                }
+
+                                                                                                if (typeof nextState.target !== "string") {
+                                                                                                    nextState.target = selectedScreen?.id || "";
+                                                                                                }
+
+                                                                                                if (nextBehavior === "link") {
+                                                                                                    delete nextState.action;
+                                                                                                    return nextState;
+                                                                                                }
+
+                                                                                                if (typeof nextState.action !== "string" || !nextState.action.trim().length) {
+                                                                                                    nextState.action = "resetState";
+                                                                                                }
+
+                                                                                                return nextState;
+                                                                                            });
+                                                                                        });
+                                                                                    }}
+                                                                                />
+                                                                            </label>
+
+                                                                            <label className="script-creator__field">
+                                                                                <span>Class Name</span>
+                                                                                <CreatorSelect
+                                                                                    value={state.className || ""}
+                                                                                    options={cyclerStateClassNameSelectOptions}
+                                                                                    onChange={(nextClassName) => {
+                                                                                        updateCyclerStates((prevStates) => {
+                                                                                            return prevStates.map((entry: any, index: number) => {
+                                                                                                if (index !== stateIndex) {
+                                                                                                    return entry;
+                                                                                                }
+
+                                                                                                if (!nextClassName.length) {
+                                                                                                    const nextState = { ...entry };
+                                                                                                    delete nextState.className;
+                                                                                                    return nextState;
+                                                                                                }
+
+                                                                                                return {
+                                                                                                    ...entry,
+                                                                                                    className: nextClassName,
+                                                                                                };
+                                                                                            });
+                                                                                        });
+                                                                                    }}
+                                                                                />
+                                                                            </label>
+                                                                        </div>
+
+                                                                        {(behavior === "link" || behavior === "action") && (
+                                                                            <label className="script-creator__field">
+                                                                                <span>Target Screen</span>
+                                                                                <input
+                                                                                    value={state.target || ""}
+                                                                                    onChange={(e) => {
+                                                                                        const nextTarget = e.target.value;
+                                                                                        updateCyclerStates((prevStates) => {
+                                                                                            return prevStates.map((entry: any, index: number) => {
+                                                                                                return index === stateIndex
+                                                                                                    ? { ...entry, target: nextTarget }
+                                                                                                    : entry;
+                                                                                            });
+                                                                                        });
+                                                                                    }}
+                                                                                />
+                                                                            </label>
+                                                                        )}
+
+                                                                        {behavior === "action" && (
+                                                                            <label className="script-creator__field">
+                                                                                <span>Action</span>
+                                                                                <input
+                                                                                    value={state.action || ""}
+                                                                                    onChange={(e) => {
+                                                                                        const nextAction = e.target.value;
+                                                                                        updateCyclerStates((prevStates) => {
+                                                                                            return prevStates.map((entry: any, index: number) => {
+                                                                                                return index === stateIndex
+                                                                                                    ? { ...entry, action: nextAction }
+                                                                                                    : entry;
+                                                                                            });
+                                                                                        });
+                                                                                    }}
+                                                                                />
+                                                                            </label>
+                                                                        )}
+
+                                                                        <div className="script-creator__actions script-creator__actions--cycler-state">
+                                                                            <button
+                                                                                className="script-creator__btn"
+                                                                                onClick={() => {
+                                                                                    updateCyclerStates((prevStates) => {
+                                                                                        return prevStates.map((entry: any, index: number) => ({
+                                                                                            ...entry,
+                                                                                            active: index === stateIndex,
+                                                                                        }));
+                                                                                    });
+                                                                                }}
+                                                                                disabled={!!state.active}
+                                                                            >
+                                                                                [SET ACTIVE]
+                                                                            </button>
+                                                                            <button
+                                                                                className="script-creator__btn"
+                                                                                onClick={() => moveCyclerState(stateIndex, -1)}
+                                                                                disabled={stateIndex === 0}
+                                                                            >
+                                                                                [UP]
+                                                                            </button>
+                                                                            <button
+                                                                                className="script-creator__btn"
+                                                                                onClick={() => moveCyclerState(stateIndex, 1)}
+                                                                                disabled={stateIndex === selectedCyclerStates.length - 1}
+                                                                            >
+                                                                                [DOWN]
+                                                                            </button>
+                                                                            <button
+                                                                                className="script-creator__btn"
+                                                                                onClick={() => removeCyclerState(stateIndex)}
+                                                                                disabled={selectedCyclerStates.length <= 1}
+                                                                            >
+                                                                                [DELETE]
+                                                                            </button>
+                                                                        </div>
+                                                                    </div>
+                                                                );
+                                                            })}
+                                                        </div>
+                                                    </div>
                                                 )}
 
                                                 {selectedElement && typeof selectedElement === "object" && (selectedElement.type === "bitmap" || selectedElement.type === "image") && (
