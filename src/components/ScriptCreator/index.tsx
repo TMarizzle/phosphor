@@ -4,7 +4,12 @@ import "./style.scss";
 interface ScriptCreatorProps {
     initialScript: any;
     onApply: (scriptJson: any) => void;
-    onPreview: (scriptJson: any, screenId: string, elementIndex: number) => void;
+    onPreview: (
+        scriptJson: any,
+        screenId: string,
+        elementIndex: number,
+        sidebarListMode: "screens" | "dialogs"
+    ) => void;
     onClose: () => void;
 }
 
@@ -45,6 +50,14 @@ interface CreatorSelectProps {
 
 type CreatorColorMode = "theme" | "dark" | "light";
 type CyclerStateBehavior = "none" | "link" | "action";
+type LinkTargetType = "link" | "dialog" | "action" | "href";
+
+interface LinkTargetEntry {
+    type: LinkTargetType;
+    target: string;
+    shiftKey: boolean;
+    action?: string;
+}
 
 const CREATOR_COLOR_MODE_LABELS: Record<CreatorColorMode, string> = {
     theme: "THEME",
@@ -56,6 +69,13 @@ const CYCLER_STATE_BEHAVIOR_OPTIONS: CreatorSelectOption[] = [
     { value: "none", label: "none" },
     { value: "link", label: "link" },
     { value: "action", label: "action" },
+];
+
+const LINK_TARGET_TYPE_OPTIONS: CreatorSelectOption[] = [
+    { value: "link", label: "link" },
+    { value: "dialog", label: "dialog" },
+    { value: "action", label: "action" },
+    { value: "href", label: "href" },
 ];
 
 const DEFAULT_SIDEBAR_WIDTH = 340;
@@ -131,6 +151,181 @@ const normalizeCyclerStates = (states: any[], fallbackLabel: string): any[] => {
     }
 
     return normalized;
+};
+
+const asLinkTargetType = (value: any, fallbackType: LinkTargetType): LinkTargetType => {
+    if (typeof value !== "string") {
+        return fallbackType;
+    }
+
+    const normalized = value.toLowerCase();
+    if (normalized === "link" || normalized === "dialog" || normalized === "action" || normalized === "href") {
+        return normalized;
+    }
+    return fallbackType;
+};
+
+const normalizeLinkTargets = (
+    rawTarget: any,
+    fallbackType: LinkTargetType,
+    fallbackTarget: string
+): LinkTargetEntry[] => {
+    const normalizeOne = (entry: any): LinkTargetEntry | null => {
+        if (!entry || typeof entry !== "object") {
+            return null;
+        }
+
+        const type = asLinkTargetType(entry.type, fallbackType);
+        const target = typeof entry.target === "string" ? entry.target : "";
+        const action = typeof entry.action === "string" ? entry.action : undefined;
+        return {
+            type,
+            target,
+            shiftKey: !!entry.shiftKey,
+            action,
+        };
+    };
+
+    const fromString = (target: string): LinkTargetEntry[] => ([
+        {
+            type: fallbackType,
+            target,
+            shiftKey: false,
+        },
+    ]);
+
+    if (typeof rawTarget === "string") {
+        return fromString(rawTarget);
+    }
+
+    if (Array.isArray(rawTarget)) {
+        const normalized = rawTarget
+            .map(normalizeOne)
+            .filter((entry: LinkTargetEntry | null): entry is LinkTargetEntry => !!entry);
+        if (normalized.length) {
+            return normalized;
+        }
+    } else {
+        const one = normalizeOne(rawTarget);
+        if (one) {
+            return [one];
+        }
+    }
+
+    return fromString(fallbackTarget);
+};
+
+const serializeLinkTargets = (
+    entries: LinkTargetEntry[],
+    fallbackType: LinkTargetType
+): string | Array<Record<string, any>> => {
+    const cleaned = entries
+        .map((entry) => {
+            const type = asLinkTargetType(entry.type, fallbackType);
+            const target = (entry.target || "").trim();
+            const shiftKey = !!entry.shiftKey;
+
+            if (type === "action") {
+                const action = (entry.action || "").trim();
+                if (!action.length && !target.length) {
+                    return null;
+                }
+
+                const next: Record<string, any> = {
+                    type: "action",
+                    action: action.length ? action : "resetState",
+                };
+                if (target.length) {
+                    next.target = target;
+                }
+                if (shiftKey) {
+                    next.shiftKey = true;
+                }
+                return next;
+            }
+
+            if (!target.length) {
+                return null;
+            }
+
+            const next: Record<string, any> = {
+                type,
+                target,
+            };
+            if (shiftKey) {
+                next.shiftKey = true;
+            }
+            return next;
+        })
+        .filter((entry): entry is Record<string, any> => !!entry);
+
+    if (!cleaned.length) {
+        return "";
+    }
+
+    if (
+        cleaned.length === 1
+        && cleaned[0].type === fallbackType
+        && cleaned[0].shiftKey !== true
+        && cleaned[0].type !== "action"
+        && typeof cleaned[0].target === "string"
+    ) {
+        return cleaned[0].target;
+    }
+
+    return cleaned;
+};
+
+const removeDialogTargetsFromElement = (entry: any, dialogId: string): any => {
+    if (!entry || typeof entry !== "object") {
+        return entry;
+    }
+
+    const type = typeof entry.type === "string" ? entry.type.toLowerCase() : "";
+    if (type !== "link" && type !== "href") {
+        return entry;
+    }
+
+    const fallbackType: LinkTargetType = type === "href" ? "href" : "link";
+    const normalized = normalizeLinkTargets(entry.target, fallbackType, "");
+    const filtered = normalized.filter((targetEntry) => {
+        return !(targetEntry.type === "dialog" && targetEntry.target === dialogId);
+    });
+    const nextTarget = serializeLinkTargets(filtered, fallbackType);
+
+    return {
+        ...entry,
+        target: nextTarget,
+    };
+};
+
+const replaceDialogTargetsInElement = (entry: any, fromDialogId: string, toDialogId: string): any => {
+    if (!entry || typeof entry !== "object") {
+        return entry;
+    }
+
+    const type = typeof entry.type === "string" ? entry.type.toLowerCase() : "";
+    if (type !== "link" && type !== "href") {
+        return entry;
+    }
+
+    const fallbackType: LinkTargetType = type === "href" ? "href" : "link";
+    const normalized = normalizeLinkTargets(entry.target, fallbackType, "");
+    const nextTargets = normalized.map((targetEntry) => {
+        if (targetEntry.type !== "dialog" || targetEntry.target !== fromDialogId) {
+            return targetEntry;
+        }
+        return {
+            ...targetEntry,
+            target: toDialogId,
+        };
+    });
+    const nextTarget = serializeLinkTargets(nextTargets, fallbackType);
+
+    return {
+        ...entry,
+        target: nextTarget,
+    };
 };
 
 const getNextCreatorColorMode = (mode: CreatorColorMode): CreatorColorMode => {
@@ -336,6 +531,12 @@ const SCREEN_TYPE_OPTIONS: CreatorSelectOption[] = [
     { value: "static", label: "static" },
 ];
 
+const DIALOG_TYPE_OPTIONS: CreatorSelectOption[] = [
+    { value: "alert", label: "alert" },
+    { value: "confirm", label: "confirm" },
+    { value: "dialog", label: "dialog" },
+];
+
 const BOOLEAN_OPTIONS: CreatorSelectOption[] = [
     { value: "false", label: "false" },
     { value: "true", label: "true" },
@@ -403,6 +604,17 @@ const ensureScriptShape = (raw: any): any => {
             content: Array.isArray(screen.content) ? screen.content : [],
         }));
 
+    base.dialogs = base.dialogs
+        .filter((dialog: any) => dialog && typeof dialog === "object")
+        .map((dialog: any, index: number) => ({
+            ...dialog,
+            id: typeof dialog.id === "string" && dialog.id.trim() ? dialog.id : `dialog${index}`,
+            type: typeof dialog.type === "string" ? dialog.type : "alert",
+            content: Array.isArray(dialog.content)
+                ? dialog.content
+                : (typeof dialog.content === "string" ? [dialog.content] : []),
+        }));
+
     return base;
 };
 
@@ -428,6 +640,19 @@ const uniqueTargets = (targets: string[]): string[] => {
     return Array.from(new Set(targets.filter((target) => typeof target === "string" && target.trim().length > 0)));
 };
 
+const DIALOG_SCHEMA_NODE_PREFIX = "dialog::";
+
+const toDialogSchemaNodeId = (dialogId: string): string => {
+    return `${DIALOG_SCHEMA_NODE_PREFIX}${dialogId}`;
+};
+
+const getSchemaNodeLabel = (nodeId: string): string => {
+    if (!nodeId.startsWith(DIALOG_SCHEMA_NODE_PREFIX)) {
+        return nodeId;
+    }
+    return `[DIALOG] ${nodeId.slice(DIALOG_SCHEMA_NODE_PREFIX.length)}`;
+};
+
 const readScreenTargetsFromAction = (action: any): string[] => {
     if (!action || typeof action !== "object") {
         return [];
@@ -451,10 +676,17 @@ const readScreenTargetsFromAction = (action: any): string[] => {
             return [];
         }
         const targetType = typeof targetEntry.type === "string" ? targetEntry.type.toLowerCase() : "";
-        if (targetType !== "link" && targetType !== "href") {
+        if (targetType !== "link" && targetType !== "href" && targetType !== "dialog") {
             return [];
         }
-        return typeof targetEntry.target === "string" ? [targetEntry.target] : [];
+        if (typeof targetEntry.target !== "string") {
+            return [];
+        }
+        return [
+            targetType === "dialog"
+                ? toDialogSchemaNodeId(targetEntry.target)
+                : targetEntry.target,
+        ];
     }));
 };
 
@@ -503,12 +735,27 @@ const readScreenTargetsFromElement = (element: any): string[] => {
     return [];
 };
 
-const buildScreenConnectionMap = (script: any): { screenIds: string[]; connectionMap: Record<string, string[]> } => {
+const buildScreenConnectionMap = (script: any): {
+    screenIds: string[];
+    nodeIds: string[];
+    connectionMap: Record<string, string[]>;
+    nodeLabelById: Record<string, string>;
+} => {
     const screens = Array.isArray(script?.screens) ? script.screens : [];
+    const dialogs = Array.isArray(script?.dialogs) ? script.dialogs : [];
     const screenIds: string[] = screens
         .map((screen: any): string => (typeof screen?.id === "string" ? screen.id : ""))
         .filter((id: string) => id.length > 0);
-    const idSet = new Set(screenIds);
+    const dialogNodeIds: string[] = dialogs
+        .map((dialog: any): string => (typeof dialog?.id === "string" ? dialog.id : ""))
+        .filter((id: string) => id.length > 0)
+        .map((id: string) => toDialogSchemaNodeId(id));
+    const nodeIds: string[] = [...screenIds, ...dialogNodeIds];
+    const idSet = new Set(nodeIds);
+    const nodeLabelById: Record<string, string> = {};
+    nodeIds.forEach((id) => {
+        nodeLabelById[id] = getSchemaNodeLabel(id);
+    });
 
     const connectionMap: Record<string, string[]> = {};
     screens.forEach((screen: any) => {
@@ -529,7 +776,7 @@ const buildScreenConnectionMap = (script: any): { screenIds: string[]; connectio
         connectionMap[screen.id] = uniqueTargets(rawTargets).filter((target) => idSet.has(target));
     });
 
-    screenIds.forEach((id) => {
+    nodeIds.forEach((id) => {
         if (!connectionMap[id]) {
             connectionMap[id] = [];
         }
@@ -537,17 +784,24 @@ const buildScreenConnectionMap = (script: any): { screenIds: string[]; connectio
 
     return {
         screenIds,
+        nodeIds,
         connectionMap,
+        nodeLabelById,
     };
 };
 
-const buildSchemaTreeLines = (rootId: string, screenIds: string[], connectionMap: Record<string, string[]>): string[] => {
-    if (!screenIds.length) {
+const buildSchemaTreeLines = (
+    rootId: string,
+    nodeIds: string[],
+    connectionMap: Record<string, string[]>,
+    nodeLabelById: Record<string, string>
+): string[] => {
+    if (!nodeIds.length) {
         return ["No screens available."];
     }
 
-    const firstRoot = screenIds.includes(rootId) ? rootId : screenIds[0];
-    const lines: string[] = [firstRoot];
+    const firstRoot = nodeIds.includes(rootId) ? rootId : nodeIds[0];
+    const lines: string[] = [nodeLabelById[firstRoot] || firstRoot];
     const globalSeen = new Set<string>([firstRoot]);
     const visited = new Set<string>([firstRoot]);
 
@@ -556,18 +810,19 @@ const buildSchemaTreeLines = (rootId: string, screenIds: string[], connectionMap
         children.forEach((childId, index) => {
             const isLast = index === children.length - 1;
             const connector = `${prefix}${isLast ? "└─ " : "├─ "}`;
+            const label = nodeLabelById[childId] || childId;
 
             if (ancestors.has(childId)) {
-                lines.push(`${connector}${childId} (cycle)`);
+                lines.push(`${connector}${label} (cycle)`);
                 return;
             }
 
             if (globalSeen.has(childId)) {
-                lines.push(`${connector}${childId} (seen)`);
+                lines.push(`${connector}${label} (seen)`);
                 return;
             }
 
-            lines.push(`${connector}${childId}`);
+            lines.push(`${connector}${label}`);
             globalSeen.add(childId);
             visited.add(childId);
             const nextAncestors = new Set(ancestors);
@@ -578,12 +833,12 @@ const buildSchemaTreeLines = (rootId: string, screenIds: string[], connectionMap
 
     drawChildren(firstRoot, "", new Set([firstRoot]));
 
-    const disconnected = screenIds.filter((id) => !visited.has(id));
+    const disconnected = nodeIds.filter((id) => !visited.has(id));
     if (disconnected.length) {
         lines.push("");
         lines.push("Unreached from selected root:");
         disconnected.forEach((id) => {
-            lines.push(id);
+            lines.push(nodeLabelById[id] || id);
             globalSeen.add(id);
             visited.add(id);
             drawChildren(id, "", new Set([id]));
@@ -614,6 +869,14 @@ const getInitialSelectedElementIndex = (initialScript: any, screenId: string): n
         return 0;
     }
     return Math.min(maxIndex, Math.max(0, Math.floor(preferred)));
+};
+
+const getInitialSidebarListMode = (initialScript: any): "screens" | "dialogs" => {
+    const preferred = initialScript?.config?.previewSidebarListMode;
+    if (preferred === "dialogs") {
+        return "dialogs";
+    }
+    return "screens";
 };
 
 const getClassNameOptionsForElementType = (elementType: string): string[] => {
@@ -681,8 +944,12 @@ const ScriptCreator: FC<ScriptCreatorProps> = ({ initialScript, onApply, onPrevi
     const [selectedElementIndex, setSelectedElementIndex] = useState<number>(() => {
         return getInitialSelectedElementIndex(initialScript, initialSelectedScreenId);
     });
+    const initialSidebarListMode = getInitialSidebarListMode(initialScript);
     const [newElementType, setNewElementType] = useState<AddableElementType>("plainText");
     const [rawElementError, setRawElementError] = useState<string | null>(null);
+    const [selectedDialogFocusId, setSelectedDialogFocusId] = useState<string>("");
+    const [selectedDialogContentIndex, setSelectedDialogContentIndex] = useState<number>(0);
+    const [sidebarListMode, setSidebarListMode] = useState<"screens" | "dialogs">(initialSidebarListMode);
     const [elementEditorMode, setElementEditorMode] = useState<"fields" | "raw">("fields");
     const [activeView, setActiveView] = useState<"editor" | "schema">("editor");
     const [creatorColorMode, setCreatorColorMode] = useState<CreatorColorMode>("theme");
@@ -764,9 +1031,43 @@ const ScriptCreator: FC<ScriptCreatorProps> = ({ initialScript, onApply, onPrevi
     const selectedScreen = useMemo(() => {
         return script.screens.find((screen: any) => screen.id === selectedScreenId) || null;
     }, [script, selectedScreenId]);
+    const selectedDialog = useMemo(() => {
+        return script.dialogs.find((dialog: any) => {
+            return dialog && typeof dialog.id === "string" && dialog.id === selectedDialogFocusId;
+        }) || null;
+    }, [script, selectedDialogFocusId]);
     const selectedScreenIndex = script.screens.findIndex((screen: any) => screen.id === selectedScreenId);
     const canMoveScreenUp = selectedScreenIndex > 0;
     const canMoveScreenDown = selectedScreenIndex >= 0 && selectedScreenIndex < (script.screens.length - 1);
+    const selectedDialogIndex = script.dialogs.findIndex((dialog: any) => {
+        return dialog && typeof dialog.id === "string" && dialog.id === selectedDialogFocusId;
+    });
+    const canMoveDialogUp = selectedDialogIndex > 0;
+    const canMoveDialogDown = selectedDialogIndex >= 0 && selectedDialogIndex < (script.dialogs.length - 1);
+    const canDeleteDialog = selectedDialogIndex >= 0;
+    const selectedDialogContent = Array.isArray(selectedDialog?.content) ? selectedDialog.content : [];
+    const selectedDialogContentEntry = selectedDialogContent[selectedDialogContentIndex];
+    const selectedDialogContentEntryIsObject = !!selectedDialogContentEntry && typeof selectedDialogContentEntry === "object";
+    const selectedDialogContentEntryType = selectedDialogContentEntryIsObject
+        && typeof (selectedDialogContentEntry as any).type === "string"
+        ? ((selectedDialogContentEntry as any).type as string).toLowerCase()
+        : "";
+    const selectedDialogContentEntryIsBitmap = selectedDialogContentEntryType === "bitmap";
+    const selectedDialogContentEntryIsTextLike = selectedDialogContentEntry !== undefined && !selectedDialogContentEntryIsBitmap;
+    const selectedDialogTextValue = typeof selectedDialogContentEntry === "string"
+        ? selectedDialogContentEntry
+        : (selectedDialogContentEntryIsObject && typeof (selectedDialogContentEntry as any).text === "string"
+            ? (selectedDialogContentEntry as any).text
+            : "");
+    const selectedDialogTextClassName = selectedDialogContentEntryIsObject
+        && typeof (selectedDialogContentEntry as any).className === "string"
+        ? (selectedDialogContentEntry as any).className
+        : "";
+    const canMoveDialogContentUp = selectedDialogContentIndex > 0;
+    const canMoveDialogContentDown = selectedDialogContentIndex >= 0 && selectedDialogContentIndex < (selectedDialogContent.length - 1);
+    const canDeleteDialogContent = selectedDialogContent.length > 0
+        && selectedDialogContentIndex >= 0
+        && selectedDialogContentIndex < selectedDialogContent.length;
 
     const selectedElement = selectedScreen?.content?.[selectedElementIndex];
     const canMoveElementUp = selectedElementIndex > 0;
@@ -779,6 +1080,14 @@ const ScriptCreator: FC<ScriptCreatorProps> = ({ initialScript, onApply, onPrevi
         && typeof selectedElement === "object"
         && typeof selectedElement.type === "string"
     ) ? selectedElement.type.toLowerCase() : "";
+    const selectedElementIsLinkLike = selectedElementType === "link" || selectedElementType === "href";
+    const selectedLinkTargets = useMemo(() => {
+        if (!selectedElementIsLinkLike || !selectedElement || typeof selectedElement !== "object") {
+            return [];
+        }
+        const fallbackType: LinkTargetType = selectedElementType === "href" ? "href" : "link";
+        return normalizeLinkTargets((selectedElement as any).target, fallbackType, selectedScreen?.id || "");
+    }, [selectedElement, selectedElementIsLinkLike, selectedElementType, selectedScreen?.id]);
     const selectedElementIsCycler = selectedElementType === "toggle" || selectedElementType === "list";
     const selectedCyclerStates = useMemo(() => {
         if (!selectedElementIsCycler) {
@@ -804,7 +1113,12 @@ const ScriptCreator: FC<ScriptCreatorProps> = ({ initialScript, onApply, onPrevi
         return schemaData.screenIds[0];
     }, [schemaData, schemaRootId, selectedScreenId]);
     const schemaLines = useMemo(() => {
-        return buildSchemaTreeLines(effectiveSchemaRootId, schemaData.screenIds, schemaData.connectionMap);
+        return buildSchemaTreeLines(
+            effectiveSchemaRootId,
+            schemaData.nodeIds,
+            schemaData.connectionMap,
+            schemaData.nodeLabelById
+        );
     }, [effectiveSchemaRootId, schemaData]);
     const classNameSelectOptions = useMemo(() => {
         return toCreatorSelectOptions(classNameOptions, "(none)");
@@ -815,6 +1129,41 @@ const ScriptCreator: FC<ScriptCreatorProps> = ({ initialScript, onApply, onPrevi
     const schemaRootSelectOptions = useMemo(() => {
         return schemaData.screenIds.map((id) => ({ value: id, label: id }));
     }, [schemaData.screenIds]);
+    const dialogIdSelectOptions = useMemo(() => {
+        return (script.dialogs || [])
+            .filter((dialog: any) => dialog && typeof dialog.id === "string" && dialog.id.trim().length > 0)
+            .map((dialog: any) => ({ value: dialog.id, label: dialog.id }));
+    }, [script.dialogs]);
+
+    useEffect(() => {
+        const dialogIds = script.dialogs
+            .filter((dialog: any) => dialog && typeof dialog.id === "string" && dialog.id.length)
+            .map((dialog: any) => dialog.id);
+
+        if (!dialogIds.length) {
+            if (selectedDialogFocusId.length) {
+                setSelectedDialogFocusId("");
+            }
+            return;
+        }
+
+        if (!selectedDialogFocusId.length) {
+            setSelectedDialogFocusId(dialogIds[0]);
+            return;
+        }
+
+        const exists = dialogIds.includes(selectedDialogFocusId);
+        if (!exists) {
+            setSelectedDialogFocusId(dialogIds[0]);
+        }
+    }, [script.dialogs, selectedDialogFocusId]);
+
+    useEffect(() => {
+        const maxIndex = Math.max(0, selectedDialogContent.length - 1);
+        if (selectedDialogContentIndex > maxIndex) {
+            setSelectedDialogContentIndex(maxIndex);
+        }
+    }, [selectedDialogContent, selectedDialogContentIndex]);
 
     const clampSidebarWidth = (nextWidth: number): number => {
         const bodyWidth = bodyRef.current?.clientWidth || 0;
@@ -857,6 +1206,25 @@ const ScriptCreator: FC<ScriptCreatorProps> = ({ initialScript, onApply, onPrevi
         }));
     };
 
+    const updateDialog = (patch: Record<string, any>) => {
+        if (!selectedDialog) {
+            return;
+        }
+
+        updateScript((prev) => ({
+            ...prev,
+            dialogs: prev.dialogs.map((dialog: any) => {
+                if (!dialog || dialog.id !== selectedDialog.id) {
+                    return dialog;
+                }
+                return {
+                    ...dialog,
+                    ...patch,
+                };
+            }),
+        }));
+    };
+
     const addScreen = () => {
         const newId = nextScreenId(script.screens);
         updateScript((prev) => ({
@@ -870,6 +1238,7 @@ const ScriptCreator: FC<ScriptCreatorProps> = ({ initialScript, onApply, onPrevi
                 },
             ],
         }));
+        setSidebarListMode("screens");
         setSelectedScreenId(newId);
         setSelectedElementIndex(0);
     };
@@ -903,6 +1272,227 @@ const ScriptCreator: FC<ScriptCreatorProps> = ({ initialScript, onApply, onPrevi
                 screens: nextScreens,
             };
         });
+    };
+
+    const addDialog = () => {
+        const newDialogId = nextDialogId(script.dialogs);
+        updateScript((prev) => ({
+            ...prev,
+            dialogs: [
+                ...prev.dialogs,
+                {
+                    id: newDialogId,
+                    type: "alert",
+                    content: ["New dialog"],
+                },
+            ],
+        }));
+        setSidebarListMode("dialogs");
+        setSelectedDialogFocusId(newDialogId);
+        setSelectedDialogContentIndex(0);
+    };
+
+    const moveDialog = (direction: -1 | 1) => {
+        if (!selectedDialogFocusId.length) {
+            return;
+        }
+
+        updateScript((prev) => {
+            const from = prev.dialogs.findIndex((dialog: any) => {
+                return dialog && typeof dialog.id === "string" && dialog.id === selectedDialogFocusId;
+            });
+            const to = from + direction;
+            if (from < 0 || to < 0 || to >= prev.dialogs.length) {
+                return prev;
+            }
+
+            const nextDialogs = [...prev.dialogs];
+            [nextDialogs[from], nextDialogs[to]] = [nextDialogs[to], nextDialogs[from]];
+            return {
+                ...prev,
+                dialogs: nextDialogs,
+            };
+        });
+    };
+
+    const removeDialog = () => {
+        if (selectedDialogIndex < 0) {
+            return;
+        }
+
+        const dialogToRemove = script.dialogs[selectedDialogIndex];
+        const dialogToRemoveId = typeof dialogToRemove?.id === "string" ? dialogToRemove.id : "";
+        if (!dialogToRemoveId.length) {
+            return;
+        }
+
+        const nextDialogs = script.dialogs.filter((dialog: any) => {
+            return !dialog || dialog.id !== dialogToRemoveId;
+        });
+        const nextSelectedDialogId = nextDialogs.length
+            ? (nextDialogs[Math.min(selectedDialogIndex, nextDialogs.length - 1)]?.id || "")
+            : "";
+
+        updateScript((prev) => ({
+            ...prev,
+            dialogs: prev.dialogs.filter((dialog: any) => {
+                return !dialog || dialog.id !== dialogToRemoveId;
+            }),
+            screens: prev.screens.map((screen: any) => ({
+                ...screen,
+                content: Array.isArray(screen.content)
+                    ? screen.content.map((entry: any) => removeDialogTargetsFromElement(entry, dialogToRemoveId))
+                    : screen.content,
+            })),
+        }));
+
+        setSelectedDialogFocusId(nextSelectedDialogId);
+    };
+
+    const renameDialogId = (nextIdRaw: string) => {
+        if (!selectedDialog) {
+            return;
+        }
+
+        const nextId = nextIdRaw.trim();
+        if (!nextId || nextId === selectedDialog.id) {
+            return;
+        }
+
+        const hasDuplicate = script.dialogs.some((dialog: any) => {
+            return dialog && dialog.id === nextId && dialog.id !== selectedDialog.id;
+        });
+        if (hasDuplicate) {
+            return;
+        }
+
+        const previousId = selectedDialog.id;
+        updateScript((prev) => ({
+            ...prev,
+            dialogs: prev.dialogs.map((dialog: any) => {
+                if (!dialog || dialog.id !== previousId) {
+                    return dialog;
+                }
+                return {
+                    ...dialog,
+                    id: nextId,
+                };
+            }),
+            screens: prev.screens.map((screen: any) => ({
+                ...screen,
+                content: Array.isArray(screen.content)
+                    ? screen.content.map((entry: any) => replaceDialogTargetsInElement(entry, previousId, nextId))
+                    : screen.content,
+            })),
+        }));
+        setSelectedDialogFocusId(nextId);
+    };
+
+    const updateDialogContentEntry = (nextEntry: any) => {
+        if (!selectedDialog) {
+            return;
+        }
+        if (selectedDialogContentIndex < 0 || selectedDialogContentIndex >= selectedDialogContent.length) {
+            return;
+        }
+
+        const nextContent = selectedDialogContent.map((entry: any, index: number) => {
+            return index === selectedDialogContentIndex ? nextEntry : entry;
+        });
+        updateDialog({ content: nextContent });
+    };
+
+    const updateDialogTextEntry = (nextText: string) => {
+        if (selectedDialogContentEntry === undefined || selectedDialogContentEntryIsBitmap) {
+            return;
+        }
+
+        if (typeof selectedDialogContentEntry === "string") {
+            updateDialogContentEntry(nextText);
+            return;
+        }
+
+        if (selectedDialogContentEntryIsObject) {
+            updateDialogContentEntry({
+                ...(selectedDialogContentEntry as any),
+                text: nextText,
+            });
+        }
+    };
+
+    const updateDialogTextClassName = (nextClassName: string) => {
+        if (selectedDialogContentEntry === undefined || selectedDialogContentEntryIsBitmap) {
+            return;
+        }
+
+        if (typeof selectedDialogContentEntry === "string") {
+            if (!nextClassName.length) {
+                return;
+            }
+            updateDialogContentEntry({
+                text: selectedDialogContentEntry,
+                className: nextClassName,
+            });
+            return;
+        }
+
+        if (!selectedDialogContentEntryIsObject) {
+            return;
+        }
+
+        const entryObject = selectedDialogContentEntry as any;
+        const nextText = typeof entryObject.text === "string" ? entryObject.text : "";
+
+        if (!nextClassName.length) {
+            const nextEntry = { ...entryObject };
+            delete nextEntry.className;
+            const remainingKeys = Object.keys(nextEntry).filter((key) => key !== "text");
+            if (!remainingKeys.length) {
+                updateDialogContentEntry(nextText);
+                return;
+            }
+            updateDialogContentEntry(nextEntry);
+            return;
+        }
+
+        updateDialogContentEntry({
+            ...entryObject,
+            text: nextText,
+            className: nextClassName,
+        });
+    };
+
+    const addDialogContentEntry = () => {
+        if (!selectedDialog) {
+            return;
+        }
+        const nextContent = [...selectedDialogContent, "New dialog line"];
+        updateDialog({ content: nextContent });
+        setSelectedDialogContentIndex(nextContent.length - 1);
+    };
+
+    const removeDialogContentEntry = () => {
+        if (!canDeleteDialogContent) {
+            return;
+        }
+        const nextContent = selectedDialogContent.filter((_: any, index: number) => {
+            return index !== selectedDialogContentIndex;
+        });
+        updateDialog({ content: nextContent });
+        setSelectedDialogContentIndex(Math.max(0, selectedDialogContentIndex - 1));
+    };
+
+    const moveDialogContentEntry = (direction: -1 | 1) => {
+        const from = selectedDialogContentIndex;
+        const to = from + direction;
+        if (from < 0 || to < 0 || from >= selectedDialogContent.length || to >= selectedDialogContent.length) {
+            return;
+        }
+
+        const nextContent = [...selectedDialogContent];
+        [nextContent[from], nextContent[to]] = [nextContent[to], nextContent[from]];
+        updateDialog({ content: nextContent });
+        setSelectedDialogContentIndex(to);
     };
 
     const addElement = () => {
@@ -1109,6 +1699,54 @@ const ScriptCreator: FC<ScriptCreatorProps> = ({ initialScript, onApply, onPrevi
         updateScreen({ content: nextContent });
     };
 
+    const updateLinkTargets = (updater: (prevTargets: LinkTargetEntry[]) => LinkTargetEntry[]) => {
+        if (!selectedElementIsLinkLike || !selectedElement || typeof selectedElement !== "object") {
+            return;
+        }
+
+        const fallbackType: LinkTargetType = selectedElementType === "href" ? "href" : "link";
+        const currentTargets = normalizeLinkTargets((selectedElement as any).target, fallbackType, selectedScreen?.id || "");
+        const nextTargets = normalizeLinkTargets(updater(currentTargets), fallbackType, selectedScreen?.id || "");
+        const target = serializeLinkTargets(nextTargets, fallbackType);
+        updateElement({
+            ...selectedElement,
+            target,
+        });
+    };
+
+    const addLinkTarget = () => {
+        updateLinkTargets((prevTargets) => ([
+            ...prevTargets,
+            {
+                type: "link",
+                target: selectedScreen?.id || "",
+                shiftKey: false,
+            },
+        ]));
+    };
+
+    const removeLinkTarget = (index: number) => {
+        updateLinkTargets((prevTargets) => {
+            if (prevTargets.length <= 1) {
+                return prevTargets;
+            }
+            return prevTargets.filter((_, targetIndex) => targetIndex !== index);
+        });
+    };
+
+    const moveLinkTarget = (index: number, direction: -1 | 1) => {
+        updateLinkTargets((prevTargets) => {
+            const toIndex = index + direction;
+            if (index < 0 || toIndex < 0 || index >= prevTargets.length || toIndex >= prevTargets.length) {
+                return prevTargets;
+            }
+
+            const nextTargets = [...prevTargets];
+            [nextTargets[index], nextTargets[toIndex]] = [nextTargets[toIndex], nextTargets[index]];
+            return nextTargets;
+        });
+    };
+
     const updateCyclerStates = (updater: (prevStates: any[]) => any[]) => {
         if (!selectedElement || typeof selectedElement !== "object" || !selectedElementIsCycler) {
             return;
@@ -1224,7 +1862,7 @@ const ScriptCreator: FC<ScriptCreatorProps> = ({ initialScript, onApply, onPrevi
         if (!selectedScreenId) {
             return;
         }
-        onPreview(cloneJson(script), selectedScreenId, selectedElementIndex);
+        onPreview(cloneJson(script), selectedScreenId, selectedElementIndex, sidebarListMode);
     };
 
     const startNewScript = () => {
@@ -1232,9 +1870,12 @@ const ScriptCreator: FC<ScriptCreatorProps> = ({ initialScript, onApply, onPrevi
         const firstScreenId = freshScript.screens[0]?.id || "";
 
         setScript(freshScript);
+        setSidebarListMode("screens");
         setSelectedScreenId(firstScreenId);
+        setSelectedDialogFocusId("");
         setSchemaRootId(firstScreenId);
         setSelectedElementIndex(0);
+        setSelectedDialogContentIndex(0);
         setElementEditorMode("fields");
         setRawElementError(null);
         setActiveView("editor");
@@ -1375,12 +2016,26 @@ const ScriptCreator: FC<ScriptCreatorProps> = ({ initialScript, onApply, onPrevi
                         </div>
 
                         <div className="script-creator__list-header">
-                            <span>Screens</span>
-                            <button className="script-creator__btn" onClick={addScreen}>[+ SCREEN]</button>
+                            <span>{sidebarListMode === "screens" ? "Screens" : "Dialogs"}</span>
+                            <div className="script-creator__actions script-creator__actions--sidebar-switch">
+                                <button
+                                    className="script-creator__btn"
+                                    onClick={() => {
+                                        setSidebarListMode((prev) => prev === "screens" ? "dialogs" : "screens");
+                                    }}
+                                >
+                                    [{sidebarListMode === "screens" ? "SHOW DIALOGS" : "SHOW SCREENS"}]
+                                </button>
+                                {sidebarListMode === "screens" ? (
+                                    <button className="script-creator__btn" onClick={addScreen}>[+ SCREEN]</button>
+                                ) : (
+                                    <button className="script-creator__btn" onClick={addDialog}>[+ DIALOG]</button>
+                                )}
+                            </div>
                         </div>
 
-                        <div className="script-creator__list script-creator__list--screens">
-                            {script.screens.map((screen: any) => (
+                        <div className={"script-creator__list " + (sidebarListMode === "screens" ? "script-creator__list--screens" : "script-creator__list--dialogs")}>
+                            {sidebarListMode === "screens" && script.screens.map((screen: any) => (
                                 <button
                                     key={screen.id}
                                     className={"script-creator__list-item" + (screen.id === selectedScreenId ? " script-creator__list-item--active" : "")}
@@ -1393,13 +2048,43 @@ const ScriptCreator: FC<ScriptCreatorProps> = ({ initialScript, onApply, onPrevi
                                     {screen.id}
                                 </button>
                             ))}
+
+                            {sidebarListMode === "dialogs" && !script.dialogs.length && (
+                                <span className="script-creator__hint">No dialogs in this script.</span>
+                            )}
+                            {sidebarListMode === "dialogs" && script.dialogs.map((dialog: any, index: number) => {
+                                const dialogId = (dialog?.id || "(unnamed)").toString();
+                                return (
+                                    <button
+                                        key={`${dialogId}-${index}`}
+                                        className={"script-creator__list-item" + (selectedDialogFocusId === dialogId ? " script-creator__list-item--active" : "")}
+                                        onClick={() => {
+                                            setSelectedDialogFocusId(dialogId);
+                                            setSelectedDialogContentIndex(0);
+                                            setRawElementError(null);
+                                        }}
+                                    >
+                                        {dialogId}
+                                    </button>
+                                );
+                            })}
                         </div>
 
-                        <div className="script-creator__actions script-creator__actions--screen-controls">
-                            <button className="script-creator__btn" onClick={() => moveScreen(-1)} disabled={!canMoveScreenUp}>[MOVE UP]</button>
-                            <button className="script-creator__btn" onClick={() => moveScreen(1)} disabled={!canMoveScreenDown}>[MOVE DOWN]</button>
-                            <button className="script-creator__btn" onClick={removeScreen} disabled={script.screens.length <= 1}>[DELETE]</button>
-                        </div>
+                        {sidebarListMode === "screens" && (
+                            <div className="script-creator__actions script-creator__actions--screen-controls">
+                                <button className="script-creator__btn" onClick={() => moveScreen(-1)} disabled={!canMoveScreenUp}>[MOVE UP]</button>
+                                <button className="script-creator__btn" onClick={() => moveScreen(1)} disabled={!canMoveScreenDown}>[MOVE DOWN]</button>
+                                <button className="script-creator__btn" onClick={removeScreen} disabled={script.screens.length <= 1}>[DELETE]</button>
+                            </div>
+                        )}
+
+                        {sidebarListMode === "dialogs" && (
+                            <div className="script-creator__actions script-creator__actions--dialog-controls">
+                                <button className="script-creator__btn" onClick={() => moveDialog(-1)} disabled={!canMoveDialogUp}>[MOVE UP]</button>
+                                <button className="script-creator__btn" onClick={() => moveDialog(1)} disabled={!canMoveDialogDown}>[MOVE DOWN]</button>
+                                <button className="script-creator__btn" onClick={removeDialog} disabled={!canDeleteDialog}>[DELETE]</button>
+                            </div>
+                        )}
                     </aside>
                     )}
 
@@ -1419,7 +2104,7 @@ const ScriptCreator: FC<ScriptCreatorProps> = ({ initialScript, onApply, onPrevi
 
                     {activeView === "editor" && (
                     <main className="script-creator__editor">
-                        {selectedScreen && (
+                        {sidebarListMode === "screens" && selectedScreen && (
                             <div className="script-creator__editor-content">
                                 <div className="script-creator__row">
                                     <label className="script-creator__field">
@@ -1552,13 +2237,155 @@ const ScriptCreator: FC<ScriptCreatorProps> = ({ initialScript, onApply, onPrevi
                                                             />
                                                         </label>
 
-                                                        <label className="script-creator__field">
-                                                            <span>Target Screen</span>
-                                                            <input
-                                                                value={selectedElement.target || ""}
-                                                                onChange={(e) => updateElement({ ...selectedElement, target: e.target.value })}
-                                                            />
-                                                        </label>
+                                                        <div className="script-creator__link-targets">
+                                                            <div className="script-creator__list-header">
+                                                                <span>Targets</span>
+                                                                <button className="script-creator__btn" onClick={addLinkTarget}>[+ TARGET]</button>
+                                                            </div>
+
+                                                            {selectedLinkTargets.map((targetEntry: LinkTargetEntry, targetIndex: number) => {
+                                                                const targetLabel = targetEntry.type === "dialog"
+                                                                    ? "Dialog ID"
+                                                                    : targetEntry.type === "href"
+                                                                        ? "URL"
+                                                                        : "Target";
+                                                                const canMoveUp = targetIndex > 0;
+                                                                const canMoveDown = targetIndex < selectedLinkTargets.length - 1;
+
+                                                                return (
+                                                                    <div key={`link-target-${targetIndex}`} className="script-creator__link-target-row">
+                                                                        <div className="script-creator__link-target-grid">
+                                                                            <label className="script-creator__field">
+                                                                                <span>Type</span>
+                                                                                <CreatorSelect
+                                                                                    value={targetEntry.type}
+                                                                                    options={LINK_TARGET_TYPE_OPTIONS}
+                                                                                    onChange={(nextTypeRaw) => {
+                                                                                        const nextType = asLinkTargetType(nextTypeRaw, "link");
+                                                                                        updateLinkTargets((prevTargets) => {
+                                                                                            return prevTargets.map((entry, index) => {
+                                                                                                if (index !== targetIndex) {
+                                                                                                    return entry;
+                                                                                                }
+
+                                                                                                const next: LinkTargetEntry = {
+                                                                                                    ...entry,
+                                                                                                    type: nextType,
+                                                                                                    action: nextType === "action"
+                                                                                                        ? (entry.action || "resetState")
+                                                                                                        : undefined,
+                                                                                                };
+
+                                                                                                if (nextType === "dialog" && !next.target.trim().length) {
+                                                                                                    next.target = (script.dialogs?.[0]?.id || "").toString();
+                                                                                                }
+
+                                                                                                return next;
+                                                                                            });
+                                                                                        });
+                                                                                    }}
+                                                                                />
+                                                                            </label>
+
+                                                                            <label className="script-creator__field">
+                                                                                <span>Shift Key</span>
+                                                                                <CreatorSelect
+                                                                                    value={targetEntry.shiftKey ? "true" : "false"}
+                                                                                    options={BOOLEAN_OPTIONS}
+                                                                                    onChange={(nextValue) => {
+                                                                                        const nextShiftKey = nextValue === "true";
+                                                                                        updateLinkTargets((prevTargets) => {
+                                                                                            return prevTargets.map((entry, index) => {
+                                                                                                return index === targetIndex
+                                                                                                    ? { ...entry, shiftKey: nextShiftKey }
+                                                                                                    : entry;
+                                                                                            });
+                                                                                        });
+                                                                                    }}
+                                                                                />
+                                                                            </label>
+                                                                        </div>
+
+                                                                        <label className="script-creator__field">
+                                                                            <span>{targetLabel}{targetEntry.type === "action" ? " (optional)" : ""}</span>
+                                                                            {targetEntry.type === "dialog" && dialogIdSelectOptions.length > 0 ? (
+                                                                                <CreatorSelect
+                                                                                    value={targetEntry.target || ""}
+                                                                                    options={dialogIdSelectOptions}
+                                                                                    fallbackLabel={targetEntry.target || "(dialog id)"}
+                                                                                    onChange={(nextTarget) => {
+                                                                                        updateLinkTargets((prevTargets) => {
+                                                                                            return prevTargets.map((entry, index) => {
+                                                                                                return index === targetIndex
+                                                                                                    ? { ...entry, target: nextTarget }
+                                                                                                    : entry;
+                                                                                            });
+                                                                                        });
+                                                                                    }}
+                                                                                />
+                                                                            ) : (
+                                                                                <input
+                                                                                    value={targetEntry.target || ""}
+                                                                                    onChange={(e) => {
+                                                                                        const nextTarget = e.target.value;
+                                                                                        updateLinkTargets((prevTargets) => {
+                                                                                            return prevTargets.map((entry, index) => {
+                                                                                                return index === targetIndex
+                                                                                                    ? { ...entry, target: nextTarget }
+                                                                                                    : entry;
+                                                                                            });
+                                                                                        });
+                                                                                    }}
+                                                                                />
+                                                                            )}
+                                                                        </label>
+
+                                                                        {targetEntry.type === "action" && (
+                                                                            <label className="script-creator__field">
+                                                                                <span>Action</span>
+                                                                                <input
+                                                                                    value={targetEntry.action || ""}
+                                                                                    onChange={(e) => {
+                                                                                        const nextAction = e.target.value;
+                                                                                        updateLinkTargets((prevTargets) => {
+                                                                                            return prevTargets.map((entry, index) => {
+                                                                                                return index === targetIndex
+                                                                                                    ? { ...entry, action: nextAction }
+                                                                                                    : entry;
+                                                                                            });
+                                                                                        });
+                                                                                    }}
+                                                                                />
+                                                                            </label>
+                                                                        )}
+
+                                                                        <div className="script-creator__actions script-creator__actions--link-target">
+                                                                            <button
+                                                                                className="script-creator__btn"
+                                                                                onClick={() => moveLinkTarget(targetIndex, -1)}
+                                                                                disabled={!canMoveUp}
+                                                                            >
+                                                                                [UP]
+                                                                            </button>
+                                                                            <button
+                                                                                className="script-creator__btn"
+                                                                                onClick={() => moveLinkTarget(targetIndex, 1)}
+                                                                                disabled={!canMoveDown}
+                                                                            >
+                                                                                [DOWN]
+                                                                            </button>
+                                                                            <button
+                                                                                className="script-creator__btn"
+                                                                                onClick={() => removeLinkTarget(targetIndex)}
+                                                                                disabled={selectedLinkTargets.length <= 1}
+                                                                            >
+                                                                                [DELETE]
+                                                                            </button>
+                                                                        </div>
+                                                                    </div>
+                                                                );
+                                                            })}
+                                                        </div>
                                                     </>
                                                 )}
 
@@ -1865,6 +2692,164 @@ const ScriptCreator: FC<ScriptCreatorProps> = ({ initialScript, onApply, onPrevi
                                 </div>
                             </div>
                         )}
+
+                        {sidebarListMode === "dialogs" && selectedDialog && (
+                            <div className="script-creator__editor-content">
+                                <div className="script-creator__row">
+                                    <label className="script-creator__field">
+                                        <span>Dialog ID</span>
+                                        <input
+                                            value={selectedDialog.id || ""}
+                                            onChange={(e) => renameDialogId(e.target.value)}
+                                        />
+                                    </label>
+
+                                    <label className="script-creator__field">
+                                        <span>Type</span>
+                                        <CreatorSelect
+                                            value={typeof selectedDialog.type === "string" ? selectedDialog.type : "alert"}
+                                            options={DIALOG_TYPE_OPTIONS}
+                                            fallbackLabel={typeof selectedDialog.type === "string" ? selectedDialog.type : "alert"}
+                                            onChange={(nextType) => updateDialog({ type: nextType })}
+                                        />
+                                    </label>
+                                </div>
+
+                                <div className="script-creator__list-header">
+                                    <span>Dialog Content</span>
+                                    <div className="script-creator__actions">
+                                        <button className="script-creator__btn" onClick={addDialogContentEntry}>[ADD LINE]</button>
+                                    </div>
+                                </div>
+
+                                <div className="script-creator__element-layout">
+                                    <div className="script-creator__element-list-panel">
+                                        <div className="script-creator__list script-creator__list--elements">
+                                            {!selectedDialogContent.length && (
+                                                <span className="script-creator__hint">No content lines in this dialog.</span>
+                                            )}
+                                            {selectedDialogContent.map((entry: any, index: number) => {
+                                                const previewRaw = typeof entry === "string" ? entry : JSON.stringify(entry);
+                                                const preview = typeof previewRaw === "string" ? previewRaw : "";
+                                                const className = entry && typeof entry === "object" && typeof entry.className === "string"
+                                                    ? entry.className.trim()
+                                                    : "";
+                                                const textValue = entry && typeof entry === "object" && typeof entry.text === "string"
+                                                    ? entry.text
+                                                    : "";
+                                                const textPreview = (textValue || preview).slice(0, 32) || "(empty)";
+                                                const label = typeof entry === "string"
+                                                    ? `line ${index + 1}: ${textPreview}`
+                                                    : (className.length
+                                                        ? `${className} line ${index + 1}: ${textPreview}`
+                                                        : `object ${index + 1}: ${textPreview}`);
+                                                return (
+                                                    <button
+                                                        key={`${selectedDialog.id || "dialog"}-entry-${index}`}
+                                                        className={"script-creator__list-item" + (index === selectedDialogContentIndex ? " script-creator__list-item--active" : "")}
+                                                        onClick={() => {
+                                                            setSelectedDialogContentIndex(index);
+                                                            setRawElementError(null);
+                                                        }}
+                                                    >
+                                                        {label}
+                                                    </button>
+                                                );
+                                            })}
+                                        </div>
+
+                                        <div className="script-creator__actions script-creator__actions--element-controls">
+                                            <button
+                                                className="script-creator__btn"
+                                                onClick={() => moveDialogContentEntry(-1)}
+                                                disabled={!canMoveDialogContentUp}
+                                            >
+                                                [MOVE UP]
+                                            </button>
+                                            <button
+                                                className="script-creator__btn"
+                                                onClick={() => moveDialogContentEntry(1)}
+                                                disabled={!canMoveDialogContentDown}
+                                            >
+                                                [MOVE DOWN]
+                                            </button>
+                                            <button
+                                                className="script-creator__btn"
+                                                onClick={removeDialogContentEntry}
+                                                disabled={!canDeleteDialogContent}
+                                            >
+                                                [DELETE]
+                                            </button>
+                                        </div>
+                                    </div>
+
+                                    <div className="script-creator__element-editor">
+                                        {selectedDialogContentEntryIsTextLike && (
+                                            <>
+                                                <label className="script-creator__field script-creator__field--fill">
+                                                    <span>Text</span>
+                                                    <textarea
+                                                        className="script-creator__textarea-fill"
+                                                        value={selectedDialogTextValue}
+                                                        onChange={(e) => {
+                                                            updateDialogTextEntry(e.target.value);
+                                                            setRawElementError(null);
+                                                        }}
+                                                    />
+                                                    <small className="script-creator__markdown-hint">
+                                                        Markdown: `#`, `**bold**`, `*italic*`, `++underline++`, `[label](url)`, `- bullets`, `&gt; quote`, `---`
+                                                    </small>
+                                                </label>
+
+                                                <label className="script-creator__field">
+                                                    <span>Class Name (Apply Style)</span>
+                                                    <CreatorSelect
+                                                        value={selectedDialogTextClassName || ""}
+                                                        options={TEXT_LINE_STYLE_OPTIONS}
+                                                        fallbackLabel={selectedDialogTextClassName || "(none)"}
+                                                        onChange={(nextClassName) => {
+                                                            updateDialogTextClassName(nextClassName);
+                                                            setRawElementError(null);
+                                                        }}
+                                                    />
+                                                </label>
+                                            </>
+                                        )}
+
+                                        {selectedDialogContentEntry !== undefined && selectedDialogContentEntryIsObject && (
+                                            <label className="script-creator__field script-creator__field--fill">
+                                                <span>Raw JSON</span>
+                                                <textarea
+                                                    className="script-creator__textarea-fill"
+                                                    value={JSON.stringify(selectedDialogContentEntry, null, 2)}
+                                                    onChange={(e) => {
+                                                        try {
+                                                            const parsed = JSON.parse(e.target.value);
+                                                            updateDialogContentEntry(parsed);
+                                                            setRawElementError(null);
+                                                        } catch {
+                                                            setRawElementError("JSON parse error");
+                                                        }
+                                                    }}
+                                                />
+                                            </label>
+                                        )}
+
+                                        {selectedDialogContentEntry === undefined && (
+                                            <span className="script-creator__hint">Select a content entry to edit.</span>
+                                        )}
+
+                                        {rawElementError && <div className="script-creator__error">{rawElementError}</div>}
+                                    </div>
+                                </div>
+                            </div>
+                        )}
+
+                        {sidebarListMode === "dialogs" && !selectedDialog && (
+                            <div className="script-creator__editor-content">
+                                <span className="script-creator__hint">No dialog selected.</span>
+                            </div>
+                        )}
                     </main>
                     )}
 
@@ -1882,7 +2867,7 @@ const ScriptCreator: FC<ScriptCreatorProps> = ({ initialScript, onApply, onPrevi
                                     />
                                 </label>
                                 <span className="script-creator__schema-hint">
-                                    Tree is built from screen links, prompts, toggles/lists, and screen onDone targets.
+                                    Tree is built from screen links, dialog links, prompts, toggles/lists, and screen onDone targets.
                                 </span>
                             </div>
 

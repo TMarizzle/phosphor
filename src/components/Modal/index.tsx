@@ -1,4 +1,5 @@
 import React, { FC, useEffect, useCallback } from "react";
+import { renderMarkdown } from "../../utils/markdown";
 
 import "./style.scss";
 
@@ -35,7 +36,11 @@ const Modal: FC<ModalProps> = (props) => {
         const content = (typeof text === "string") ? [text] : text;
         return content.map((element, index) => {
             if (typeof element === "string") {
-                return <p key={index}>{element}</p>;
+                return (
+                    <div key={index} className="__text__">
+                        {renderMarkdown(element)}
+                    </div>
+                );
             }
 
             if (element && typeof element === "object") {
@@ -59,10 +64,17 @@ const Modal: FC<ModalProps> = (props) => {
                     );
                 }
 
+                const textEntry = element as ModalTextEntry;
+                const textValue = typeof textEntry.text === "string" ? textEntry.text : "";
+                const textCss = [
+                    "__text__",
+                    textEntry.className ? textEntry.className : null,
+                ].join(" ").trim();
+
                 return (
-                    <p key={index} className={element.className || ""}>
-                        {(element as ModalTextEntry).text || ""}
-                    </p>
+                    <div key={index} className={textCss}>
+                        {renderMarkdown(textValue)}
+                    </div>
                 );
             }
 

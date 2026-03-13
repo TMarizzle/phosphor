@@ -273,8 +273,15 @@ $creator-dark-control-bg: rgba($creator-dark-bg, 0.92);
         @include creator-scrollbar;
     }
 
-    &__list--screens {
+    &__list--screens,
+    &__list--dialogs {
         min-height: 220px;
+    }
+
+    &__hint {
+        opacity: 0.7;
+        font-size: 12pt;
+        line-height: 1.2;
     }
 
     &__list-item {
@@ -329,6 +336,26 @@ $creator-dark-control-bg: rgba($creator-dark-bg, 0.92);
         @include creator-scrollbar;
     }
 
+    &__link-targets {
+        display: flex;
+        flex-direction: column;
+        gap: 0.35rem;
+    }
+
+    &__link-target-row {
+        border: 1px solid var(--fg);
+        padding: 0.25rem;
+        display: flex;
+        flex-direction: column;
+        gap: 0.25rem;
+    }
+
+    &__link-target-grid {
+        display: grid;
+        grid-template-columns: minmax(0, 180px) minmax(0, 120px);
+        gap: 0.35rem;
+    }
+
     &__cycler {
         display: flex;
         flex-direction: column;
@@ -378,6 +405,16 @@ $creator-dark-control-bg: rgba($creator-dark-bg, 0.92);
         gap: 0.11rem;
     }
 
+    &__actions--sidebar-switch {
+        margin-top: 0;
+        gap: 0.11rem;
+    }
+
+    &__actions--dialog-controls {
+        margin-top: 0;
+        gap: 0.11rem;
+    }
+
     &__actions--element-controls {
         margin-top: 0;
         gap: 0.11rem;
@@ -388,6 +425,10 @@ $creator-dark-control-bg: rgba($creator-dark-bg, 0.92);
     }
 
     &__actions--cycler-state {
+        gap: 0.1rem;
+    }
+
+    &__actions--link-target {
         gap: 0.1rem;
     }
 
@@ -707,7 +748,8 @@ $creator-dark-control-bg: rgba($creator-dark-bg, 0.92);
 
         &__row,
         &__element-layout,
-        &__cycler-state-row {
+        &__cycler-state-row,
+        &__link-target-grid {
             grid-template-columns: 1fr;
         }
     }

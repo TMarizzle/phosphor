@@ -430,6 +430,7 @@ class App extends Component<any, AppState> {
         if (cleanedJson?.config && typeof cleanedJson.config === "object") {
             delete cleanedJson.config.previewStartScreen;
             delete cleanedJson.config.previewSelectedElementIndex;
+            delete cleanedJson.config.previewSidebarListMode;
         }
 
         const label = (cleanedJson?.config?.name || "CUSTOM").toString();
@@ -459,7 +460,12 @@ class App extends Component<any, AppState> {
         });
     }
 
-    private _handleCreatorPreview(scriptJson: any, screenId: string, elementIndex: number): void {
+    private _handleCreatorPreview(
+        scriptJson: any,
+        screenId: string,
+        elementIndex: number,
+        sidebarListMode: "screens" | "dialogs"
+    ): void {
         if (!Array.isArray(scriptJson?.screens) || !scriptJson.screens.length) {
             this.setState({ uploadError: "Invalid JSON: missing 'screens' array." });
             return;
@@ -486,6 +492,7 @@ class App extends Component<any, AppState> {
             ...(previewJson.config || {}),
             previewStartScreen: screenId,
             previewSelectedElementIndex: safeElementIndex,
+            previewSidebarListMode: sidebarListMode,
         };
 
         const label = (previewJson?.config?.name || "PREVIEW").toString();
