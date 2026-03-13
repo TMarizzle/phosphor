@@ -2248,7 +2248,7 @@ const ScriptCreator: FC<ScriptCreatorProps> = ({ initialScript, onApply, onPrevi
                                                                 onChange={(e) => updateElement(e.target.value)}
                                                             />
                                                             <small className="script-creator__markdown-hint">
-                                                                Markdown: `#`, `**bold**`, `*italic*`, `__underline__`, `~~strikethrough~~`, `[label](url)`, `- bullets`, `&gt; quote`, `---`
+                                                                Markdown: `#`, `**bold**`, `*italic*`, `__underline__`, `~~strikethrough~~`, `[label](url)`, `- bullets`, `&gt; quote`, `\&gt;` literal `&gt;`, `---`
                                                             </small>
                                                         </label>
 
@@ -2443,7 +2443,7 @@ const ScriptCreator: FC<ScriptCreatorProps> = ({ initialScript, onApply, onPrevi
                                                             onChange={(e) => updateElement({ ...selectedElement, text: e.target.value })}
                                                         />
                                                         <small className="script-creator__markdown-hint">
-                                                            Markdown: `#`, `**bold**`, `*italic*`, `__underline__`, `~~strikethrough~~`, `[label](url)`, `- bullets`, `&gt; quote`, `---`
+                                                            Markdown: `#`, `**bold**`, `*italic*`, `__underline__`, `~~strikethrough~~`, `[label](url)`, `- bullets`, `&gt; quote`, `\&gt;` literal `&gt;`, `---`
                                                         </small>
                                                     </label>
                                                 )}
@@ -2842,7 +2842,7 @@ const ScriptCreator: FC<ScriptCreatorProps> = ({ initialScript, onApply, onPrevi
                                                         }}
                                                     />
                                                     <small className="script-creator__markdown-hint">
-                                                        Markdown: `#`, `**bold**`, `*italic*`, `__underline__`, `~~strikethrough~~`, `[label](url)`, `- bullets`, `&gt; quote`, `---`
+                                                        Markdown: `#`, `**bold**`, `*italic*`, `__underline__`, `~~strikethrough~~`, `[label](url)`, `- bullets`, `&gt; quote`, `\&gt;` literal `&gt;`, `---`
                                                     </small>
                                                 </label>
 

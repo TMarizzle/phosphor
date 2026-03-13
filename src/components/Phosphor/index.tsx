@@ -1187,7 +1187,7 @@ class Phosphor extends Component<PhosphorProps, AppState> {
         if (type === ScreenDataType.Text || type === ScreenDataType.Link || type === ScreenDataType.Prompt
         ) {
             const sourceText = type === ScreenDataType.Prompt ? element.prompt : element.text;
-            const text = (type === ScreenDataType.Text || type === ScreenDataType.Link)
+            const text = (type === ScreenDataType.Text)
                 ? markdownToPlainText(sourceText || "")
                 : (sourceText || "");
             const handleRendered = () => this._activateNextScreenData();

@@ -24,14 +24,14 @@
                 {
                     "type": "text",
                     "className": "alert",
-                    "text": ">>> TERMINAL REACTIVATED <<<"
+                    "text": "\\>>> TERMINAL REACTIVATED <<<"
                 },
                 "VERSION 1.3.6",
                 "",
                 {
                     "type": "text",
                     "className": "alert",
-                    "text": ">>> SHIP INTEGRITY: COMPROMISED <<<"
+                    "text": "\\>>> SHIP INTEGRITY: COMPROMISED <<<"
                 },
                 "",
                 "",
@@ -745,7 +745,7 @@
                 ":: MEMORY BLOCKS REMOUNTING ::",
                 "A9F0-44C1-77EE-1100 :: READ",
                 "1X00-EE77-1C44-0F9A :: READ",
-                "## 0x0A 0x17 0xDE 0x3B 0x7F 0xAA ##",
+                "\\## 0x0A 0x17 0xDE 0x3B 0x7F 0xAA ##",
                 "ALGN: !@#$_<>[]{}//\\\\::??~~==++--",
                 "QW7N::K2A::ZX91::MTRX::OPEN::OPEN",
                 "::::: //// \\\\\\\\ #### **** ++++ ----",

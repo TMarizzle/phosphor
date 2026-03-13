@@ -27,6 +27,11 @@ const parseBlockquoteLine = (line: string): BlockquoteLine | null => {
         index++;
     }
 
+    // Allow escaping blockquote markdown with "\>" for literal ">" text.
+    if (line[index] === "\\" && line[index + 1] === ">") {
+        return null;
+    }
+
     let level = 0;
     while (index < length && line[index] === ">") {
         level++;
