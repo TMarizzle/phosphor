@@ -769,6 +769,11 @@ const ScriptCreator: FC<ScriptCreatorProps> = ({ initialScript, onApply, onPrevi
     const canMoveScreenDown = selectedScreenIndex >= 0 && selectedScreenIndex < (script.screens.length - 1);
 
     const selectedElement = selectedScreen?.content?.[selectedElementIndex];
+    const canMoveElementUp = selectedElementIndex > 0;
+    const canMoveElementDown = !!selectedScreen
+        && selectedElementIndex >= 0
+        && selectedElementIndex < (selectedScreen.content.length - 1);
+    const canDeleteElement = !!selectedScreen && selectedScreen.content.length > 0;
     const selectedElementType = (
         selectedElement
         && typeof selectedElement === "object"
@@ -1393,7 +1398,7 @@ const ScriptCreator: FC<ScriptCreatorProps> = ({ initialScript, onApply, onPrevi
                         <div className="script-creator__actions script-creator__actions--screen-controls">
                             <button className="script-creator__btn" onClick={() => moveScreen(-1)} disabled={!canMoveScreenUp}>[MOVE UP]</button>
                             <button className="script-creator__btn" onClick={() => moveScreen(1)} disabled={!canMoveScreenDown}>[MOVE DOWN]</button>
-                            <button className="script-creator__btn" onClick={removeScreen} disabled={script.screens.length <= 1}>[DELETE SCREEN]</button>
+                            <button className="script-creator__btn" onClick={removeScreen} disabled={script.screens.length <= 1}>[DELETE]</button>
                         </div>
                     </aside>
                     )}
@@ -1456,22 +1461,48 @@ const ScriptCreator: FC<ScriptCreatorProps> = ({ initialScript, onApply, onPrevi
                                 </div>
 
                                 <div className="script-creator__element-layout">
-                                    <div className="script-creator__list script-creator__list--elements">
-                                        {selectedScreen.content.map((entry: any, index: number) => {
-                                            const label = getElementListLabel(entry);
-                                            return (
-                                                <button
-                                                    key={`${selectedScreen.id}-${index}`}
-                                                    className={"script-creator__list-item" + (index === selectedElementIndex ? " script-creator__list-item--active" : "")}
-                                                    onClick={() => {
-                                                        setSelectedElementIndex(index);
-                                                        setRawElementError(null);
-                                                    }}
-                                                >
-                                                    {label}
-                                                </button>
-                                            );
-                                        })}
+                                    <div className="script-creator__element-list-panel">
+                                        <div className="script-creator__list script-creator__list--elements">
+                                            {selectedScreen.content.map((entry: any, index: number) => {
+                                                const label = getElementListLabel(entry);
+                                                return (
+                                                    <button
+                                                        key={`${selectedScreen.id}-${index}`}
+                                                        className={"script-creator__list-item" + (index === selectedElementIndex ? " script-creator__list-item--active" : "")}
+                                                        onClick={() => {
+                                                            setSelectedElementIndex(index);
+                                                            setRawElementError(null);
+                                                        }}
+                                                    >
+                                                        {label}
+                                                    </button>
+                                                );
+                                            })}
+                                        </div>
+
+                                        <div className="script-creator__actions script-creator__actions--element-controls">
+                                            <button
+                                                className="script-creator__btn"
+                                                onClick={() => moveElement(-1)}
+                                                disabled={!canMoveElementUp}
+                                            >
+                                                [MOVE UP]
+                                            </button>
+                                            <button
+                                                className="script-creator__btn"
+                                                onClick={() => moveElement(1)}
+                                                disabled={!canMoveElementDown}
+                                            >
+                                                [MOVE DOWN]
+                                            </button>
+                                            <button
+                                                className="script-creator__btn"
+                                                onClick={removeElement}
+                                                disabled={!canDeleteElement}
+                                            >
+                                                [DELETE]
+                                            </button>
+                                        </div>
                                     </div>
 
                                     <div className="script-creator__element-editor">
@@ -1830,12 +1861,6 @@ const ScriptCreator: FC<ScriptCreatorProps> = ({ initialScript, onApply, onPrevi
                                         )}
 
                                         {rawElementError && <div className="script-creator__error">{rawElementError}</div>}
-
-                                        <div className="script-creator__actions script-creator__actions--footer">
-                                            <button className="script-creator__btn" onClick={() => moveElement(-1)}>[MOVE UP]</button>
-                                            <button className="script-creator__btn" onClick={() => moveElement(1)}>[MOVE DOWN]</button>
-                                            <button className="script-creator__btn" onClick={removeElement}>[DELETE ELEMENT]</button>
-                                        </div>
                                     </div>
                                 </div>
                             </div>

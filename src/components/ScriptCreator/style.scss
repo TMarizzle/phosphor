@@ -304,6 +304,13 @@ $creator-dark-control-bg: rgba($creator-dark-bg, 0.92);
         min-height: 0;
     }
 
+    &__element-list-panel {
+        display: flex;
+        flex-direction: column;
+        min-height: 0;
+        gap: 0.2rem;
+    }
+
     &__editor-content {
         display: flex;
         flex-direction: column;
@@ -367,6 +374,11 @@ $creator-dark-control-bg: rgba($creator-dark-bg, 0.92);
     }
 
     &__actions--screen-controls {
+        margin-top: 0;
+        gap: 0.11rem;
+    }
+
+    &__actions--element-controls {
         margin-top: 0;
         gap: 0.11rem;
     }
