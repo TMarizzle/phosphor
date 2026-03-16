@@ -520,7 +520,7 @@ class Phosphor extends Component<PhosphorProps, AppState> {
         }, () => {
             const previewStartScreenId = this.props.json?.config?.previewStartScreen;
             if (typeof previewStartScreenId === "string" && previewStartScreenId.length) {
-                const previewIndex = screens.findIndex((screen) => screen.id === previewStartScreenId);
+                const previewIndex = screens.findIndex((screen: Screen) => screen.id === previewStartScreenId);
                 if (previewIndex >= 0) {
                     this._setActiveScreen(previewIndex);
                     return;

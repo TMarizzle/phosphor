@@ -46,6 +46,7 @@ interface CreatorSelectProps {
     className?: string;
     disabled?: boolean;
     fallbackLabel?: string;
+    searchable?: boolean;
 }
 
 type CreatorColorMode = "theme" | "dark" | "light";
@@ -69,6 +70,39 @@ interface PromptActionEntry {
 interface PromptCommandEntry {
     command: string;
     action: PromptActionEntry;
+}
+
+type ScriptSearchMatchKind = "screen" | "element" | "dialog" | "dialogContent";
+type PendingSearchSelectionMode = "first" | "last" | number;
+
+interface SearchOccurrenceRange {
+    start: number;
+    end: number;
+}
+
+interface ScriptSearchMatch {
+    id: string;
+    kind: ScriptSearchMatchKind;
+    title: string;
+    excerpt: string;
+    matchCount: number;
+    screenId?: string;
+    elementIndex?: number;
+    dialogId?: string;
+    dialogContentIndex?: number;
+}
+
+interface EditorSearchOccurrence {
+    element: HTMLInputElement | HTMLTextAreaElement | HTMLButtonElement;
+    start: number;
+    end: number;
+    selectable: boolean;
+}
+
+interface IndexedLabeledEntry {
+    entry: any;
+    index: number;
+    label: string;
 }
 
 const CREATOR_COLOR_MODE_LABELS: Record<CreatorColorMode, string> = {
@@ -113,6 +147,22 @@ const MARKDOWN_SHORTCUTS: Record<string, MarkdownShortcut> = {
     i: { wrapper: "*" },
     u: { wrapper: "__" },
     x: { wrapper: "~~", requiresShift: true },
+};
+const SEARCHABLE_INPUT_TYPES = new Set(["", "text", "search", "url", "email", "tel", "password"]);
+const EDITOR_SEARCH_SELECTOR = [
+    "input:not([type])",
+    "input[type=\"text\"]",
+    "input[type=\"search\"]",
+    "input[type=\"url\"]",
+    "input[type=\"email\"]",
+    "input[type=\"tel\"]",
+    "input[type=\"password\"]",
+    "textarea",
+    "button.script-creator-select__trigger[data-searchable-select=\"true\"]",
+].join(", ");
+
+const isSearchableInputType = (type: string): boolean => {
+    return SEARCHABLE_INPUT_TYPES.has(type.toLowerCase());
 };
 
 const getCyclerStateBehavior = (state: any): CyclerStateBehavior => {
@@ -435,6 +485,7 @@ const CreatorSelect: FC<CreatorSelectProps> = ({
     className,
     disabled = false,
     fallbackLabel,
+    searchable = false,
 }) => {
     const [open, setOpen] = useState<boolean>(false);
     const rootRef = useRef<HTMLDivElement | null>(null);
@@ -477,6 +528,7 @@ const CreatorSelect: FC<CreatorSelectProps> = ({
             <button
                 type="button"
                 className="script-creator-select__trigger"
+                data-searchable-select={searchable ? "true" : undefined}
                 aria-haspopup="listbox"
                 aria-controls={listboxId}
                 aria-expanded={open}
@@ -1001,6 +1053,103 @@ const toCreatorSelectOptions = (options: string[], emptyLabel: string): CreatorS
     }));
 };
 
+const escapeSearchPattern = (value: string): string => {
+    return value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+};
+
+const getSearchTextOccurrences = (
+    source: string,
+    query: string,
+    matchCase: boolean,
+    wholeWord: boolean
+): SearchOccurrenceRange[] => {
+    const trimmedQuery = query.trim();
+    if (!trimmedQuery.length || !source.length) {
+        return [];
+    }
+
+    const escapedQuery = escapeSearchPattern(trimmedQuery);
+    const flags = matchCase ? "g" : "gi";
+    const pattern = new RegExp(
+        wholeWord
+            ? `(^|[^A-Za-z0-9_])(${escapedQuery})(?=$|[^A-Za-z0-9_])`
+            : `(${escapedQuery})`,
+        flags
+    );
+    const occurrences: SearchOccurrenceRange[] = [];
+    let match: RegExpExecArray | null = pattern.exec(source);
+
+    while (match) {
+        const prefixLength = wholeWord ? (match[1] || "").length : 0;
+        const matchedText = wholeWord ? (match[2] || "") : (match[1] || "");
+        const start = match.index + prefixLength;
+        const end = start + matchedText.length;
+
+        if (matchedText.length > 0) {
+            occurrences.push({ start, end });
+        }
+
+        if (pattern.lastIndex === match.index) {
+            pattern.lastIndex += 1;
+        }
+
+        match = pattern.exec(source);
+    }
+
+    return occurrences;
+};
+
+const collectSearchStrings = (value: any, collected: string[] = []): string[] => {
+    if (typeof value === "string") {
+        if (value.trim().length) {
+            collected.push(value);
+        }
+        return collected;
+    }
+
+    if (Array.isArray(value)) {
+        value.forEach((entry) => {
+            collectSearchStrings(entry, collected);
+        });
+        return collected;
+    }
+
+    if (!value || typeof value !== "object") {
+        return collected;
+    }
+
+    Object.entries(value).forEach(([key, entryValue]) => {
+        if (key === "type") {
+            return;
+        }
+        collectSearchStrings(entryValue, collected);
+    });
+
+    return collected;
+};
+
+const buildSearchExcerpt = (
+    value: string,
+    query: string,
+    matchCase: boolean,
+    wholeWord: boolean
+): string => {
+    const compact = value.replace(/\s+/g, " ").trim();
+    if (!compact.length) {
+        return "(empty)";
+    }
+
+    const occurrences = getSearchTextOccurrences(compact, query, matchCase, wholeWord);
+    if (!occurrences.length) {
+        return compact.slice(0, 120);
+    }
+
+    const firstOccurrence = occurrences[0];
+    const start = Math.max(0, firstOccurrence.start - 28);
+    const end = Math.min(compact.length, firstOccurrence.end + 72);
+    return `${start > 0 ? "..." : ""}${compact.slice(start, end)}${end < compact.length ? "..." : ""}`;
+};
+
 const getElementListLabel = (entry: any): string => {
     if (typeof entry === "string") {
         return `text line: ${entry.slice(0, 24) || "(empty)"}`;
@@ -1026,6 +1175,178 @@ const getElementListLabel = (entry: any): string => {
     return `${type}: ${headline}`;
 };
 
+const getDialogContentListLabel = (entry: any, index: number): string => {
+    const previewRaw = typeof entry === "string" ? entry : JSON.stringify(entry);
+    const preview = typeof previewRaw === "string" ? previewRaw : "";
+    const className = entry && typeof entry === "object" && typeof entry.className === "string"
+        ? entry.className.trim()
+        : "";
+    const textValue = entry && typeof entry === "object" && typeof entry.text === "string"
+        ? entry.text
+        : "";
+    const textPreview = (textValue || preview).slice(0, 32) || "(empty)";
+
+    if (typeof entry === "string") {
+        return `line ${index + 1}: ${textPreview}`;
+    }
+
+    if (className.length) {
+        return `${className} line ${index + 1}: ${textPreview}`;
+    }
+
+    return `object ${index + 1}: ${textPreview}`;
+};
+
+const buildScriptSearchMatches = (
+    script: any,
+    query: string,
+    matchCase: boolean,
+    wholeWord: boolean
+): ScriptSearchMatch[] => {
+    const trimmedQuery = query.trim();
+    if (!trimmedQuery.length) {
+        return [];
+    }
+
+    const results: ScriptSearchMatch[] = [];
+    const pushResult = (match: ScriptSearchMatch): void => {
+        results.push(match);
+    };
+
+    (script?.screens || []).forEach((screen: any) => {
+        const screenId = typeof screen?.id === "string" ? screen.id : "(unnamed)";
+        const screenIdMatches = getSearchTextOccurrences(screenId, trimmedQuery, matchCase, wholeWord);
+        if (screenIdMatches.length) {
+            pushResult({
+                id: `screen:${screenId}`,
+                kind: "screen",
+                screenId,
+                title: `Screen ${screenId}`,
+                excerpt: "Screen ID",
+                matchCount: screenIdMatches.length,
+            });
+        }
+
+        const content = Array.isArray(screen?.content) ? screen.content : [];
+        content.forEach((entry: any, index: number) => {
+            const searchableText = typeof entry === "string"
+                ? entry
+                : collectSearchStrings(entry).join("\n");
+            const entryMatches = getSearchTextOccurrences(searchableText, trimmedQuery, matchCase, wholeWord);
+
+            if (!entryMatches.length) {
+                return;
+            }
+
+            pushResult({
+                id: `screen:${screenId}:element:${index}`,
+                kind: "element",
+                screenId,
+                elementIndex: index,
+                title: `Screen ${screenId} / Element ${index + 1}`,
+                excerpt: `${getElementListLabel(entry)} | ${buildSearchExcerpt(searchableText, trimmedQuery, matchCase, wholeWord)}`,
+                matchCount: entryMatches.length,
+            });
+        });
+    });
+
+    (script?.dialogs || []).forEach((dialog: any) => {
+        const dialogId = typeof dialog?.id === "string" ? dialog.id : "(unnamed)";
+        const dialogIdMatches = getSearchTextOccurrences(dialogId, trimmedQuery, matchCase, wholeWord);
+        if (dialogIdMatches.length) {
+            pushResult({
+                id: `dialog:${dialogId}`,
+                kind: "dialog",
+                dialogId,
+                title: `Dialog ${dialogId}`,
+                excerpt: "Dialog ID",
+                matchCount: dialogIdMatches.length,
+            });
+        }
+
+        const content = Array.isArray(dialog?.content) ? dialog.content : [];
+        content.forEach((entry: any, index: number) => {
+            const searchableText = typeof entry === "string"
+                ? entry
+                : collectSearchStrings(entry).join("\n");
+            const entryMatches = getSearchTextOccurrences(searchableText, trimmedQuery, matchCase, wholeWord);
+
+            if (!entryMatches.length) {
+                return;
+            }
+
+            pushResult({
+                id: `dialog:${dialogId}:content:${index}`,
+                kind: "dialogContent",
+                dialogId,
+                dialogContentIndex: index,
+                title: `Dialog ${dialogId} / Line ${index + 1}`,
+                excerpt: `${getDialogContentListLabel(entry, index)} | ${buildSearchExcerpt(searchableText, trimmedQuery, matchCase, wholeWord)}`,
+                matchCount: entryMatches.length,
+            });
+        });
+    });
+
+    return results;
+};
+
+const getEditorSearchOccurrences = (
+    root: HTMLElement | null,
+    query: string,
+    matchCase: boolean,
+    wholeWord: boolean
+): EditorSearchOccurrence[] => {
+    if (!root) {
+        return [];
+    }
+
+    const searchTargets = Array.from(root.querySelectorAll(EDITOR_SEARCH_SELECTOR));
+    const occurrences: EditorSearchOccurrence[] = [];
+
+    searchTargets.forEach((target) => {
+        if (!(target instanceof HTMLInputElement || target instanceof HTMLTextAreaElement || target instanceof HTMLButtonElement)) {
+            return;
+        }
+        if (target.dataset.searchExclude === "true" || !target.getClientRects().length) {
+            return;
+        }
+        if (target instanceof HTMLInputElement && !isSearchableInputType(target.type || "text")) {
+            return;
+        }
+        if (target.disabled) {
+            return;
+        }
+
+        const value = target instanceof HTMLButtonElement
+            ? (target.textContent || "")
+            : (target.value || "");
+        const ranges = getSearchTextOccurrences(value, query, matchCase, wholeWord);
+
+        ranges.forEach((range) => {
+            occurrences.push({
+                element: target,
+                start: range.start,
+                end: range.end,
+                selectable: target instanceof HTMLInputElement || target instanceof HTMLTextAreaElement,
+            });
+        });
+    });
+
+    return occurrences;
+};
+
+const focusEditorSearchOccurrence = (occurrence: EditorSearchOccurrence): void => {
+    occurrence.element.scrollIntoView({ block: "nearest", inline: "nearest" });
+    occurrence.element.focus();
+
+    if (
+        occurrence.selectable
+        && (occurrence.element instanceof HTMLInputElement || occurrence.element instanceof HTMLTextAreaElement)
+    ) {
+        occurrence.element.setSelectionRange(occurrence.start, occurrence.end);
+    }
+};
+
 const ScriptCreator: FC<ScriptCreatorProps> = ({ initialScript, onApply, onPreview, onClose }) => {
     const initialSelectedScreenId = getInitialSelectedScreenId(initialScript);
     const [script, setScript] = useState<any>(() => ensureScriptShape(initialScript));
@@ -1045,10 +1366,22 @@ const ScriptCreator: FC<ScriptCreatorProps> = ({ initialScript, onApply, onPrevi
     const [creatorColorMode, setCreatorColorMode] = useState<CreatorColorMode>("theme");
     const [sidebarWidth, setSidebarWidth] = useState<number>(DEFAULT_SIDEBAR_WIDTH);
     const [isResizingSidebar, setIsResizingSidebar] = useState<boolean>(false);
+    const [searchQuery, setSearchQuery] = useState<string>("");
+    const [searchMatchCase, setSearchMatchCase] = useState<boolean>(false);
+    const [searchWholeWord, setSearchWholeWord] = useState<boolean>(false);
+    const [activeSearchMatchIndex, setActiveSearchMatchIndex] = useState<number>(-1);
+    const [searchResultsVisible, setSearchResultsVisible] = useState<boolean>(true);
+    const [searchResultsExpanded, setSearchResultsExpanded] = useState<boolean>(false);
+    const [filterListsToMatches, setFilterListsToMatches] = useState<boolean>(false);
+    const [activeVisibleSearchOccurrenceIndex, setActiveVisibleSearchOccurrenceIndex] = useState<number>(-1);
+    const [visibleSearchOccurrenceCount, setVisibleSearchOccurrenceCount] = useState<number>(0);
+    const [searchFocusRequestId, setSearchFocusRequestId] = useState<number>(0);
     const bodyRef = useRef<HTMLDivElement | null>(null);
+    const editorRef = useRef<HTMLElement | null>(null);
     const resizePointerIdRef = useRef<number | null>(null);
     const resizeStartXRef = useRef<number>(0);
     const resizeStartWidthRef = useRef<number>(DEFAULT_SIDEBAR_WIDTH);
+    const pendingSearchSelectionModeRef = useRef<PendingSearchSelectionMode | null>(null);
 
     const handleEditorMarkdownShortcut = (event: React.KeyboardEvent<HTMLElement>): void => {
         const nativeEvent = event.nativeEvent as KeyboardEvent & { isComposing?: boolean };
@@ -1077,15 +1410,13 @@ const ScriptCreator: FC<ScriptCreatorProps> = ({ initialScript, onApply, onPrevi
             return;
         }
 
+        if (target.closest(".script-creator__search")) {
+            return;
+        }
+
         if (target instanceof HTMLInputElement) {
             const inputType = (target.type || "text").toLowerCase();
-            const isTextInput = inputType === "text"
-                || inputType === "search"
-                || inputType === "url"
-                || inputType === "email"
-                || inputType === "tel"
-                || inputType === "password";
-            if (!isTextInput) {
+            if (!isSearchableInputType(inputType)) {
                 return;
             }
         }
@@ -1272,6 +1603,123 @@ const ScriptCreator: FC<ScriptCreatorProps> = ({ initialScript, onApply, onPrevi
             .filter((dialog: any) => dialog && typeof dialog.id === "string" && dialog.id.trim().length > 0)
             .map((dialog: any) => ({ value: dialog.id, label: dialog.id }));
     }, [script.dialogs]);
+    const searchMatches = useMemo(() => {
+        return buildScriptSearchMatches(script, searchQuery, searchMatchCase, searchWholeWord);
+    }, [script, searchQuery, searchMatchCase, searchWholeWord]);
+    const totalSearchOccurrenceCount = useMemo(() => {
+        return searchMatches.reduce((total, match) => total + match.matchCount, 0);
+    }, [searchMatches]);
+    const hasSearchQuery = searchQuery.trim().length > 0;
+    const searchResultLabel = `${searchMatches.length} result${searchMatches.length === 1 ? "" : "s"}`;
+    const searchOccurrenceLabel = `${totalSearchOccurrenceCount} match${totalSearchOccurrenceCount === 1 ? "" : "es"}`;
+    const shouldShowSearchResults = hasSearchQuery && searchResultsVisible;
+    const shouldExpandSearchResults = shouldShowSearchResults && searchResultsExpanded;
+    const shouldFilterListsToMatches = hasSearchQuery && filterListsToMatches;
+    const searchSummaryBase = !hasSearchQuery
+        ? "Search screens, elements, and dialogs."
+        : !searchMatches.length
+            ? "No matches."
+            : activeSearchMatchIndex >= 0
+                ? `${activeSearchMatchIndex + 1}/${searchMatches.length} ${searchMatches.length === 1 ? "result" : "results"}`
+                    + ` | ${searchOccurrenceLabel}`
+                    + (
+                        visibleSearchOccurrenceCount > 0 && activeVisibleSearchOccurrenceIndex >= 0
+                            ? ` | ${activeVisibleSearchOccurrenceIndex + 1}/${visibleSearchOccurrenceCount} in view`
+                            : ""
+                    )
+                : `${searchResultLabel} | ${searchOccurrenceLabel}`;
+    const searchSummary = searchSummaryBase
+
+    const matchingScreenIdSet = useMemo(() => {
+        const ids = new Set<string>();
+        searchMatches.forEach((match) => {
+            if (match.screenId) {
+                ids.add(match.screenId);
+            }
+        });
+        return ids;
+    }, [searchMatches]);
+    const matchingDialogIdSet = useMemo(() => {
+        const ids = new Set<string>();
+        searchMatches.forEach((match) => {
+            if (match.dialogId) {
+                ids.add(match.dialogId);
+            }
+        });
+        return ids;
+    }, [searchMatches]);
+    const matchingElementKeySet = useMemo(() => {
+        const ids = new Set<string>();
+        searchMatches.forEach((match) => {
+            if (match.kind === "element" && match.screenId && typeof match.elementIndex === "number") {
+                ids.add(`${match.screenId}:${match.elementIndex}`);
+            }
+        });
+        return ids;
+    }, [searchMatches]);
+    const matchingDialogContentKeySet = useMemo(() => {
+        const ids = new Set<string>();
+        searchMatches.forEach((match) => {
+            if (match.kind === "dialogContent" && match.dialogId && typeof match.dialogContentIndex === "number") {
+                ids.add(`${match.dialogId}:${match.dialogContentIndex}`);
+            }
+        });
+        return ids;
+    }, [searchMatches]);
+    const visibleScreens = useMemo(() => {
+        const screens = Array.isArray(script.screens) ? script.screens : [];
+        if (!shouldFilterListsToMatches) {
+            return screens;
+        }
+        return screens.filter((screen: any) => {
+            return typeof screen?.id === "string" && matchingScreenIdSet.has(screen.id);
+        });
+    }, [matchingScreenIdSet, script.screens, shouldFilterListsToMatches]);
+    const visibleDialogs = useMemo(() => {
+        const dialogs = Array.isArray(script.dialogs) ? script.dialogs : [];
+        if (!shouldFilterListsToMatches) {
+            return dialogs;
+        }
+        return dialogs.filter((dialog: any) => {
+            return typeof dialog?.id === "string" && matchingDialogIdSet.has(dialog.id);
+        });
+    }, [matchingDialogIdSet, script.dialogs, shouldFilterListsToMatches]);
+    const visibleElementEntries = useMemo<IndexedLabeledEntry[]>(() => {
+        const content = Array.isArray(selectedScreen?.content) ? selectedScreen.content : [];
+        return content
+            .map((entry: any, index: number) => ({
+                entry,
+                index,
+                label: getElementListLabel(entry),
+            }))
+            .filter((item: IndexedLabeledEntry) => {
+                if (!shouldFilterListsToMatches || !selectedScreen?.id) {
+                    return true;
+                }
+                return matchingElementKeySet.has(`${selectedScreen.id}:${item.index}`);
+            });
+    }, [matchingElementKeySet, selectedScreen, shouldFilterListsToMatches]);
+    const visibleDialogContentEntries = useMemo<IndexedLabeledEntry[]>(() => {
+        return selectedDialogContent
+            .map((entry: any, index: number) => ({
+                entry,
+                index,
+                label: getDialogContentListLabel(entry, index),
+            }))
+            .filter((item: IndexedLabeledEntry) => {
+                if (!shouldFilterListsToMatches || !selectedDialog?.id) {
+                    return true;
+                }
+                return matchingDialogContentKeySet.has(`${selectedDialog.id}:${item.index}`);
+            });
+    }, [matchingDialogContentKeySet, selectedDialog?.id, selectedDialogContent, shouldFilterListsToMatches]);
+
+    const resetSearchNavigation = (): void => {
+        pendingSearchSelectionModeRef.current = null;
+        setActiveSearchMatchIndex(-1);
+        setActiveVisibleSearchOccurrenceIndex(-1);
+        setVisibleSearchOccurrenceCount(0);
+    };
 
     useEffect(() => {
         const dialogIds = script.dialogs
@@ -1302,6 +1750,178 @@ const ScriptCreator: FC<ScriptCreatorProps> = ({ initialScript, onApply, onPrevi
             setSelectedDialogContentIndex(maxIndex);
         }
     }, [selectedDialogContent, selectedDialogContentIndex]);
+
+    useEffect(() => {
+        if (!searchMatches.length) {
+            pendingSearchSelectionModeRef.current = null;
+            if (activeSearchMatchIndex !== -1) {
+                setActiveSearchMatchIndex(-1);
+            }
+            if (activeVisibleSearchOccurrenceIndex !== -1) {
+                setActiveVisibleSearchOccurrenceIndex(-1);
+            }
+            if (visibleSearchOccurrenceCount !== 0) {
+                setVisibleSearchOccurrenceCount(0);
+            }
+            return;
+        }
+
+        if (activeSearchMatchIndex >= searchMatches.length) {
+            setActiveSearchMatchIndex(searchMatches.length - 1);
+        }
+    }, [activeSearchMatchIndex, activeVisibleSearchOccurrenceIndex, searchMatches, visibleSearchOccurrenceCount]);
+
+    useEffect(() => {
+        if (!hasSearchQuery && searchResultsExpanded) {
+            setSearchResultsExpanded(false);
+        }
+    }, [hasSearchQuery, searchResultsExpanded]);
+
+    useEffect(() => {
+        if (!searchResultsVisible && searchResultsExpanded) {
+            setSearchResultsExpanded(false);
+        }
+    }, [searchResultsExpanded, searchResultsVisible]);
+
+    useEffect(() => {
+        if (!hasSearchQuery || activeView !== "editor") {
+            if (activeVisibleSearchOccurrenceIndex !== -1) {
+                setActiveVisibleSearchOccurrenceIndex(-1);
+            }
+            if (visibleSearchOccurrenceCount !== 0) {
+                setVisibleSearchOccurrenceCount(0);
+            }
+            return;
+        }
+
+        if (pendingSearchSelectionModeRef.current !== null) {
+            return;
+        }
+
+        const occurrences = getEditorSearchOccurrences(editorRef.current, searchQuery, searchMatchCase, searchWholeWord);
+        setVisibleSearchOccurrenceCount(occurrences.length);
+        setActiveVisibleSearchOccurrenceIndex((prev) => {
+            if (!occurrences.length) {
+                return -1;
+            }
+            if (prev < 0) {
+                return -1;
+            }
+            return Math.min(prev, occurrences.length - 1);
+        });
+    }, [
+        activeView,
+        activeVisibleSearchOccurrenceIndex,
+        elementEditorMode,
+        hasSearchQuery,
+        script,
+        searchMatchCase,
+        searchQuery,
+        searchWholeWord,
+        selectedDialogContentIndex,
+        selectedDialogFocusId,
+        selectedElementIndex,
+        selectedScreenId,
+        sidebarListMode,
+        visibleSearchOccurrenceCount,
+    ]);
+
+    useEffect(() => {
+        if (pendingSearchSelectionModeRef.current === null) {
+            return;
+        }
+
+        const frame = window.requestAnimationFrame(() => {
+            const mode = pendingSearchSelectionModeRef.current;
+            pendingSearchSelectionModeRef.current = null;
+            if (mode === null) {
+                return;
+            }
+
+            const occurrences = getEditorSearchOccurrences(editorRef.current, searchQuery, searchMatchCase, searchWholeWord);
+            setVisibleSearchOccurrenceCount(occurrences.length);
+            if (!occurrences.length) {
+                setActiveVisibleSearchOccurrenceIndex(-1);
+                return;
+            }
+
+            const targetIndex = typeof mode === "number"
+                ? Math.max(0, Math.min(mode, occurrences.length - 1))
+                : mode === "last"
+                    ? occurrences.length - 1
+                    : 0;
+
+            focusEditorSearchOccurrence(occurrences[targetIndex]);
+            setActiveVisibleSearchOccurrenceIndex(targetIndex);
+        });
+
+        return () => {
+            window.cancelAnimationFrame(frame);
+        };
+    }, [
+        activeView,
+        elementEditorMode,
+        script,
+        searchFocusRequestId,
+        searchMatchCase,
+        searchQuery,
+        searchWholeWord,
+        selectedDialogContentIndex,
+        selectedDialogFocusId,
+        selectedElementIndex,
+        selectedScreenId,
+        sidebarListMode,
+    ]);
+
+    useEffect(() => {
+        if (!shouldFilterListsToMatches || sidebarListMode !== "screens" || !visibleScreens.length) {
+            return;
+        }
+
+        const selectedVisible = visibleScreens.some((screen: any) => screen.id === selectedScreenId);
+        if (!selectedVisible) {
+            setSelectedScreenId(visibleScreens[0].id);
+            setSelectedElementIndex(0);
+            setRawElementError(null);
+        }
+    }, [selectedScreenId, shouldFilterListsToMatches, sidebarListMode, visibleScreens]);
+
+    useEffect(() => {
+        if (!shouldFilterListsToMatches || sidebarListMode !== "dialogs" || !visibleDialogs.length) {
+            return;
+        }
+
+        const selectedVisible = visibleDialogs.some((dialog: any) => dialog?.id === selectedDialogFocusId);
+        if (!selectedVisible) {
+            setSelectedDialogFocusId(visibleDialogs[0].id);
+            setSelectedDialogContentIndex(0);
+            setRawElementError(null);
+        }
+    }, [selectedDialogFocusId, shouldFilterListsToMatches, sidebarListMode, visibleDialogs]);
+
+    useEffect(() => {
+        if (!shouldFilterListsToMatches || sidebarListMode !== "screens" || !visibleElementEntries.length) {
+            return;
+        }
+
+        const selectedVisible = visibleElementEntries.some((entry: IndexedLabeledEntry) => entry.index === selectedElementIndex);
+        if (!selectedVisible) {
+            setSelectedElementIndex(visibleElementEntries[0].index);
+            setRawElementError(null);
+        }
+    }, [selectedElementIndex, shouldFilterListsToMatches, sidebarListMode, visibleElementEntries]);
+
+    useEffect(() => {
+        if (!shouldFilterListsToMatches || sidebarListMode !== "dialogs" || !visibleDialogContentEntries.length) {
+            return;
+        }
+
+        const selectedVisible = visibleDialogContentEntries.some((entry: IndexedLabeledEntry) => entry.index === selectedDialogContentIndex);
+        if (!selectedVisible) {
+            setSelectedDialogContentIndex(visibleDialogContentEntries[0].index);
+            setRawElementError(null);
+        }
+    }, [selectedDialogContentIndex, shouldFilterListsToMatches, sidebarListMode, visibleDialogContentEntries]);
 
     const clampSidebarWidth = (nextWidth: number): number => {
         const bodyWidth = bodyRef.current?.clientWidth || 0;
@@ -2065,6 +2685,8 @@ const ScriptCreator: FC<ScriptCreatorProps> = ({ initialScript, onApply, onPrevi
         setElementEditorMode("fields");
         setRawElementError(null);
         setActiveView("editor");
+        setSearchQuery("");
+        resetSearchNavigation();
     };
 
     const copyJson = async () => {
@@ -2127,6 +2749,129 @@ const ScriptCreator: FC<ScriptCreatorProps> = ({ initialScript, onApply, onPrevi
         setIsResizingSidebar(false);
     };
 
+    const openSearchMatch = (
+        match: ScriptSearchMatch,
+        index: number,
+        selectionMode: PendingSearchSelectionMode = "first"
+    ): void => {
+        pendingSearchSelectionModeRef.current = selectionMode;
+        setSearchFocusRequestId((prev) => prev + 1);
+        setActiveView("editor");
+        setSearchResultsExpanded(false);
+        setActiveSearchMatchIndex(index);
+        setActiveVisibleSearchOccurrenceIndex(-1);
+        setVisibleSearchOccurrenceCount(0);
+        setRawElementError(null);
+
+        if (match.kind === "screen" || match.kind === "element") {
+            setSidebarListMode("screens");
+            if (match.screenId) {
+                setSelectedScreenId(match.screenId);
+            }
+            setSelectedElementIndex(typeof match.elementIndex === "number" ? match.elementIndex : 0);
+            return;
+        }
+
+        setSidebarListMode("dialogs");
+        if (match.dialogId) {
+            setSelectedDialogFocusId(match.dialogId);
+        }
+        setSelectedDialogContentIndex(typeof match.dialogContentIndex === "number" ? match.dialogContentIndex : 0);
+    };
+
+    const stepSearchMatch = (direction: -1 | 1): void => {
+        if (!searchMatches.length) {
+            return;
+        }
+
+        if (activeSearchMatchIndex >= 0) {
+            const visibleOccurrences = getEditorSearchOccurrences(editorRef.current, searchQuery, searchMatchCase, searchWholeWord);
+            setVisibleSearchOccurrenceCount(visibleOccurrences.length);
+
+            if (visibleOccurrences.length) {
+                const baseIndex = activeVisibleSearchOccurrenceIndex < 0
+                    ? (direction > 0 ? -1 : visibleOccurrences.length)
+                    : activeVisibleSearchOccurrenceIndex;
+                const nextVisibleIndex = baseIndex + direction;
+
+                if (nextVisibleIndex >= 0 && nextVisibleIndex < visibleOccurrences.length) {
+                    focusEditorSearchOccurrence(visibleOccurrences[nextVisibleIndex]);
+                    setActiveVisibleSearchOccurrenceIndex(nextVisibleIndex);
+                    return;
+                }
+            } else if (activeVisibleSearchOccurrenceIndex !== -1) {
+                setActiveVisibleSearchOccurrenceIndex(-1);
+            }
+        }
+
+        const nextIndex = activeSearchMatchIndex < 0
+            ? (direction > 0 ? 0 : searchMatches.length - 1)
+            : (activeSearchMatchIndex + direction + searchMatches.length) % searchMatches.length;
+
+        openSearchMatch(searchMatches[nextIndex], nextIndex, direction > 0 ? "first" : "last");
+    };
+
+    const handleSearchInputKeyDown = (event: React.KeyboardEvent<HTMLInputElement>): void => {
+        if (!hasSearchQuery) {
+            return;
+        }
+
+        if (event.key === "ArrowDown") {
+            event.preventDefault();
+            stepSearchMatch(1);
+            return;
+        }
+
+        if (event.key === "ArrowUp") {
+            event.preventDefault();
+            stepSearchMatch(-1);
+            return;
+        }
+
+        if (event.key === "Enter") {
+            event.preventDefault();
+            stepSearchMatch(event.shiftKey ? -1 : 1);
+            return;
+        }
+
+        if (event.key === "Escape") {
+            event.preventDefault();
+            setSearchQuery("");
+            resetSearchNavigation();
+        }
+    };
+
+    const renderSearchResults = (expanded: boolean = false) => {
+        const resultsClassName = "script-creator__search-results"
+            + (expanded ? " script-creator__search-results--expanded" : "");
+
+        return (
+            <div className={resultsClassName}>
+                {searchMatches.length > 0 ? searchMatches.map((match, index) => (
+                    <button
+                        key={match.id}
+                        type="button"
+                        className={
+                            "script-creator__search-result"
+                            + (index === activeSearchMatchIndex ? " script-creator__search-result--active" : "")
+                        }
+                        onClick={() => openSearchMatch(match, index)}
+                    >
+                        <span className="script-creator__search-result-header">
+                            <span className="script-creator__search-result-title">{match.title}</span>
+                            <span className="script-creator__search-result-meta">
+                                {match.matchCount} {match.matchCount === 1 ? "hit" : "hits"}
+                            </span>
+                        </span>
+                        <span className="script-creator__search-result-excerpt">{match.excerpt}</span>
+                    </button>
+                )) : (
+                    <span className="script-creator__hint">No matches in this script.</span>
+                )}
+            </div>
+        );
+    };
+
     return (
         <section
             className={`script-creator script-creator--${creatorColorMode}${isResizingSidebar ? " script-creator--resizing" : ""}`}
@@ -2174,6 +2919,141 @@ const ScriptCreator: FC<ScriptCreatorProps> = ({ initialScript, onApply, onPrevi
                     </div>
                 </div>
 
+                <div className="script-creator__search">
+                    <div className="script-creator__search-toolbar">
+                        <label className="script-creator__field script-creator__search-field">
+                            <div className="script-creator__search-label-row">
+                                <span>Search</span>
+                                <span className="script-creator__search-summary">{searchSummary}</span>
+                            </div>
+                            <input
+                                type="search"
+                                className="script-creator__search-input"
+                                value={searchQuery}
+                                placeholder="Search screens, elements, dialogs"
+                                onChange={(e) => {
+                                    setSearchQuery(e.target.value);
+                                    resetSearchNavigation();
+                                }}
+                                onKeyDown={handleSearchInputKeyDown}
+                            />
+                        </label>
+
+                        <div className="script-creator__search-controls">
+                            <button
+                                type="button"
+                                className={
+                                    "script-creator__btn script-creator__search-toggle"
+                                    + (searchMatchCase ? " script-creator__btn--active" : "")
+                                }
+                                title="Match Case"
+                                aria-label="Match Case"
+                                aria-pressed={searchMatchCase}
+                                onClick={() => {
+                                    setSearchMatchCase((prev) => !prev);
+                                    resetSearchNavigation();
+                                }}
+                            >
+                                <span className="script-creator__search-symbol">Aa</span>
+                            </button>
+                            <button
+                                type="button"
+                                className={
+                                    "script-creator__btn script-creator__search-toggle"
+                                    + (searchWholeWord ? " script-creator__btn--active" : "")
+                                }
+                                title="Match Whole Word"
+                                aria-label="Match Whole Word"
+                                aria-pressed={searchWholeWord}
+                                onClick={() => {
+                                    setSearchWholeWord((prev) => !prev);
+                                    resetSearchNavigation();
+                                }}
+                            >
+                                <span className="script-creator__search-symbol script-creator__search-symbol--whole-word">ab</span>
+                            </button>
+                            <button
+                                type="button"
+                                className={
+                                    "script-creator__btn script-creator__search-nav"
+                                    + (searchResultsVisible ? " script-creator__btn--active" : "")
+                                }
+                                title={searchResultsVisible ? "Hide Search Results" : "Show Search Results"}
+                                aria-label={searchResultsVisible ? "Hide Search Results" : "Show Search Results"}
+                                aria-pressed={searchResultsVisible}
+                                disabled={!hasSearchQuery}
+                                onClick={() => {
+                                    setSearchResultsVisible((prev) => !prev);
+                                }}
+                            >
+                                ::
+                            </button>
+                            <button
+                                type="button"
+                                className={
+                                    "script-creator__btn script-creator__search-nav"
+                                    + (shouldExpandSearchResults ? " script-creator__btn--active" : "")
+                                }
+                                title={shouldExpandSearchResults ? "Show Results Inline" : "Make Results Fill Script"}
+                                aria-label={shouldExpandSearchResults ? "Show Results Inline" : "Make Results Fill Script"}
+                                aria-pressed={shouldExpandSearchResults}
+                                disabled={!shouldShowSearchResults}
+                                onClick={() => {
+                                    if (!shouldShowSearchResults) {
+                                        return;
+                                    }
+                                    setSearchResultsExpanded((prev) => !prev);
+                                }}
+                            >
+                                []
+                            </button>
+                            <button
+                                type="button"
+                                className={
+                                    "script-creator__btn script-creator__search-nav"
+                                    + (shouldFilterListsToMatches ? " script-creator__btn--active" : "")
+                                }
+                                title="Only Show Matching List Items"
+                                aria-label="Only Show Matching List Items"
+                                aria-pressed={shouldFilterListsToMatches}
+                                disabled={!hasSearchQuery}
+                                onClick={() => {
+                                    setFilterListsToMatches((prev) => !prev);
+                                }}
+                            >
+                                L
+                            </button>
+                            <button
+                                type="button"
+                                className="script-creator__btn script-creator__search-nav"
+                                title="Previous Match"
+                                aria-label="Previous Match"
+                                disabled={!searchMatches.length}
+                                onClick={() => stepSearchMatch(-1)}
+                            >
+                                ↑
+                            </button>
+                            <button
+                                type="button"
+                                className="script-creator__btn script-creator__search-nav"
+                                title="Next Match"
+                                aria-label="Next Match"
+                                disabled={!searchMatches.length}
+                                onClick={() => stepSearchMatch(1)}
+                            >
+                                ↓
+                            </button>
+                        </div>
+                    </div>
+
+                    {shouldShowSearchResults && !shouldExpandSearchResults && renderSearchResults()}
+                </div>
+
+                {shouldExpandSearchResults ? (
+                    <div className="script-creator__search-results-panel">
+                        {renderSearchResults(true)}
+                    </div>
+                ) : (
                 <div
                     ref={bodyRef}
                     className={"script-creator__body" + (activeView === "schema" ? " script-creator__body--single" : "")}
@@ -2221,7 +3101,12 @@ const ScriptCreator: FC<ScriptCreatorProps> = ({ initialScript, onApply, onPrevi
                         </div>
 
                         <div className={"script-creator__list " + (sidebarListMode === "screens" ? "script-creator__list--screens" : "script-creator__list--dialogs")}>
-                            {sidebarListMode === "screens" && script.screens.map((screen: any) => (
+                            {sidebarListMode === "screens" && !visibleScreens.length && (
+                                <span className="script-creator__hint">
+                                    {shouldFilterListsToMatches ? "No matching screens." : "No screens in this script."}
+                                </span>
+                            )}
+                            {sidebarListMode === "screens" && visibleScreens.map((screen: any) => (
                                 <button
                                     key={screen.id}
                                     className={"script-creator__list-item" + (screen.id === selectedScreenId ? " script-creator__list-item--active" : "")}
@@ -2235,10 +3120,12 @@ const ScriptCreator: FC<ScriptCreatorProps> = ({ initialScript, onApply, onPrevi
                                 </button>
                             ))}
 
-                            {sidebarListMode === "dialogs" && !script.dialogs.length && (
-                                <span className="script-creator__hint">No dialogs in this script.</span>
+                            {sidebarListMode === "dialogs" && !visibleDialogs.length && (
+                                <span className="script-creator__hint">
+                                    {shouldFilterListsToMatches ? "No matching dialogs." : "No dialogs in this script."}
+                                </span>
                             )}
-                            {sidebarListMode === "dialogs" && script.dialogs.map((dialog: any, index: number) => {
+                            {sidebarListMode === "dialogs" && visibleDialogs.map((dialog: any, index: number) => {
                                 const dialogId = (dialog?.id || "(unnamed)").toString();
                                 return (
                                     <button
@@ -2251,9 +3138,9 @@ const ScriptCreator: FC<ScriptCreatorProps> = ({ initialScript, onApply, onPrevi
                                         }}
                                     >
                                         {dialogId}
-                                    </button>
-                                );
-                            })}
+                                </button>
+                            );
+                        })}
                         </div>
 
                         {sidebarListMode === "screens" && (
@@ -2289,7 +3176,7 @@ const ScriptCreator: FC<ScriptCreatorProps> = ({ initialScript, onApply, onPrevi
                     )}
 
                     {activeView === "editor" && (
-                    <main className="script-creator__editor">
+                    <main ref={editorRef} className="script-creator__editor">
                         {sidebarListMode === "screens" && selectedScreen && (
                             <div className="script-creator__editor-content">
                                 <div className="script-creator__row">
@@ -2334,8 +3221,12 @@ const ScriptCreator: FC<ScriptCreatorProps> = ({ initialScript, onApply, onPrevi
                                 <div className="script-creator__element-layout">
                                     <div className="script-creator__element-list-panel">
                                         <div className="script-creator__list script-creator__list--elements">
-                                            {selectedScreen.content.map((entry: any, index: number) => {
-                                                const label = getElementListLabel(entry);
+                                            {!visibleElementEntries.length && (
+                                                <span className="script-creator__hint">
+                                                    {shouldFilterListsToMatches ? "No matching elements in this screen." : "No elements in this screen."}
+                                                </span>
+                                            )}
+                                            {visibleElementEntries.map(({ index, label }: IndexedLabeledEntry) => {
                                                 return (
                                                     <button
                                                         key={`${selectedScreen.id}-${index}`}
@@ -2499,6 +3390,7 @@ const ScriptCreator: FC<ScriptCreatorProps> = ({ initialScript, onApply, onPrevi
                                                                                     value={targetEntry.target || ""}
                                                                                     options={dialogIdSelectOptions}
                                                                                     fallbackLabel={targetEntry.target || "(dialog id)"}
+                                                                                    searchable
                                                                                     onChange={(nextTarget) => {
                                                                                         updateLinkTargets((prevTargets) => {
                                                                                             return prevTargets.map((entry, index) => {
@@ -2677,6 +3569,7 @@ const ScriptCreator: FC<ScriptCreatorProps> = ({ initialScript, onApply, onPrevi
                                                                                         value={promptCommand.action?.target || ""}
                                                                                         options={dialogIdSelectOptions}
                                                                                         fallbackLabel={promptCommand.action?.target || "(dialog id)"}
+                                                                                        searchable
                                                                                         onChange={(nextTarget) => {
                                                                                             updatePromptCommands((prevCommands) => {
                                                                                                 return prevCommands.map((entry, index) => {
@@ -2860,6 +3753,7 @@ const ScriptCreator: FC<ScriptCreatorProps> = ({ initialScript, onApply, onPrevi
                                                                                 <CreatorSelect
                                                                                     value={state.className || ""}
                                                                                     options={cyclerStateClassNameSelectOptions}
+                                                                                    searchable
                                                                                     onChange={(nextClassName) => {
                                                                                         updateCyclerStates((prevStates) => {
                                                                                             return prevStates.map((entry: any, index: number) => {
@@ -3032,6 +3926,7 @@ const ScriptCreator: FC<ScriptCreatorProps> = ({ initialScript, onApply, onPrevi
                                                         <CreatorSelect
                                                             value={selectedElement.className || ""}
                                                             options={classNameSelectOptions}
+                                                            searchable
                                                             onChange={(nextValue) => {
                                                                 if (!nextValue.length) {
                                                                     const nextElement = { ...selectedElement };
@@ -3107,24 +4002,12 @@ const ScriptCreator: FC<ScriptCreatorProps> = ({ initialScript, onApply, onPrevi
                                 <div className="script-creator__element-layout">
                                     <div className="script-creator__element-list-panel">
                                         <div className="script-creator__list script-creator__list--elements">
-                                            {!selectedDialogContent.length && (
-                                                <span className="script-creator__hint">No content lines in this dialog.</span>
+                                            {!visibleDialogContentEntries.length && (
+                                                <span className="script-creator__hint">
+                                                    {shouldFilterListsToMatches ? "No matching content lines in this dialog." : "No content lines in this dialog."}
+                                                </span>
                                             )}
-                                            {selectedDialogContent.map((entry: any, index: number) => {
-                                                const previewRaw = typeof entry === "string" ? entry : JSON.stringify(entry);
-                                                const preview = typeof previewRaw === "string" ? previewRaw : "";
-                                                const className = entry && typeof entry === "object" && typeof entry.className === "string"
-                                                    ? entry.className.trim()
-                                                    : "";
-                                                const textValue = entry && typeof entry === "object" && typeof entry.text === "string"
-                                                    ? entry.text
-                                                    : "";
-                                                const textPreview = (textValue || preview).slice(0, 32) || "(empty)";
-                                                const label = typeof entry === "string"
-                                                    ? `line ${index + 1}: ${textPreview}`
-                                                    : (className.length
-                                                        ? `${className} line ${index + 1}: ${textPreview}`
-                                                        : `object ${index + 1}: ${textPreview}`);
+                                            {visibleDialogContentEntries.map(({ index, label }: IndexedLabeledEntry) => {
                                                 return (
                                                     <button
                                                         key={`${selectedDialog.id || "dialog"}-entry-${index}`}
@@ -3189,6 +4072,7 @@ const ScriptCreator: FC<ScriptCreatorProps> = ({ initialScript, onApply, onPrevi
                                                         value={selectedDialogTextClassName || ""}
                                                         options={TEXT_LINE_STYLE_OPTIONS}
                                                         fallbackLabel={selectedDialogTextClassName || "(none)"}
+                                                        searchable
                                                         onChange={(nextClassName) => {
                                                             updateDialogTextClassName(nextClassName);
                                                             setRawElementError(null);
@@ -3203,6 +4087,7 @@ const ScriptCreator: FC<ScriptCreatorProps> = ({ initialScript, onApply, onPrevi
                                                 <span>Raw JSON</span>
                                                 <textarea
                                                     className="script-creator__textarea-fill"
+                                                    data-search-exclude={selectedDialogContentEntryIsTextLike ? "true" : undefined}
                                                     value={JSON.stringify(selectedDialogContentEntry, null, 2)}
                                                     onChange={(e) => {
                                                         try {
@@ -3259,6 +4144,7 @@ const ScriptCreator: FC<ScriptCreatorProps> = ({ initialScript, onApply, onPrevi
                         </main>
                     )}
                 </div>
+                )}
 
                 <div className="script-creator__footer">
                     <button className="script-creator__btn" onClick={applyScript}>[APPLY TO APP]</button>
