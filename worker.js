@@ -24,6 +24,11 @@ export default {
       res = await env.ASSETS.fetch(new Request(url.toString(), request));
     }
 
-    return res;
+    const securedRes = new Response(res.body, res);
+    securedRes.headers.set("X-Frame-Options", "DENY");
+    securedRes.headers.set("X-Content-Type-Options", "nosniff");
+    securedRes.headers.set("Referrer-Policy", "strict-origin-when-cross-origin");
+    securedRes.headers.set("Permissions-Policy", "camera=(), microphone=(), geolocation=()");
+    return securedRes;
   },
 };
