@@ -922,7 +922,7 @@ const ModulesBrowser: FC = () => {
                     href={getTerminalAppUrl()}
                     title="Return to the PHOSPHOR terminal"
                 >
-                    {APP_TITLE}
+                    {APP_TITLE} LIBRARY
                 </a>
 
                 <button
