@@ -900,7 +900,7 @@ const ModulesBrowser: FC = () => {
     return (
         <section className={browserClassName}>
             <header ref={headerRef} className="phosphor-header modules-browser__topbar">
-                <span className="phosphor-header__title">PHOSPHOR v7.0 MODULES</span>
+                <span className="phosphor-header__title">PHOSPHOR v7.1 MODULES</span>
 
                 <button
                     className="phosphor-header__btn phosphor-header__menu-btn"

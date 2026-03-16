@@ -1,5 +1,50 @@
 const PREFIX = "/phosphor";
 
+const applySecurityHeaders = (response) => {
+  const securedResponse = new Response(response.body, response);
+  securedResponse.headers.set("X-Frame-Options", "DENY");
+  securedResponse.headers.set("X-Content-Type-Options", "nosniff");
+  securedResponse.headers.set("Referrer-Policy", "strict-origin-when-cross-origin");
+  securedResponse.headers.set("Permissions-Policy", "camera=(), microphone=(), geolocation=()");
+  return securedResponse;
+};
+
+const addPrefixToPathname = (pathname) => {
+  if (!pathname || pathname === "/") {
+    return `${PREFIX}/`;
+  }
+
+  return `${PREFIX}${pathname.startsWith("/") ? pathname : `/${pathname}`}`;
+};
+
+const rewriteAssetRedirect = (response, requestUrl) => {
+  if (response.status < 300 || response.status >= 400) {
+    return response;
+  }
+
+  const location = response.headers.get("Location");
+  if (!location) {
+    return response;
+  }
+
+  const incomingUrl = new URL(requestUrl);
+  const redirectedUrl = new URL(location, incomingUrl);
+
+  if (redirectedUrl.origin !== incomingUrl.origin || redirectedUrl.pathname.startsWith(PREFIX)) {
+    return response;
+  }
+
+  const headers = new Headers(response.headers);
+  redirectedUrl.pathname = addPrefixToPathname(redirectedUrl.pathname);
+  headers.set("Location", redirectedUrl.toString());
+
+  return new Response(response.body, {
+    status: response.status,
+    statusText: response.statusText,
+    headers,
+  });
+};
+
 export default {
   async fetch(request, env) {
     const url = new URL(request.url);
@@ -16,19 +61,20 @@ export default {
 
     url.pathname = url.pathname.slice(PREFIX.length) || "/";
 
-    let res = await env.ASSETS.fetch(new Request(url.toString(), request));
+    let res = rewriteAssetRedirect(
+      await env.ASSETS.fetch(new Request(url.toString(), request)),
+      request.url
+    );
 
     // SPA fallback for deep links without file extensions
     if (res.status === 404 && !url.pathname.includes(".")) {
-      url.pathname = "/index.html";
-      res = await env.ASSETS.fetch(new Request(url.toString(), request));
+      url.pathname = "/";
+      res = rewriteAssetRedirect(
+        await env.ASSETS.fetch(new Request(url.toString(), request)),
+        request.url
+      );
     }
 
-    const securedRes = new Response(res.body, res);
-    securedRes.headers.set("X-Frame-Options", "DENY");
-    securedRes.headers.set("X-Content-Type-Options", "nosniff");
-    securedRes.headers.set("Referrer-Policy", "strict-origin-when-cross-origin");
-    securedRes.headers.set("Permissions-Policy", "camera=(), microphone=(), geolocation=()");
-    return securedRes;
+    return applySecurityHeaders(res);
   },
 };
