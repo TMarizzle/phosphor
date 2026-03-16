@@ -1,0 +1,501 @@
+import type { Session } from "@supabase/supabase-js";
+import { hasSupabaseEnv, supabase } from "./supabase";
+
+export type ModuleVisibility = "private" | "public";
+export type ModuleSort = "newest" | "top-rated" | "most-subscribed";
+
+export interface ModuleRecord {
+    id: string;
+    owner_id: string;
+    title: string;
+    summary: string;
+    script_json: any;
+    cover_image_url: string | null;
+    visibility: ModuleVisibility;
+    rating_count: number;
+    rating_average: number;
+    subscription_count: number;
+    published_at: string | null;
+    created_at: string;
+    updated_at: string;
+}
+
+export interface SaveModuleInput {
+    id?: string;
+    ownerId: string;
+    title: string;
+    summary: string;
+    scriptJson: any;
+    visibility: ModuleVisibility;
+}
+
+export interface UpdateModuleMetadataInput {
+    id: string;
+    ownerId: string;
+    title: string;
+    summary: string;
+    visibility: ModuleVisibility;
+}
+
+export interface UserModuleRating {
+    module_id: string;
+    rating: number;
+}
+
+const MODULE_SELECT = [
+    "id",
+    "owner_id",
+    "title",
+    "summary",
+    "script_json",
+    "cover_image_url",
+    "visibility",
+    "rating_count",
+    "rating_average",
+    "subscription_count",
+    "published_at",
+    "created_at",
+    "updated_at",
+].join(", ");
+
+const requireSupabase = () => {
+    if (!supabase || !hasSupabaseEnv) {
+        throw new Error("Supabase is not configured. Add VITE_SUPABASE_URL and VITE_SUPABASE_PUBLISHABLE_KEY.");
+    }
+
+    return supabase;
+};
+
+const normalizeModuleRecord = (record: any): ModuleRecord => ({
+    ...record,
+    rating_average: typeof record?.rating_average === "number"
+        ? record.rating_average
+        : Number(record?.rating_average || 0),
+});
+
+const getSortableModuleTimestamp = (module: ModuleRecord): number => {
+    const primaryTimestamp = new Date(module.published_at || module.updated_at || module.created_at).getTime();
+    if (!Number.isNaN(primaryTimestamp)) {
+        return primaryTimestamp;
+    }
+
+    const fallbackTimestamp = new Date(module.updated_at || module.created_at).getTime();
+    return Number.isNaN(fallbackTimestamp) ? 0 : fallbackTimestamp;
+};
+
+const sortModuleRecords = (modules: ModuleRecord[], sort: ModuleSort): ModuleRecord[] => {
+    return [...modules].sort((left, right) => {
+        if (sort === "top-rated") {
+            if (right.rating_average !== left.rating_average) {
+                return right.rating_average - left.rating_average;
+            }
+            if (right.rating_count !== left.rating_count) {
+                return right.rating_count - left.rating_count;
+            }
+        } else if (sort === "most-subscribed") {
+            if (right.subscription_count !== left.subscription_count) {
+                return right.subscription_count - left.subscription_count;
+            }
+            if (right.rating_average !== left.rating_average) {
+                return right.rating_average - left.rating_average;
+            }
+        }
+
+        return getSortableModuleTimestamp(right) - getSortableModuleTimestamp(left);
+    });
+};
+
+const escapeModuleQuery = (queryText: string): string => {
+    return queryText
+        .replace(/[%_]/g, "\\$&")
+        .replace(/,/g, "\\,");
+};
+
+const applyModuleSort = (query: any, sort: ModuleSort): any => {
+    if (sort === "top-rated") {
+        return query
+            .order("rating_average", { ascending: false })
+            .order("rating_count", { ascending: false })
+            .order("published_at", { ascending: false, nullsFirst: false });
+    }
+
+    if (sort === "most-subscribed") {
+        return query
+            .order("subscription_count", { ascending: false })
+            .order("rating_average", { ascending: false })
+            .order("published_at", { ascending: false, nullsFirst: false });
+    }
+
+    return query
+        .order("published_at", { ascending: false, nullsFirst: false })
+        .order("updated_at", { ascending: false });
+};
+
+export const isSupabaseConfigured = (): boolean => {
+    return !!supabase && hasSupabaseEnv;
+};
+
+export const getCurrentSession = async (): Promise<Session | null> => {
+    const client = requireSupabase();
+    const { data, error } = await client.auth.getSession();
+    if (error) {
+        throw error;
+    }
+
+    return data.session;
+};
+
+export const onAuthStateChange = (
+    callback: (session: Session | null) => void
+): { unsubscribe: () => void } => {
+    const client = requireSupabase();
+    const { data } = client.auth.onAuthStateChange((_event, session) => {
+        callback(session);
+    });
+
+    return {
+        unsubscribe: () => data.subscription.unsubscribe(),
+    };
+};
+
+export const signInWithGoogle = async (redirectTo: string): Promise<void> => {
+    const client = requireSupabase();
+    const { error } = await client.auth.signInWithOAuth({
+        provider: "google",
+        options: {
+            redirectTo,
+        },
+    });
+
+    if (error) {
+        throw error;
+    }
+};
+
+export const signOut = async (): Promise<void> => {
+    const client = requireSupabase();
+    const { error } = await client.auth.signOut();
+    if (error) {
+        throw error;
+    }
+};
+
+export const listOwnModules = async (ownerId: string): Promise<ModuleRecord[]> => {
+    const client = requireSupabase();
+    const { data, error } = await client
+        .from("modules")
+        .select(MODULE_SELECT)
+        .eq("owner_id", ownerId)
+        .order("updated_at", { ascending: false });
+
+    if (error) {
+        throw error;
+    }
+
+    return (data || []).map(normalizeModuleRecord);
+};
+
+export const searchPublicModules = async (
+    queryText: string,
+    sort: ModuleSort,
+    limit = 60
+): Promise<ModuleRecord[]> => {
+    const client = requireSupabase();
+    let query = client
+        .from("modules")
+        .select(MODULE_SELECT)
+        .eq("visibility", "public");
+
+    const trimmedQuery = queryText.trim();
+    if (trimmedQuery.length) {
+        const escapedQuery = escapeModuleQuery(trimmedQuery);
+        query = query.or(`title.ilike.%${escapedQuery}%,summary.ilike.%${escapedQuery}%`);
+    }
+
+    const { data, error } = await applyModuleSort(query, sort).limit(limit);
+
+    if (error) {
+        throw error;
+    }
+
+    return (data || []).map(normalizeModuleRecord);
+};
+
+const searchOwnModules = async (
+    ownerId: string,
+    queryText: string,
+    limit = 60
+): Promise<ModuleRecord[]> => {
+    const client = requireSupabase();
+    let query = client
+        .from("modules")
+        .select(MODULE_SELECT)
+        .eq("owner_id", ownerId);
+
+    const trimmedQuery = queryText.trim();
+    if (trimmedQuery.length) {
+        const escapedQuery = escapeModuleQuery(trimmedQuery);
+        query = query.or(`title.ilike.%${escapedQuery}%,summary.ilike.%${escapedQuery}%`);
+    }
+
+    const { data, error } = await query
+        .order("updated_at", { ascending: false })
+        .limit(limit);
+
+    if (error) {
+        throw error;
+    }
+
+    return (data || []).map(normalizeModuleRecord);
+};
+
+export const searchDiscoverableModules = async (
+    queryText: string,
+    sort: ModuleSort,
+    userId?: string | null,
+    limit = 60
+): Promise<ModuleRecord[]> => {
+    if (!userId) {
+        return searchPublicModules(queryText, sort, limit);
+    }
+
+    const [publicModules, ownModules] = await Promise.all([
+        searchPublicModules(queryText, sort, limit),
+        searchOwnModules(userId, queryText, limit),
+    ]);
+
+    const mergedModules = new Map<string, ModuleRecord>();
+    [...publicModules, ...ownModules].forEach((module) => {
+        mergedModules.set(module.id, module);
+    });
+
+    return sortModuleRecords(Array.from(mergedModules.values()), sort).slice(0, limit);
+};
+
+export const fetchPublicModulesByIds = async (moduleIds: string[]): Promise<ModuleRecord[]> => {
+    const client = requireSupabase();
+    if (!moduleIds.length) {
+        return [];
+    }
+
+    const { data, error } = await client
+        .from("modules")
+        .select(MODULE_SELECT)
+        .eq("visibility", "public")
+        .in("id", moduleIds);
+
+    if (error) {
+        throw error;
+    }
+
+    const modulesById = new Map<string, ModuleRecord>();
+    (data || []).map(normalizeModuleRecord).forEach((module) => {
+        modulesById.set(module.id, module);
+    });
+
+    return moduleIds
+        .map((moduleId) => modulesById.get(moduleId) || null)
+        .filter((module): module is ModuleRecord => !!module);
+};
+
+export const fetchPublicModuleById = async (moduleId: string): Promise<ModuleRecord | null> => {
+    const client = requireSupabase();
+    const { data, error } = await client
+        .from("modules")
+        .select(MODULE_SELECT)
+        .eq("id", moduleId)
+        .eq("visibility", "public")
+        .maybeSingle();
+
+    if (error) {
+        throw error;
+    }
+
+    return data ? normalizeModuleRecord(data) : null;
+};
+
+export const fetchAccessibleModuleById = async (
+    moduleId: string,
+    userId?: string | null
+): Promise<ModuleRecord | null> => {
+    const client = requireSupabase();
+    const { data, error } = await client
+        .from("modules")
+        .select(MODULE_SELECT)
+        .eq("id", moduleId)
+        .maybeSingle();
+
+    if (error) {
+        throw error;
+    }
+
+    if (!data) {
+        return null;
+    }
+
+    const module = normalizeModuleRecord(data);
+    if (module.visibility === "public") {
+        return module;
+    }
+
+    return userId && module.owner_id === userId ? module : null;
+};
+
+export const listUserSubscriptions = async (userId: string): Promise<string[]> => {
+    const client = requireSupabase();
+    const { data, error } = await client
+        .from("module_subscriptions")
+        .select("module_id")
+        .eq("user_id", userId);
+
+    if (error) {
+        throw error;
+    }
+
+    return (data || [])
+        .map((entry: any) => entry?.module_id)
+        .filter((moduleId: any): moduleId is string => typeof moduleId === "string");
+};
+
+export const listSubscribedModules = async (userId: string): Promise<ModuleRecord[]> => {
+    const moduleIds = await listUserSubscriptions(userId);
+    return fetchPublicModulesByIds(moduleIds);
+};
+
+export const listUserRatings = async (userId: string): Promise<Record<string, number>> => {
+    const client = requireSupabase();
+    const { data, error } = await client
+        .from("module_ratings")
+        .select("module_id, rating")
+        .eq("user_id", userId);
+
+    if (error) {
+        throw error;
+    }
+
+    return (data || []).reduce((acc: Record<string, number>, entry: any) => {
+        if (typeof entry?.module_id === "string" && typeof entry?.rating === "number") {
+            acc[entry.module_id] = entry.rating;
+        }
+        return acc;
+    }, {});
+};
+
+export const saveModule = async (input: SaveModuleInput): Promise<ModuleRecord> => {
+    const client = requireSupabase();
+    const payload = {
+        owner_id: input.ownerId,
+        title: input.title,
+        summary: input.summary,
+        script_json: input.scriptJson,
+        visibility: input.visibility,
+    };
+
+    if (input.id) {
+        const { data, error } = await client
+            .from("modules")
+            .update(payload)
+            .eq("id", input.id)
+            .eq("owner_id", input.ownerId)
+            .select(MODULE_SELECT)
+            .single();
+
+        if (error) {
+            throw error;
+        }
+
+        return normalizeModuleRecord(data);
+    }
+
+    const { data, error } = await client
+        .from("modules")
+        .insert(payload)
+        .select(MODULE_SELECT)
+        .single();
+
+    if (error) {
+        throw error;
+    }
+
+    return normalizeModuleRecord(data);
+};
+
+export const updateModuleMetadata = async (input: UpdateModuleMetadataInput): Promise<ModuleRecord> => {
+    const client = requireSupabase();
+    const { data, error } = await client
+        .from("modules")
+        .update({
+            title: input.title,
+            summary: input.summary,
+            visibility: input.visibility,
+        })
+        .eq("id", input.id)
+        .eq("owner_id", input.ownerId)
+        .select(MODULE_SELECT)
+        .single();
+
+    if (error) {
+        throw error;
+    }
+
+    return normalizeModuleRecord(data);
+};
+
+export const deleteModule = async (moduleId: string, ownerId: string): Promise<void> => {
+    const client = requireSupabase();
+    const { error } = await client
+        .from("modules")
+        .delete()
+        .eq("id", moduleId)
+        .eq("owner_id", ownerId);
+
+    if (error) {
+        throw error;
+    }
+};
+
+export const subscribeToModule = async (moduleId: string, userId: string): Promise<void> => {
+    const client = requireSupabase();
+    const { error } = await client
+        .from("module_subscriptions")
+        .upsert({
+            module_id: moduleId,
+            user_id: userId,
+        }, {
+            onConflict: "module_id,user_id",
+        });
+
+    if (error) {
+        throw error;
+    }
+};
+
+export const unsubscribeFromModule = async (moduleId: string, userId: string): Promise<void> => {
+    const client = requireSupabase();
+    const { error } = await client
+        .from("module_subscriptions")
+        .delete()
+        .eq("module_id", moduleId)
+        .eq("user_id", userId);
+
+    if (error) {
+        throw error;
+    }
+};
+
+export const rateModule = async (moduleId: string, userId: string, rating: number): Promise<void> => {
+    const client = requireSupabase();
+    const { error } = await client
+        .from("module_ratings")
+        .upsert({
+            module_id: moduleId,
+            user_id: userId,
+            rating,
+        }, {
+            onConflict: "module_id,user_id",
+        });
+
+    if (error) {
+        throw error;
+    }
+};

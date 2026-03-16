@@ -150,6 +150,7 @@ export const THEMES: Theme[] = [
     makeTheme("amber", "AMBER", [254, 145,  11], [8,   4,   0]),
     makeTheme("green", "GREEN", [ 0, 220,  0], [0,   0,   0]),
     makeTheme("white", "WHITE", [218, 218, 218], [2,   2,   2]),
+    makeTheme("light", "LIGHT", [18,  18,  18], [244, 244, 240]),
 ];
 
 export const DEFAULT_THEME = THEMES[0];
