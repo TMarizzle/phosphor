@@ -2,6 +2,10 @@ name = "phosphor"
 main = "worker.js"
 compatibility_date = "2026-02-17"
 
+routes = [
+  { pattern = "dunninganddragons.com/phosphor*", zone_name = "dunninganddragons.com" }
+]
+
 [assets]
 directory = "./build"
 binding = "ASSETS"
