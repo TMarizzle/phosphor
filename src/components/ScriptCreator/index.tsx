@@ -3365,7 +3365,7 @@ const ScriptCreator: FC<ScriptCreatorProps> = ({ initialScript, onApply, onPrevi
                                                                             </label>
 
                                                                             <label className="script-creator__field">
-                                                                                <span>Shift Key</span>
+                                                                                <span>Shift / Long Press</span>
                                                                                 <CreatorSelect
                                                                                     value={targetEntry.shiftKey ? "true" : "false"}
                                                                                     options={BOOLEAN_OPTIONS}

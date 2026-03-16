@@ -1,4 +1,4 @@
-import React, { FC, useEffect } from "react";
+import React, { FC, useEffect, useRef } from "react";
 
 import "./style.scss";
 
@@ -11,6 +11,7 @@ import "./style.scss";
 interface LinkTarget {
     target: string;
     type: any;
+    shiftKey?: boolean;
 }
 
 export interface LinkProps {
@@ -25,32 +26,75 @@ export interface LinkProps {
 const Link: FC<LinkProps> = (props) => {
     const { text, target, className, onClick, onRendered } = props;
     const css = ["__link__", className ? className : null].join(" ").trim();
+    const longPressTimerRef = useRef<number | null>(null);
+    const lastLongPressAtRef = useRef<number>(0);
+    const hasShiftTarget = Array.isArray(target) && target.some((entry) => {
+        return !!entry && typeof entry === "object" && entry.shiftKey === true;
+    });
 
-    let touches = 0;
-    const handleTouchStart = (e: React.TouchEvent<HTMLSpanElement>) => {
-        touches = e.touches.length;
+    const clearLongPressTimer = () => {
+        if (longPressTimerRef.current !== null) {
+            window.clearTimeout(longPressTimerRef.current);
+            longPressTimerRef.current = null;
+        }
     };
-    const handleTouchEnd = (e: React.TouchEvent<HTMLSpanElement>) => {
-        e.preventDefault(); // prevents the click event firing
-        onClick && onClick(target, touches > 1);
-        touches = 0;
+
+    const startLongPress = () => {
+        if (!hasShiftTarget) {
+            return;
+        }
+
+        clearLongPressTimer();
+        longPressTimerRef.current = window.setTimeout(() => {
+            lastLongPressAtRef.current = Date.now();
+            onClick && onClick(target, true);
+            clearLongPressTimer();
+        }, 500);
+    };
+
+    const handlePointerDown = (e: React.PointerEvent<HTMLSpanElement>) => {
+        if (e.button !== 0) {
+            return;
+        }
+
+        startLongPress();
+    };
+
+    const handlePointerUp = () => {
+        clearLongPressTimer();
+    };
+
+    const handlePointerCancel = () => {
+        clearLongPressTimer();
     };
 
     const handleClick = (e: React.MouseEvent<HTMLSpanElement>) => {
         e.preventDefault();
+
+        clearLongPressTimer();
+        if (Date.now() - lastLongPressAtRef.current < 750) {
+            return;
+        }
+
         onClick && onClick(target, e.shiftKey);
     };
     const handleRendered = () => (onRendered && onRendered());
 
     // this should fire on mount/update
     useEffect(() => handleRendered());
+    useEffect(() => {
+        return () => clearLongPressTimer();
+    }, []);
 
     return (
         <span
             className={css}
+            title={hasShiftTarget ? "Shift-click or press and hold for alternate action" : undefined}
             onClick={handleClick}
-            onTouchStart={handleTouchStart}
-            onTouchEnd={handleTouchEnd}
+            onPointerDown={handlePointerDown}
+            onPointerUp={handlePointerUp}
+            onPointerLeave={handlePointerCancel}
+            onPointerCancel={handlePointerCancel}
         >
             {text}
         </span>

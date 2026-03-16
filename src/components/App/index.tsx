@@ -82,7 +82,7 @@ class App extends Component<any, AppState> {
         const customScripts = this._loadCustomScripts();
         const activeScript = this._resolveInitialActiveScript(customScripts);
         this._headerRef = React.createRef<HTMLElement>();
-        this._titleRef = React.createRef<HTMLSpanElement>();
+        this._titleRef = React.createRef<HTMLAnchorElement>();
         this._controlsRef = React.createRef<HTMLDivElement>();
         this.state = {
             activeScript,
