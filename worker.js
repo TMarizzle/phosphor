@@ -1,4 +1,6 @@
 const PREFIX = "/phosphor";
+const LEGACY_MODULES_BROWSER_PATH = `${PREFIX}/modules`;
+const MODULES_BROWSER_PATH = `${PREFIX}/library`;
 
 const applySecurityHeaders = (response) => {
   const securedResponse = new Response(response.body, response);
@@ -51,6 +53,11 @@ export default {
 
     if (!url.pathname.startsWith(PREFIX)) {
       return new Response("Not found", { status: 404 });
+    }
+
+    if (url.pathname === LEGACY_MODULES_BROWSER_PATH || url.pathname === `${LEGACY_MODULES_BROWSER_PATH}/`) {
+      url.pathname = MODULES_BROWSER_PATH;
+      return Response.redirect(url.toString(), 301);
     }
 
     // Ensure relative asset paths in index.html resolve under /phosphor/

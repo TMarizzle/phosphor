@@ -30,7 +30,7 @@ import {
     persistModulesBrowserViewMode,
     persistSoundEnabled,
 } from "../../lib/preferences";
-import { getModulesBrowserUrl, getTerminalAppUrl } from "../../lib/routes";
+import { getModulesBrowserUrl, getTerminalAppUrl, isLegacyModulesBrowserPath } from "../../lib/routes";
 import {
     THEMES,
     Theme,
@@ -441,6 +441,22 @@ const ModulesBrowser: FC = () => {
     }, [shareMenuOpen, updateShareMenuPosition]);
 
     useEffect(() => {
+        if (!isLegacyModulesBrowserPath()) {
+            return;
+        }
+
+        try {
+            const currentUrl = new URL(window.location.href);
+            const nextUrl = new URL(getModulesBrowserUrl());
+            nextUrl.search = currentUrl.search;
+            nextUrl.hash = currentUrl.hash;
+            window.history.replaceState({}, "", nextUrl.toString());
+        } catch {
+            // ignore invalid URLs
+        }
+    }, []);
+
+    useEffect(() => {
         if (!supabaseReady) {
             setAuthLoading(false);
             setCatalogLoading(false);
@@ -567,7 +583,7 @@ const ModulesBrowser: FC = () => {
         setNoticeMessage(null);
         try {
             const returnUrl = new URL(getTerminalAppUrl());
-            returnUrl.searchParams.set("auth_return", "modules");
+            returnUrl.searchParams.set("auth_return", "library");
             await signInWithGoogle(returnUrl.toString());
         } catch (error: any) {
             setErrorMessage(error?.message || "Could not start Google sign-in.");
@@ -900,7 +916,7 @@ const ModulesBrowser: FC = () => {
     return (
         <section className={browserClassName}>
             <header ref={headerRef} className="phosphor-header modules-browser__topbar">
-                <span className="phosphor-header__title">PHOSPHOR v7.1 MODULES</span>
+                <span className="phosphor-header__title">PHOSPHOR v7.1 LIBRARY</span>
 
                 <button
                     className="phosphor-header__btn phosphor-header__menu-btn"

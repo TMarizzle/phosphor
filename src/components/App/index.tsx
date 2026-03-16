@@ -283,7 +283,8 @@ class App extends Component<any, AppState> {
     private _shouldReturnToModulesBrowser(): boolean {
         try {
             const params = new URLSearchParams(window.location.search);
-            return params.get("auth_return") === "modules";
+            const authReturn = params.get("auth_return");
+            return authReturn === "modules" || authReturn === "library";
         } catch {
             return false;
         }

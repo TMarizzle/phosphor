@@ -1,3 +1,6 @@
+const MODULES_BROWSER_PATH = "/library";
+const LEGACY_MODULES_BROWSER_PATH = "/modules";
+
 const normalizeBasePath = (basePath: string): string => {
     let nextBasePath = basePath || "/";
 
@@ -42,7 +45,12 @@ export const stripBasePath = (pathname: string): string => {
 
 export const isModulesBrowserPath = (pathname: string = window.location.pathname): boolean => {
     const normalizedPath = stripBasePath(pathname).replace(/\/+$/, "") || "/";
-    return normalizedPath === "/modules";
+    return normalizedPath === MODULES_BROWSER_PATH || normalizedPath === LEGACY_MODULES_BROWSER_PATH;
+};
+
+export const isLegacyModulesBrowserPath = (pathname: string = window.location.pathname): boolean => {
+    const normalizedPath = stripBasePath(pathname).replace(/\/+$/, "") || "/";
+    return normalizedPath === LEGACY_MODULES_BROWSER_PATH;
 };
 
 const buildUrl = (
@@ -75,6 +83,6 @@ export const getModulesBrowserUrl = (
     params?: Record<string, string | null | undefined>
 ): string => {
     const basePathWithoutTrailingSlash = getBasePathWithoutTrailingSlash();
-    const modulesPath = `${basePathWithoutTrailingSlash || ""}/modules`;
+    const modulesPath = `${basePathWithoutTrailingSlash || ""}${MODULES_BROWSER_PATH}`;
     return buildUrl(modulesPath, params);
 };
