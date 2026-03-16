@@ -30,6 +30,7 @@ import {
     persistModulesBrowserViewMode,
     persistSoundEnabled,
 } from "../../lib/preferences";
+import { APP_TITLE } from "../../lib/branding";
 import { getModulesBrowserUrl, getTerminalAppUrl, isLegacyModulesBrowserPath } from "../../lib/routes";
 import {
     THEMES,
@@ -916,7 +917,13 @@ const ModulesBrowser: FC = () => {
     return (
         <section className={browserClassName}>
             <header ref={headerRef} className="phosphor-header modules-browser__topbar">
-                <span className="phosphor-header__title">PHOSPHOR v7.2 LIBRARY</span>
+                <a
+                    className="phosphor-header__title"
+                    href={getTerminalAppUrl()}
+                    title="Return to the PHOSPHOR terminal"
+                >
+                    {APP_TITLE}
+                </a>
 
                 <button
                     className="phosphor-header__btn phosphor-header__menu-btn"

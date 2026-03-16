@@ -30,6 +30,7 @@ import {
     signInWithGoogle,
     signOut,
 } from "../../lib/modules";
+import { APP_TITLE } from "../../lib/branding";
 import { loadPersistedSoundEnabled, persistSoundEnabled } from "../../lib/preferences";
 import { getModulesBrowserUrl, getTerminalAppUrl } from "../../lib/routes";
 
@@ -67,7 +68,7 @@ interface AppState {
 
 class App extends Component<any, AppState> {
     private _headerRef: React.RefObject<HTMLElement>;
-    private _titleRef: React.RefObject<HTMLSpanElement>;
+    private _titleRef: React.RefObject<HTMLAnchorElement>;
     private _controlsRef: React.RefObject<HTMLDivElement>;
     private _headerLayoutRafId: number | null = null;
     private _authSubscription: { unsubscribe: () => void } | null = null;
@@ -1143,7 +1144,14 @@ class App extends Component<any, AppState> {
                     ref={this._headerRef}
                     className={"phosphor-header" + (headerCompact ? " phosphor-header--compact" : "")}
                 >
-                    <span ref={this._titleRef} className="phosphor-header__title">PHOSPHOR v7.2</span>
+                    <a
+                        ref={this._titleRef}
+                        className="phosphor-header__title"
+                        href={getTerminalAppUrl()}
+                        title="Return to the PHOSPHOR terminal"
+                    >
+                        {APP_TITLE}
+                    </a>
 
                     <button
                         className="phosphor-header__btn phosphor-header__menu-btn"
