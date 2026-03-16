@@ -16,12 +16,13 @@ export default {
 
     url.pathname = url.pathname.slice(PREFIX.length) || "/";
 
-    // SPA routing: non-file paths (no extension) serve index.html directly
-    if (!url.pathname.includes(".")) {
-      url.pathname = "/index.html";
-    }
-
     let res = await env.ASSETS.fetch(new Request(url.toString(), request));
+
+    // SPA fallback for deep links without file extensions
+    if (res.status === 404 && !url.pathname.includes(".")) {
+      url.pathname = "/index.html";
+      res = await env.ASSETS.fetch(new Request(url.toString(), request));
+    }
 
     const securedRes = new Response(res.body, res);
     securedRes.headers.set("X-Frame-Options", "DENY");
