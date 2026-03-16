@@ -96,7 +96,7 @@ class App extends Component<any, AppState> {
             optionsDropdownOpen: false,
             mobileMenuOpen: false,
             creatorOpen: false,
-            modulesOpen: false,
+            modulesOpen: this._hasAuthReturnParams(),
             previewMode: false,
             uploadError: null,
             authSession: null,
@@ -280,10 +280,28 @@ class App extends Component<any, AppState> {
         }
     }
 
+    private _shouldReturnToModulesBrowser(): boolean {
+        try {
+            const params = new URLSearchParams(window.location.search);
+            return params.get("auth_return") === "modules";
+        } catch {
+            return false;
+        }
+    }
+
+    private _hasAuthReturnParams(): boolean {
+        try {
+            const params = new URLSearchParams(window.location.search);
+            return params.has("code") && params.has("state");
+        } catch {
+            return false;
+        }
+    }
+
     private _clearTransientAuthParams(): void {
         try {
             const url = new URL(window.location.href);
-            const removableParams = ["code", "state", "error", "error_code", "error_description"];
+            const removableParams = ["code", "state", "error", "error_code", "error_description", "auth_return"];
             let changed = false;
             removableParams.forEach((param) => {
                 if (url.searchParams.has(param)) {
@@ -380,6 +398,11 @@ class App extends Component<any, AppState> {
                 await this._handleRefreshModules(session.user.id);
             }
 
+            if (this._shouldReturnToModulesBrowser()) {
+                window.location.href = getModulesBrowserUrl();
+                return;
+            }
+
             await this._loadSharedModuleFromLocation();
         } catch (error: any) {
             this.setState({
@@ -435,12 +458,12 @@ class App extends Component<any, AppState> {
         this.setState((prev) => ({
             activeScript: nextScript,
             activeScriptRevision: prev.activeScriptRevision + 1,
-            activeModule: module,
+            activeModule: module as ModuleRecord | null,
             creatorOpen: false,
             previewMode: false,
-            uploadError: null,
+            uploadError: null as string | null,
             modulesBusy: false,
-            modulesError: null,
+            modulesError: null as string | null,
             modulesNotice: options?.notice || null,
             scriptDropdownOpen: false,
             optionsDropdownOpen: false,
@@ -852,6 +875,12 @@ class App extends Component<any, AppState> {
             return;
         }
 
+        if (file.size > 5 * 1024 * 1024) {
+            this.setState({ uploadError: "File is too large. Maximum size is 5 MB." });
+            e.target.value = "";
+            return;
+        }
+
         const reader = new FileReader();
         reader.onload = (event) => {
             try {
@@ -874,7 +903,7 @@ class App extends Component<any, AppState> {
                         activeScript: customScript,
                         activeScriptRevision: prev.activeScriptRevision + 1,
                         customScripts,
-                        activeModule: null,
+                        activeModule: null as ModuleRecord | null,
                         scriptDropdownOpen: false,
                         optionsDropdownOpen: false,
                         customThemeEditorOpen: false,
@@ -1113,7 +1142,7 @@ class App extends Component<any, AppState> {
                     ref={this._headerRef}
                     className={"phosphor-header" + (headerCompact ? " phosphor-header--compact" : "")}
                 >
-                    <span ref={this._titleRef} className="phosphor-header__title">PHOSPHOR v6.2</span>
+                    <span ref={this._titleRef} className="phosphor-header__title">PHOSPHOR v7.0</span>
 
                     <button
                         className="phosphor-header__btn phosphor-header__menu-btn"

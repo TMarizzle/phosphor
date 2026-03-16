@@ -379,6 +379,20 @@ $browser-normal-font-stack: "Trebuchet MS", Verdana, Geneva, sans-serif;
     }
 
     &__owner-menu-dropdown {
+        // Portaled to document.body, so we must set CSS vars here directly
+        // rather than relying on inheriting from .modules-browser.
+        --browser-bg: var(--theme-bg, #000);
+        --browser-fg: var(--theme-fg, #fff);
+        --browser-border: var(--browser-fg);
+        --browser-soft-border: rgba(255, 255, 255, 0.12);
+        --browser-control-bg: var(--browser-bg);
+        --browser-fg-glow: var(--theme-fg-glow, none);
+        --browser-text-shadow: var(--browser-fg-glow);
+        --browser-selected-bg: var(--browser-fg);
+        --browser-selected-fg: var(--browser-bg);
+        --browser-font-family: #{$font-family};
+        --browser-size-scale: 1;
+
         position: fixed;
         min-width: 10.5rem;
         max-width: min(13rem, calc(100vw - 1rem));
@@ -386,6 +400,28 @@ $browser-normal-font-stack: "Trebuchet MS", Verdana, Geneva, sans-serif;
         font-family: var(--browser-font-family);
         font-size: calc(16pt * var(--browser-size-scale));
         text-shadow: var(--browser-text-shadow);
+        background: var(--browser-bg);
+        border-color: var(--browser-border);
+        color: var(--browser-fg);
+    }
+
+    &__owner-menu-dropdown--font-normal {
+        --browser-font-family: #{$browser-normal-font-stack};
+        --browser-size-scale: 0.82;
+        --browser-text-shadow: none;
+        --browser-fg-glow: none;
+    }
+
+    &__owner-menu-dropdown--web-view {
+        --browser-bg: #f7f3ea;
+        --browser-fg: #181614;
+        --browser-border: #c7bfaf;
+        --browser-soft-border: rgba(24, 22, 20, 0.12);
+        --browser-control-bg: #fffdfa;
+        --browser-fg-glow: none;
+        --browser-text-shadow: none;
+        --browser-selected-bg: #2b6489;
+        --browser-selected-fg: #ffffff;
     }
 
     &__owner-menu-dropdown .phosphor-header__dropdown-item,
@@ -394,14 +430,93 @@ $browser-normal-font-stack: "Trebuchet MS", Verdana, Geneva, sans-serif;
         font-size: calc(16pt * var(--browser-size-scale));
         line-height: 1.2;
         text-shadow: var(--browser-text-shadow);
+        color: var(--browser-fg);
     }
 
     &__owner-menu-dropdown .phosphor-header__dropdown-item {
         padding: 0.12rem 0.26rem;
+        border-bottom-color: var(--browser-soft-border);
+
+        &:hover {
+            background: var(--browser-selected-bg);
+            color: var(--browser-selected-fg);
+            text-shadow: none;
+        }
+    }
+
+    &__owner-menu-dropdown .phosphor-header__dropdown-label {
+        border-bottom-color: var(--browser-soft-border);
     }
 
     &__owner-menu-dropdown .phosphor-header__dropdown-item--separator {
         margin: 0;
+    }
+
+    &__share-menu {
+        display: inline-flex;
+        flex: 0 0 auto;
+        align-self: flex-start;
+    }
+
+    &__share-menu-dropdown {
+        // Portaled to document.body — same pattern as owner-menu-dropdown.
+        --browser-bg: var(--theme-bg, #000);
+        --browser-fg: var(--theme-fg, #fff);
+        --browser-border: var(--browser-fg);
+        --browser-soft-border: rgba(255, 255, 255, 0.12);
+        --browser-control-bg: var(--browser-bg);
+        --browser-fg-glow: var(--theme-fg-glow, none);
+        --browser-text-shadow: var(--browser-fg-glow);
+        --browser-selected-bg: var(--browser-fg);
+        --browser-selected-fg: var(--browser-bg);
+        --browser-font-family: #{$font-family};
+        --browser-size-scale: 1;
+
+        position: fixed;
+        min-width: 10.5rem;
+        max-width: min(13rem, calc(100vw - 1rem));
+        z-index: 520;
+        font-family: var(--browser-font-family);
+        font-size: calc(16pt * var(--browser-size-scale));
+        text-shadow: var(--browser-text-shadow);
+        background: var(--browser-bg);
+        border-color: var(--browser-border);
+        color: var(--browser-fg);
+    }
+
+    &__share-menu-dropdown--font-normal {
+        --browser-font-family: #{$browser-normal-font-stack};
+        --browser-size-scale: 0.82;
+        --browser-text-shadow: none;
+        --browser-fg-glow: none;
+    }
+
+    &__share-menu-dropdown--web-view {
+        --browser-bg: #f7f3ea;
+        --browser-fg: #181614;
+        --browser-border: #c7bfaf;
+        --browser-soft-border: rgba(24, 22, 20, 0.12);
+        --browser-control-bg: #fffdfa;
+        --browser-fg-glow: none;
+        --browser-text-shadow: none;
+        --browser-selected-bg: #2b6489;
+        --browser-selected-fg: #ffffff;
+    }
+
+    &__share-menu-dropdown .phosphor-header__dropdown-item {
+        font-family: var(--browser-font-family);
+        font-size: calc(16pt * var(--browser-size-scale));
+        line-height: 1.2;
+        text-shadow: var(--browser-text-shadow);
+        color: var(--browser-fg);
+        padding: 0.12rem 0.26rem;
+        border-bottom-color: var(--browser-soft-border);
+
+        &:hover {
+            background: var(--browser-selected-bg);
+            color: var(--browser-selected-fg);
+            text-shadow: none;
+        }
     }
 
     &__detail-card {

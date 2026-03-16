@@ -239,7 +239,7 @@ const ModulesPanel: FC<ModulesPanelProps> = ({
                             <textarea
                                 value={summary}
                                 onChange={(event) => setSummary(event.target.value)}
-                                maxLength={500}
+                                maxLength={2000}
                                 rows={3}
                                 placeholder="Short summary for the module listing"
                             />

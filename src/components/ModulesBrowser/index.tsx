@@ -70,6 +70,8 @@ const TRANSIENT_AUTH_PARAMS = [
 ] as const;
 const OWNER_MENU_WIDTH = 224;
 const OWNER_MENU_HEIGHT = 140;
+const SHARE_MENU_WIDTH = 224;
+const SHARE_MENU_HEIGHT = 90;
 
 const getModulesBrowserUrlWithTransientAuthParams = (
     params?: Record<string, string | null | undefined>
@@ -133,6 +135,15 @@ const parseInitialSearch = (): string => {
     }
 };
 
+const parseInitialModuleId = (): string | null => {
+    try {
+        const params = new URLSearchParams(window.location.search);
+        return params.get("module") || null;
+    } catch {
+        return null;
+    }
+};
+
 const parseInitialSubscribedOnly = (): boolean => {
     try {
         const params = new URLSearchParams(window.location.search);
@@ -174,7 +185,7 @@ const ModulesBrowser: FC = () => {
     const [sort, setSort] = useState<ModuleSort>(parseInitialSort);
     const [subscribedOnly, setSubscribedOnly] = useState<boolean>(parseInitialSubscribedOnly);
     const [modules, setModules] = useState<ModuleRecord[]>([]);
-    const [selectedModuleId, setSelectedModuleId] = useState<string | null>(null);
+    const [selectedModuleId, setSelectedModuleId] = useState<string | null>(parseInitialModuleId);
     const [subscribedIds, setSubscribedIds] = useState<string[]>([]);
     const [createdModuleCount, setCreatedModuleCount] = useState<number>(0);
     const [ratingsByModuleId, setRatingsByModuleId] = useState<Record<string, number>>({});
@@ -186,6 +197,8 @@ const ModulesBrowser: FC = () => {
     const [mobileMenuOpen, setMobileMenuOpen] = useState<boolean>(false);
     const [ownerMenuOpen, setOwnerMenuOpen] = useState<boolean>(false);
     const [ownerMenuPosition, setOwnerMenuPosition] = useState<{ top: number; left: number } | null>(null);
+    const [shareMenuOpen, setShareMenuOpen] = useState<boolean>(false);
+    const [shareMenuPosition, setShareMenuPosition] = useState<{ top: number; left: number } | null>(null);
     const [editingModuleId, setEditingModuleId] = useState<string | null>(null);
     const [editTitle, setEditTitle] = useState<string>("");
     const [editSummary, setEditSummary] = useState<string>("");
@@ -212,6 +225,8 @@ const ModulesBrowser: FC = () => {
     const optionsRef = useRef<HTMLDivElement | null>(null);
     const ownerMenuRef = useRef<HTMLDivElement | null>(null);
     const ownerMenuDropdownRef = useRef<HTMLDivElement | null>(null);
+    const shareMenuRef = useRef<HTMLDivElement | null>(null);
+    const shareMenuDropdownRef = useRef<HTMLDivElement | null>(null);
 
     const updateOwnerMenuPosition = useCallback(() => {
         const anchor = ownerMenuRef.current;
@@ -229,6 +244,27 @@ const ModulesBrowser: FC = () => {
             : rect.bottom + 4;
 
         setOwnerMenuPosition({
+            top: nextTop,
+            left: nextLeft,
+        });
+    }, []);
+
+    const updateShareMenuPosition = useCallback(() => {
+        const anchor = shareMenuRef.current;
+        if (!anchor) {
+            return;
+        }
+
+        const rect = anchor.getBoundingClientRect();
+        const nextLeft = Math.max(
+            8,
+            Math.min(rect.right - SHARE_MENU_WIDTH, window.innerWidth - SHARE_MENU_WIDTH - 8)
+        );
+        const nextTop = rect.bottom + 4 + SHARE_MENU_HEIGHT > window.innerHeight - 8
+            ? Math.max(8, rect.top - SHARE_MENU_HEIGHT - 4)
+            : rect.bottom + 4;
+
+        setShareMenuPosition({
             top: nextTop,
             left: nextLeft,
         });
@@ -300,7 +336,7 @@ const ModulesBrowser: FC = () => {
     }, [activeTheme]);
 
     useEffect(() => {
-        if (!profileOpen && !optionsDropdownOpen && !mobileMenuOpen && !ownerMenuOpen) {
+        if (!profileOpen && !optionsDropdownOpen && !mobileMenuOpen && !ownerMenuOpen && !shareMenuOpen) {
             return;
         }
 
@@ -328,12 +364,22 @@ const ModulesBrowser: FC = () => {
                 setOwnerMenuOpen(false);
             }
 
+            if (
+                shareMenuOpen
+                && shareMenuRef.current
+                && !shareMenuRef.current.contains(target)
+                && (!shareMenuDropdownRef.current || !shareMenuDropdownRef.current.contains(target))
+            ) {
+                setShareMenuOpen(false);
+            }
+
             if (mobileMenuOpen && headerRef.current && !headerRef.current.contains(target)) {
                 setMobileMenuOpen(false);
                 setProfileOpen(false);
                 setOptionsDropdownOpen(false);
                 setCustomThemeEditorOpen(false);
                 setOwnerMenuOpen(false);
+                setShareMenuOpen(false);
             }
         };
 
@@ -344,6 +390,7 @@ const ModulesBrowser: FC = () => {
                 setCustomThemeEditorOpen(false);
                 setMobileMenuOpen(false);
                 setOwnerMenuOpen(false);
+                setShareMenuOpen(false);
             }
         };
 
@@ -353,7 +400,7 @@ const ModulesBrowser: FC = () => {
             document.removeEventListener("mousedown", handleDocumentMouseDown);
             document.removeEventListener("keydown", handleDocumentKeyDown);
         };
-    }, [mobileMenuOpen, optionsDropdownOpen, ownerMenuOpen, profileOpen]);
+    }, [mobileMenuOpen, optionsDropdownOpen, ownerMenuOpen, profileOpen, shareMenuOpen]);
 
     useEffect(() => {
         if (!ownerMenuOpen) {
@@ -373,6 +420,25 @@ const ModulesBrowser: FC = () => {
             window.removeEventListener("scroll", handleViewportChange, true);
         };
     }, [ownerMenuOpen, updateOwnerMenuPosition]);
+
+    useEffect(() => {
+        if (!shareMenuOpen) {
+            setShareMenuPosition(null);
+            return;
+        }
+
+        updateShareMenuPosition();
+        const handleViewportChange = () => {
+            updateShareMenuPosition();
+        };
+
+        window.addEventListener("resize", handleViewportChange);
+        window.addEventListener("scroll", handleViewportChange, true);
+        return () => {
+            window.removeEventListener("resize", handleViewportChange);
+            window.removeEventListener("scroll", handleViewportChange, true);
+        };
+    }, [shareMenuOpen, updateShareMenuPosition]);
 
     useEffect(() => {
         if (!supabaseReady) {
@@ -457,7 +523,7 @@ const ModulesBrowser: FC = () => {
     useEffect(() => {
         const timeoutId = window.setTimeout(() => {
             void refreshCatalog(sessionUserId, subscribedIds);
-        }, 160);
+        }, 350);
 
         return () => {
             window.clearTimeout(timeoutId);
@@ -500,11 +566,9 @@ const ModulesBrowser: FC = () => {
         setErrorMessage(null);
         setNoticeMessage(null);
         try {
-            await signInWithGoogle(getModulesBrowserUrl({
-                q: query.trim() || undefined,
-                sort: sort !== "newest" ? sort : undefined,
-                subscribed: subscribedOnly ? "1" : undefined,
-            }));
+            const returnUrl = new URL(getTerminalAppUrl());
+            returnUrl.searchParams.set("auth_return", "modules");
+            await signInWithGoogle(returnUrl.toString());
         } catch (error: any) {
             setErrorMessage(error?.message || "Could not start Google sign-in.");
         }
@@ -669,21 +733,36 @@ const ModulesBrowser: FC = () => {
         }
     };
 
-    const handleCopyLink = async (module: ModuleRecord): Promise<void> => {
-        if (module.visibility !== "public") {
-            setErrorMessage("Only public modules can be shared.");
-            setNoticeMessage(null);
-            return;
-        }
-
+    const handleCopyPhosphorLink = async (module: ModuleRecord): Promise<void> => {
+        setShareMenuOpen(false);
         const shareUrl = getTerminalAppUrl(module.id);
         try {
             await navigator.clipboard.writeText(shareUrl);
-            setNoticeMessage("Module link copied to clipboard.");
+            setNoticeMessage("Phosphor link copied to clipboard.");
             setErrorMessage(null);
         } catch {
             setErrorMessage(`Could not copy automatically. Share this URL manually: ${shareUrl}`);
         }
+    };
+
+    const handleCopyLibraryLink = async (module: ModuleRecord): Promise<void> => {
+        setShareMenuOpen(false);
+        const shareUrl = getModulesBrowserUrl({ module: module.id });
+        try {
+            await navigator.clipboard.writeText(shareUrl);
+            setNoticeMessage("Library link copied to clipboard.");
+            setErrorMessage(null);
+        } catch {
+            setErrorMessage(`Could not copy automatically. Share this URL manually: ${shareUrl}`);
+        }
+    };
+
+    const handleShareMenuToggle = (): void => {
+        setShareMenuOpen((prev) => !prev);
+        setOwnerMenuOpen(false);
+        setProfileOpen(false);
+        setOptionsDropdownOpen(false);
+        setCustomThemeEditorOpen(false);
     };
 
     const handleOwnerMenuToggle = (): void => {
@@ -821,7 +900,7 @@ const ModulesBrowser: FC = () => {
     return (
         <section className={browserClassName}>
             <header ref={headerRef} className="phosphor-header modules-browser__topbar">
-                <span className="phosphor-header__title">PHOSPHOR MODULES</span>
+                <span className="phosphor-header__title">PHOSPHOR v7.0 MODULES</span>
 
                 <button
                     className="phosphor-header__btn phosphor-header__menu-btn"
@@ -1227,13 +1306,16 @@ const ModulesBrowser: FC = () => {
                                             Open in Phosphor
                                         </button>
 
-                                        <button
-                                            className="modules-browser__btn"
-                                            disabled={selectedModule.visibility !== "public"}
-                                            onClick={() => void handleCopyLink(selectedModule)}
-                                        >
-                                            Copy Link
-                                        </button>
+                                        <div ref={shareMenuRef} className="modules-browser__share-menu">
+                                            <button
+                                                className="modules-browser__btn"
+                                                onClick={handleShareMenuToggle}
+                                                aria-haspopup="menu"
+                                                aria-expanded={shareMenuOpen}
+                                            >
+                                                {shareMenuOpen ? "Share ▲" : "Share ▼"}
+                                            </button>
+                                        </div>
 
                                         {!isOwnModule && (
                                             <button
@@ -1283,6 +1365,7 @@ const ModulesBrowser: FC = () => {
                                                         onChange={(event) => setEditSummary(event.target.value)}
                                                         placeholder="Short summary for the module page"
                                                         rows={5}
+                                                        maxLength={2000}
                                                     />
                                                 </label>
                                             </div>
@@ -1362,7 +1445,11 @@ const ModulesBrowser: FC = () => {
             {ownerMenuOpen && !!selectedModule && selectedModule.owner_id === sessionUserId && !!ownerMenuPosition && createPortal(
                 <div
                     ref={ownerMenuDropdownRef}
-                    className="phosphor-header__dropdown phosphor-header__dropdown--options modules-browser__owner-menu-dropdown"
+                    className={
+                        "phosphor-header__dropdown phosphor-header__dropdown--options modules-browser__owner-menu-dropdown"
+                        + (viewMode === "web" ? " modules-browser__owner-menu-dropdown--web-view" : "")
+                        + (fontMode === "normal" ? " modules-browser__owner-menu-dropdown--font-normal" : "")
+                    }
                     role="menu"
                     style={{
                         top: `${ownerMenuPosition.top}px`,
@@ -1383,13 +1470,44 @@ const ModulesBrowser: FC = () => {
                     >
                         {selectedModule.visibility === "public" ? "Make Private" : "Make Public"}
                     </button>
-                    <div className="phosphor-header__dropdown-item phosphor-header__dropdown-item--separator" />
                     <button
                         className="phosphor-header__dropdown-item modules-browser__dropdown-item--danger"
                         role="menuitem"
                         onClick={() => void handleDeleteOwnedModule(selectedModule)}
                     >
                         Delete Module
+                    </button>
+                </div>,
+                document.body
+            )}
+
+            {shareMenuOpen && !!selectedModule && !!shareMenuPosition && createPortal(
+                <div
+                    ref={shareMenuDropdownRef}
+                    className={
+                        "phosphor-header__dropdown phosphor-header__dropdown--options modules-browser__share-menu-dropdown"
+                        + (viewMode === "web" ? " modules-browser__share-menu-dropdown--web-view" : "")
+                        + (fontMode === "normal" ? " modules-browser__share-menu-dropdown--font-normal" : "")
+                    }
+                    role="menu"
+                    style={{
+                        top: `${shareMenuPosition.top}px`,
+                        left: `${shareMenuPosition.left}px`,
+                    }}
+                >
+                    <button
+                        className="phosphor-header__dropdown-item"
+                        role="menuitem"
+                        onClick={() => void handleCopyPhosphorLink(selectedModule)}
+                    >
+                        Copy Phosphor Link
+                    </button>
+                    <button
+                        className="phosphor-header__dropdown-item"
+                        role="menuitem"
+                        onClick={() => void handleCopyLibraryLink(selectedModule)}
+                    >
+                        Copy Library Link
                     </button>
                 </div>,
                 document.body

@@ -109,7 +109,7 @@ const Modal: FC<ModalProps> = (props) => {
             document.removeEventListener("keydown", handleKeyDown);
             document.body.classList.remove("static");
         };
-    });
+    }, [handleKeyDown]);
 
     return (
         <section className={css} onClick={onClose}>

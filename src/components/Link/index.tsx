@@ -32,14 +32,12 @@ const Link: FC<LinkProps> = (props) => {
     };
     const handleTouchEnd = (e: React.TouchEvent<HTMLSpanElement>) => {
         e.preventDefault(); // prevents the click event firing
-        console.log("handleTouchEnd");
         onClick && onClick(target, touches > 1);
         touches = 0;
     };
 
     const handleClick = (e: React.MouseEvent<HTMLSpanElement>) => {
         e.preventDefault();
-        console.log("click");
         onClick && onClick(target, e.shiftKey);
     };
     const handleRendered = () => (onRendered && onRendered());

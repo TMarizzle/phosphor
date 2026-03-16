@@ -57,7 +57,7 @@ create table if not exists public.modules (
     id uuid primary key default gen_random_uuid(),
     owner_id uuid not null references public.profiles (id) on delete cascade,
     title text not null check (char_length(trim(title)) between 1 and 120),
-    summary text not null default '' check (char_length(summary) <= 500),
+    summary text not null default '' check (char_length(summary) <= 2000),
     script_json jsonb not null check (public.is_valid_phosphor_script(script_json)),
     cover_image_url text,
     visibility text not null default 'private' check (visibility in ('private', 'public')),

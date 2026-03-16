@@ -381,8 +381,16 @@ export const listUserRatings = async (userId: string): Promise<Record<string, nu
     }, {});
 };
 
+const MAX_SCRIPT_JSON_BYTES = 5 * 1024 * 1024; // 5 MB
+
 export const saveModule = async (input: SaveModuleInput): Promise<ModuleRecord> => {
     const client = requireSupabase();
+
+    const jsonSize = new Blob([JSON.stringify(input.scriptJson)]).size;
+    if (jsonSize > MAX_SCRIPT_JSON_BYTES) {
+        throw new Error("Script JSON is too large. Maximum size is 5 MB.");
+    }
+
     const payload = {
         owner_id: input.ownerId,
         title: input.title,
