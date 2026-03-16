@@ -73,6 +73,8 @@ const OWNER_MENU_WIDTH = 224;
 const OWNER_MENU_HEIGHT = 140;
 const SHARE_MENU_WIDTH = 224;
 const SHARE_MENU_HEIGHT = 90;
+const MAX_AUTHOR_LENGTH = 25;
+const MAX_RATING = 5;
 
 const getModulesBrowserUrlWithTransientAuthParams = (
     params?: Record<string, string | null | undefined>
@@ -169,6 +171,42 @@ const formatTimestamp = (value: string | null): string => {
         month: "short",
         day: "numeric",
     });
+};
+
+const getModuleAuthor = (module: ModuleRecord): string => {
+    const author = module?.script_json?.config?.author;
+    if (typeof author === "string" && author.trim().length) {
+        const normalizedAuthor = author.trim();
+        if (normalizedAuthor.length <= MAX_AUTHOR_LENGTH) {
+            return normalizedAuthor;
+        }
+
+        return `${normalizedAuthor.slice(0, MAX_AUTHOR_LENGTH - 3)}...`;
+    }
+
+    return "Unknown author";
+};
+
+const getModuleRatingAscii = (ratingAverage: number): string => {
+    const normalizedRating = Number.isFinite(ratingAverage)
+        ? Math.max(0, Math.min(MAX_RATING, ratingAverage))
+        : 0;
+    const filledSlots = Math.round(normalizedRating);
+    return `[${"*".repeat(filledSlots)}${"-".repeat(MAX_RATING - filledSlots)}]`;
+};
+
+const getModuleRatingTitle = (ratingAverage: number): string => {
+    const normalizedRating = Number.isFinite(ratingAverage)
+        ? Math.max(0, Math.min(MAX_RATING, ratingAverage))
+        : 0;
+    return `Rating ${normalizedRating.toFixed(1)} / ${MAX_RATING}`;
+};
+
+const getModuleRatingNumeric = (ratingAverage: number): string => {
+    const normalizedRating = Number.isFinite(ratingAverage)
+        ? Math.max(0, Math.min(MAX_RATING, ratingAverage))
+        : 0;
+    return normalizedRating.toFixed(1);
 };
 
 const ModulesBrowser: FC = () => {
@@ -1238,6 +1276,10 @@ const ModulesBrowser: FC = () => {
                                     const isSelected = selectedModule?.id === module.id;
                                     const isSubscribed = subscribedIdSet.has(module.id);
                                     const showPrivateFlag = module.visibility === "private" && module.owner_id === sessionUserId;
+                                    const author = getModuleAuthor(module);
+                                    const ratingDisplay = getModuleRatingAscii(module.rating_average);
+                                    const ratingNumeric = getModuleRatingNumeric(module.rating_average);
+                                    const ratingTitle = getModuleRatingTitle(module.rating_average);
 
                                     return (
                                         <button
@@ -1251,9 +1293,14 @@ const ModulesBrowser: FC = () => {
                                             aria-pressed={isSelected}
                                         >
                                             <div className="modules-browser__list-header">
-                                                <span className="modules-browser__list-name">
-                                                    {module.title}
-                                                </span>
+                                                <div className="modules-browser__list-title-group">
+                                                    <span className="modules-browser__list-name" title={module.title}>
+                                                        {module.title}
+                                                    </span>
+                                                    <span className="modules-browser__list-author" title={author}>
+                                                        By {author}
+                                                    </span>
+                                                </div>
                                                 <div className="modules-browser__list-flags">
                                                     {showPrivateFlag && (
                                                         <span className="modules-browser__list-flag">Private</span>
@@ -1264,13 +1311,16 @@ const ModulesBrowser: FC = () => {
                                                 </div>
                                             </div>
                                             <span className="modules-browser__list-meta">
-                                                Rating {module.rating_average.toFixed(2)} / 5
-                                                {" | "}
-                                                {module.rating_count} ratings
-                                                {" | "}
-                                                {module.subscription_count} subscribers
-                                                {" | "}
-                                                Published {formatTimestamp(module.published_at || module.updated_at)}
+                                                <span className="modules-browser__list-meta-primary">
+                                                    {module.subscription_count} subscribers
+                                                    {" | "}
+                                                    Published {formatTimestamp(module.published_at || module.updated_at)}
+                                                </span>
+                                                <span className="modules-browser__list-meta-rating" title={ratingTitle}>
+                                                    Rating {ratingDisplay} ({ratingNumeric})
+                                                    {" | "}
+                                                    {module.rating_count} ratings
+                                                </span>
                                             </span>
                                             <span className="modules-browser__list-summary">
                                                 {module.summary || "[NO SUMMARY PROVIDED]"}
@@ -1295,14 +1345,23 @@ const ModulesBrowser: FC = () => {
                             const isOwnModule = selectedModule.owner_id === sessionUserId;
                             const isBusy = actionModuleId === selectedModule.id;
                             const isEditing = editingModuleId === selectedModule.id;
+                            const author = getModuleAuthor(selectedModule);
+                            const ratingDisplay = getModuleRatingAscii(selectedModule.rating_average);
+                            const ratingNumeric = getModuleRatingNumeric(selectedModule.rating_average);
+                            const ratingTitle = getModuleRatingTitle(selectedModule.rating_average);
 
                             return (
                                 <article className="modules-browser__detail">
                                     <div className="modules-browser__detail-header">
                                         <div className="modules-browser__detail-title-group">
-                                            <h2>{selectedModule.title}</h2>
+                                            <div className="modules-browser__detail-title-row">
+                                                <h2 title={selectedModule.title}>{selectedModule.title}</h2>
+                                                <span className="modules-browser__detail-author" title={author}>
+                                                    By {author}
+                                                </span>
+                                            </div>
                                             <div className="modules-browser__meta">
-                                                <span>Rating {selectedModule.rating_average.toFixed(2)} / 5</span>
+                                                <span title={ratingTitle}>Rating {ratingDisplay} ({ratingNumeric})</span>
                                                 <span>{selectedModule.rating_count} ratings</span>
                                                 <span>{selectedModule.subscription_count} subscribers</span>
                                                 <span>Published {formatTimestamp(selectedModule.published_at || selectedModule.updated_at)}</span>

@@ -279,6 +279,14 @@ $browser-normal-font-stack: "Trebuchet MS", Verdana, Geneva, sans-serif;
         min-width: 0;
     }
 
+    &__list-title-group {
+        display: flex;
+        align-items: baseline;
+        gap: 0.3rem;
+        min-width: 0;
+        flex: 1 1 auto;
+    }
+
     &__list-flags {
         display: flex;
         flex-wrap: wrap;
@@ -295,7 +303,6 @@ $browser-normal-font-stack: "Trebuchet MS", Verdana, Geneva, sans-serif;
     }
 
     &__list-name,
-    &__list-meta,
     &__list-summary {
         display: block;
         min-width: 0;
@@ -305,8 +312,18 @@ $browser-normal-font-stack: "Trebuchet MS", Verdana, Geneva, sans-serif;
     }
 
     &__list-name {
+        flex: 1 1 auto;
         font-size: calc(#{$browser-heading-size} * var(--browser-size-scale));
         line-height: 1.1;
+    }
+
+    &__list-author {
+        flex: 0 0 auto;
+        font-size: calc(#{$browser-meta-size} * var(--browser-size-scale));
+        line-height: 1.2;
+        color: currentColor;
+        opacity: 0.72;
+        white-space: nowrap;
     }
 
     &__list-flag {
@@ -318,9 +335,28 @@ $browser-normal-font-stack: "Trebuchet MS", Verdana, Geneva, sans-serif;
     }
 
     &__list-meta {
+        display: flex;
+        align-items: baseline;
+        justify-content: space-between;
+        gap: 0.35rem;
+        min-width: 0;
         font-size: calc(#{$browser-meta-size} * var(--browser-size-scale));
         line-height: 1.22;
         opacity: 0.92;
+    }
+
+    &__list-meta-primary {
+        flex: 1 1 auto;
+        min-width: 0;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+    }
+
+    &__list-meta-rating {
+        flex: 0 0 auto;
+        text-align: right;
+        white-space: nowrap;
     }
 
     &__list-summary {
@@ -351,10 +387,32 @@ $browser-normal-font-stack: "Trebuchet MS", Verdana, Geneva, sans-serif;
         min-width: 0;
 
         h2 {
-            margin: 0 0 0.18rem;
+            margin: 0;
             font-size: calc(22pt * var(--browser-size-scale));
             line-height: 1.12;
+            flex: 1 1 auto;
+            min-width: 0;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
         }
+    }
+
+    &__detail-title-row {
+        display: flex;
+        align-items: baseline;
+        gap: 0.4rem;
+        min-width: 0;
+        margin-bottom: 0.18rem;
+    }
+
+    &__detail-author {
+        flex: 0 0 auto;
+        font-size: calc(#{$browser-meta-size} * var(--browser-size-scale));
+        line-height: 1.2;
+        color: currentColor;
+        opacity: 0.72;
+        white-space: nowrap;
     }
 
     &__detail-badges {
@@ -811,6 +869,15 @@ $browser-normal-font-stack: "Trebuchet MS", Verdana, Geneva, sans-serif;
 
 @media (max-width: 760px) {
     .modules-browser {
+        &__list-meta {
+            flex-direction: column;
+            align-items: flex-start;
+        }
+
+        &__list-meta-rating {
+            text-align: left;
+        }
+
         &__detail-header {
             flex-direction: column;
             align-items: flex-start;
