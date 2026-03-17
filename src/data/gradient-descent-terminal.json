@@ -1235,13 +1235,29 @@
                     "text": "# CHECKPOINT ALPHA"
                 },
                 "",
-                "\\> GATES",
+                {
+                    "type": "list",
+                    "states": [
+                        {
+                            "text": "GATES             [> CLOSED]"
+                        },
+                        {
+                            "text": "GATES             [> OPEN]"
+                        }
+                    ]
+                },
                 "",
-                "\\[\\> CLOSED\\]",
-                "",
-                "\\> AUTOMATED GUNS",
-                "",
-                "\\[\\> OFF\\]",
+                {
+                    "type": "list",
+                    "states": [
+                        {
+                            "text": "AUTOMATED GUNS    [> OFF]"
+                        },
+                        {
+                            "text": "AUTOMATED GUNS    [> ON]"
+                        }
+                    ]
+                },
                 "",
                 {
                     "type": "link",
@@ -1259,13 +1275,29 @@
                     "text": "# CHECKPOINT BRAVO"
                 },
                 "",
-                "\\> GATES",
+                {
+                    "type": "list",
+                    "states": [
+                        {
+                            "text": "GATES             [> CLOSED]"
+                        },
+                        {
+                            "text": "GATES             [> OPEN]"
+                        }
+                    ]
+                },
                 "",
-                "\\[\\> CLOSED\\]",
-                "",
-                "\\> AUTOMATED GUNS",
-                "",
-                "\\[\\> OFF\\]",
+                {
+                    "type": "list",
+                    "states": [
+                        {
+                            "text": "AUTOMATED GUNS    [> OFF]"
+                        },
+                        {
+                            "text": "AUTOMATED GUNS    [> ON]"
+                        }
+                    ]
+                },
                 "",
                 {
                     "type": "link",
@@ -1336,17 +1368,41 @@
                     "text": "# SECURITY HUB"
                 },
                 "",
-                "\\> DOCKING ARM",
+                {
+                    "type": "list",
+                    "states": [
+                        {
+                            "text": "DOCKING ARM    [> OFF]"
+                        },
+                        {
+                            "text": "DOCKING ARM    [> ON]"
+                        }
+                    ]
+                },
                 "",
-                "\\[\\> OFF\\]",
+                {
+                    "type": "list",
+                    "states": [
+                        {
+                            "text": "LIFT 12        [> OFF]"
+                        },
+                        {
+                            "text": "LIFT 12        [> ON]"
+                        }
+                    ]
+                },
                 "",
-                "\\> LIFT 12",
-                "",
-                "\\[\\> OFF\\]",
-                "",
-                "\\> LIFT 146",
-                "",
-                "\\[\\> OFF\\]",
+                {
+                    "type": "list",
+                    "states": [
+                        {
+                            "text": "LIFT 146       [> OFF]"
+                        },
+                        {
+                            "text": "LIFT 146       [> ON]"
+                        }
+                    ]
+                },
                 "",
                 {
                     "type": "link",
@@ -1501,27 +1557,23 @@
                     "text": "# ATMOSPHERE"
                 },
                 "",
-                "\\> ATMOSPHERE REPLENISHMENT",
-                "",
-                "\\[\\> ON\\]",
+                {
+                    "type": "list",
+                    "states": [
+                        {
+                            "text": "ATMOSPHERE REPLENISHMENT    [> ON]"
+                        },
+                        {
+                            "text": "ATMOSPHERE REPLENISHMENT    [> OFF]"
+                        }
+                    ]
+                },
                 "",
                 "GAS MIXTURE",
+                "NITROGEN       \\[\\> 78%\\]",
+                "OXYGEN         \\[\\> 22%\\]",
                 "",
-                "NITROGEN",
-                "",
-                "\\[\\> 78%\\]",
-                "",
-                "OXYGEN",
-                "",
-                "\\[\\> 22%\\]",
-                "",
-                "TEMPERATURE",
-                "",
-                "\\[\\> 22°C\\]",
-                "",
-                "INCREASE",
-                "",
-                "DECREASE",
+                "TEMPERATURE    \\[\\> 22°C\\]",
                 "",
                 {
                     "type": "link",
@@ -1539,9 +1591,20 @@
                     "text": "# GRAVITY"
                 },
                 "",
-                "\\>GRAVITY",
-                "",
-                "\\[\\> 1G\\]",
+                {
+                    "type": "list",
+                    "states": [
+                        {
+                            "text": "GRAVITY    [> 1G]"
+                        },
+                        {
+                            "text": "GRAVITY    [> 2G]"
+                        },
+                        {
+                            "text": "GRAVITY    [> OFF]"
+                        }
+                    ]
+                },
                 "",
                 {
                     "type": "link",
@@ -1776,25 +1839,95 @@
                     "text": "# AUTOMATED TURRETS"
                 },
                 "",
-                "MACHINE GUN 1",
+                {
+                    "type": "list",
+                    "states": [
+                        {
+                            "text": "MACHINE GUN 1       [> NON-CHOSEN]"
+                        },
+                        {
+                            "text": "MACHINE GUN 1       [> ALL]"
+                        },
+                        {
+                            "text": "MACHINE GUN 1       [> FALLEN]"
+                        },
+                        {
+                            "text": "MACHINE GUN 1       [> OFF]"
+                        }
+                    ]
+                },
                 "",
-                "\\[\\> NON\\-CHOSEN\\]",
+                {
+                    "type": "list",
+                    "states": [
+                        {
+                            "text": "MACHINE GUN 2       [> NON-CHOSEN]"
+                        },
+                        {
+                            "text": "MACHINE GUN 2       [> ALL]"
+                        },
+                        {
+                            "text": "MACHINE GUN 2       [> FALLEN]"
+                        },
+                        {
+                            "text": "MACHINE GUN 2       [> OFF]"
+                        }
+                    ]
+                },
                 "",
-                "MACHINE GUN 2",
+                {
+                    "type": "list",
+                    "states": [
+                        {
+                            "text": "MACHINE GUN 3       [> NON-CHOSEN]"
+                        },
+                        {
+                            "text": "MACHINE GUN 3       [> ALL]"
+                        },
+                        {
+                            "text": "MACHINE GUN 3       [> FALLEN]"
+                        },
+                        {
+                            "text": "MACHINE GUN 3       [> OFF]"
+                        }
+                    ]
+                },
                 "",
-                "\\[\\> NON\\-CHOSEN\\]",
+                {
+                    "type": "list",
+                    "states": [
+                        {
+                            "text": "MACHINE GUN 4       [> NON-CHOSEN]"
+                        },
+                        {
+                            "text": "MACHINE GUN 4       [> ALL]"
+                        },
+                        {
+                            "text": "MACHINE GUN 4       [> FALLEN]"
+                        },
+                        {
+                            "text": "MACHINE GUN 4       [> OFF]"
+                        }
+                    ]
+                },
                 "",
-                "MACHINE GUN 3",
-                "",
-                "\\[\\> NON\\-CHOSEN\\]",
-                "",
-                "MACHINE GUN 4",
-                "",
-                "\\[\\> NON\\-CHOSEN\\]",
-                "",
-                "GRENADE LAUNCHER",
-                "",
-                "\\[\\> NON\\-CHOSEN\\]",
+                {
+                    "type": "list",
+                    "states": [
+                        {
+                            "text": "GRENADE LAUNCHER    [> NON-CHOSEN]"
+                        },
+                        {
+                            "text": "GRENADE LAUNCHER    [> ALL]"
+                        },
+                        {
+                            "text": "GRENADE LAUNCHER    [> FALLEN]"
+                        },
+                        {
+                            "text": "GRENADE LAUNCHER    [> OFF]"
+                        }
+                    ]
+                },
                 "",
                 {
                     "type": "link",
@@ -1812,29 +1945,77 @@
                     "text": "# DOOR CONTROLS"
                 },
                 "",
-                "\\> EXECUTIVE LOUNGE",
+                {
+                    "type": "list",
+                    "states": [
+                        {
+                            "text": "EXECUTIVE LOUNGE        [> LOCKED]"
+                        },
+                        {
+                            "text": "EXECUTIVE LOUNGE        [> OPEN]"
+                        }
+                    ]
+                },
                 "",
-                "\\[\\> LOCKED\\]",
+                {
+                    "type": "list",
+                    "states": [
+                        {
+                            "text": "REFORMATTING SUITE 1    [> LOCKED]"
+                        },
+                        {
+                            "text": "REFORMATTING SUITE 1    [> OPEN]"
+                        }
+                    ]
+                },
                 "",
-                "\\> REFORMATTING SUITE 1",
+                {
+                    "type": "list",
+                    "states": [
+                        {
+                            "text": "REFORMATTING SUITE 2    [> LOCKED]"
+                        },
+                        {
+                            "text": "REFORMATTING SUITE 2    [> OPEN]"
+                        }
+                    ]
+                },
                 "",
-                "\\[\\> LOCKED\\]",
+                {
+                    "type": "list",
+                    "states": [
+                        {
+                            "text": "COURTROOM               [> LOCKED]"
+                        },
+                        {
+                            "text": "COURTROOM               [> OPEN]"
+                        }
+                    ]
+                },
                 "",
-                "\\> REFORMATTING SUITE 2",
+                {
+                    "type": "list",
+                    "states": [
+                        {
+                            "text": "COMM TERMINAL           [> LOCKED]"
+                        },
+                        {
+                            "text": "COMM TERMINAL           [> OPEN]"
+                        }
+                    ]
+                },
                 "",
-                "\\[\\> LOCKED\\]",
-                "",
-                "\\> COURTROOM",
-                "",
-                "\\[\\> LOCKED\\]",
-                "",
-                "\\> COMM TERMINAL",
-                "",
-                "\\[\\> LOCKED\\]",
-                "",
-                "\\> FORTIFICATIONS",
-                "",
-                "\\[\\> LOCKED\\]",
+                {
+                    "type": "list",
+                    "states": [
+                        {
+                            "text": "FORTIFICATIONS          [> LOCKED]"
+                        },
+                        {
+                            "text": "FORTIFICATIONS          [> OPEN]"
+                        }
+                    ]
+                },
                 "",
                 {
                     "type": "link",
@@ -1852,27 +2033,23 @@
                     "text": "# ATMOSPHERE"
                 },
                 "",
-                "\\> ATMOSPHERE REPLENISHMENT",
-                "",
-                "\\[\\> ON\\]",
+                {
+                    "type": "list",
+                    "states": [
+                        {
+                            "text": "ATMOSPHERE REPLENISHMENT    [> ON]"
+                        },
+                        {
+                            "text": "ATMOSPHERE REPLENISHMENT    [> OFF]"
+                        }
+                    ]
+                },
                 "",
                 "GAS MIXTURE",
+                "NITROGEN       \\[\\> 78%\\]",
+                "OXYGEN         \\[\\> 22%\\]",
                 "",
-                "NITROGEN",
-                "",
-                "\\[\\> 78%\\]",
-                "",
-                "OXYGEN",
-                "",
-                "\\[\\> 22%\\]",
-                "",
-                "TEMPERATURE",
-                "",
-                "\\[\\> 22°C\\]",
-                "",
-                "INCREASE",
-                "",
-                "DECREASE",
+                "TEMPERATURE    \\[\\> 22°C\\]",
                 "",
                 {
                     "type": "link",
@@ -1890,9 +2067,20 @@
                     "text": "# GRAVITY"
                 },
                 "",
-                "\\>GRAVITY",
-                "",
-                "\\[\\> 1G\\]",
+                {
+                    "type": "list",
+                    "states": [
+                        {
+                            "text": "GRAVITY    [> 1G]"
+                        },
+                        {
+                            "text": "GRAVITY    [> 2G]"
+                        },
+                        {
+                            "text": "GRAVITY    [> OFF]"
+                        }
+                    ]
+                },
                 "",
                 {
                     "type": "link",
@@ -2706,27 +2894,23 @@
                     "text": "# ATMOSPHERE"
                 },
                 "",
-                "\\> ATMOSPHERE REPLENISHMENT",
-                "",
-                "\\[\\> ON\\]",
+                {
+                    "type": "list",
+                    "states": [
+                        {
+                            "text": "ATMOSPHERE REPLENISHMENT    [> ON]"
+                        },
+                        {
+                            "text": "ATMOSPHERE REPLENISHMENT    [> OFF]"
+                        }
+                    ]
+                },
                 "",
                 "GAS MIXTURE",
+                "NITROGEN       \\[\\> 78%\\]",
+                "OXYGEN         \\[\\> 22%\\]",
                 "",
-                "NITROGEN",
-                "",
-                "\\[\\> 78%\\]",
-                "",
-                "OXYGEN",
-                "",
-                "\\[\\> 22%\\]",
-                "",
-                "TEMPERATURE",
-                "",
-                "\\[\\> 22°C\\]",
-                "",
-                "INCREASE",
-                "",
-                "DECREASE",
+                "TEMPERATURE    \\[\\> 22°C\\]",
                 "",
                 {
                     "type": "link",
@@ -2744,9 +2928,20 @@
                     "text": "# GRAVITY"
                 },
                 "",
-                "\\>GRAVITY",
-                "",
-                "\\[\\> 1G\\]",
+                {
+                    "type": "list",
+                    "states": [
+                        {
+                            "text": "GRAVITY    [> 1G]"
+                        },
+                        {
+                            "text": "GRAVITY    [> 2G]"
+                        },
+                        {
+                            "text": "GRAVITY    [> OFF]"
+                        }
+                    ]
+                },
                 "",
                 {
                     "type": "link",
@@ -2817,27 +3012,23 @@
                     "text": "# ATMOSPHERE"
                 },
                 "",
-                "\\> ATMOSPHERE REPLENISHMENT",
-                "",
-                "\\[\\> ON\\]",
+                {
+                    "type": "list",
+                    "states": [
+                        {
+                            "text": "ATMOSPHERE REPLENISHMENT    [> ON]"
+                        },
+                        {
+                            "text": "ATMOSPHERE REPLENISHMENT    [> OFF]"
+                        }
+                    ]
+                },
                 "",
                 "GAS MIXTURE",
+                "NITROGEN       \\[\\> 78%\\]",
+                "OXYGEN         \\[\\> 22%\\]",
                 "",
-                "NITROGEN",
-                "",
-                "\\[\\> 78%\\]",
-                "",
-                "OXYGEN",
-                "",
-                "\\[\\> 22%\\]",
-                "",
-                "TEMPERATURE",
-                "",
-                "\\[\\> 22°C\\]",
-                "",
-                "INCREASE",
-                "",
-                "DECREASE",
+                "TEMPERATURE    \\[\\> 22°C\\]",
                 "",
                 {
                     "type": "link",
@@ -2855,27 +3046,23 @@
                     "text": "# ATMOSPHERE"
                 },
                 "",
-                "\\> ATMOSPHERE REPLENISHMENT",
-                "",
-                "\\[\\> ON\\]",
+                {
+                    "type": "list",
+                    "states": [
+                        {
+                            "text": "ATMOSPHERE REPLENISHMENT    [> ON]"
+                        },
+                        {
+                            "text": "ATMOSPHERE REPLENISHMENT    [> OFF]"
+                        }
+                    ]
+                },
                 "",
                 "GAS MIXTURE",
+                "NITROGEN       \\[\\> 78%\\]",
+                "OXYGEN         \\[\\> 22%\\]",
                 "",
-                "NITROGEN",
-                "",
-                "\\[\\> 78%\\]",
-                "",
-                "OXYGEN",
-                "",
-                "\\[\\> 22%\\]",
-                "",
-                "TEMPERATURE",
-                "",
-                "\\[\\> 22°C\\]",
-                "",
-                "INCREASE",
-                "",
-                "DECREASE",
+                "TEMPERATURE    \\[\\> 22°C\\]",
                 "",
                 {
                     "type": "link",
@@ -2893,27 +3080,23 @@
                     "text": "# ATMOSPHERE"
                 },
                 "",
-                "\\> ATMOSPHERE REPLENISHMENT",
-                "",
-                "\\[\\> ON\\]",
+                {
+                    "type": "list",
+                    "states": [
+                        {
+                            "text": "ATMOSPHERE REPLENISHMENT    [> ON]"
+                        },
+                        {
+                            "text": "ATMOSPHERE REPLENISHMENT    [> OFF]"
+                        }
+                    ]
+                },
                 "",
                 "GAS MIXTURE",
+                "NITROGEN       \\[\\> 78%\\]",
+                "OXYGEN         \\[\\> 22%\\]",
                 "",
-                "NITROGEN",
-                "",
-                "\\[\\> 78%\\]",
-                "",
-                "OXYGEN",
-                "",
-                "\\[\\> 22%\\]",
-                "",
-                "TEMPERATURE",
-                "",
-                "\\[\\> 22°C\\]",
-                "",
-                "INCREASE",
-                "",
-                "DECREASE",
+                "TEMPERATURE    \\[\\> 22°C\\]",
                 "",
                 {
                     "type": "link",
@@ -2931,27 +3114,23 @@
                     "text": "# ATMOSPHERE"
                 },
                 "",
-                "\\> ATMOSPHERE REPLENISHMENT",
-                "",
-                "\\[\\> ON\\]",
+                {
+                    "type": "list",
+                    "states": [
+                        {
+                            "text": "ATMOSPHERE REPLENISHMENT    [> ON]"
+                        },
+                        {
+                            "text": "ATMOSPHERE REPLENISHMENT    [> OFF]"
+                        }
+                    ]
+                },
                 "",
                 "GAS MIXTURE",
+                "NITROGEN       \\[\\> 78%\\]",
+                "OXYGEN         \\[\\> 22%\\]",
                 "",
-                "NITROGEN",
-                "",
-                "\\[\\> 78%\\]",
-                "",
-                "OXYGEN",
-                "",
-                "\\[\\> 22%\\]",
-                "",
-                "TEMPERATURE",
-                "",
-                "\\[\\> 22°C\\]",
-                "",
-                "INCREASE",
-                "",
-                "DECREASE",
+                "TEMPERATURE    \\[\\> 22°C\\]",
                 "",
                 {
                     "type": "link",
@@ -2969,27 +3148,23 @@
                     "text": "# ATMOSPHERE"
                 },
                 "",
-                "\\> ATMOSPHERE REPLENISHMENT",
-                "",
-                "\\[\\> ON\\]",
+                {
+                    "type": "list",
+                    "states": [
+                        {
+                            "text": "ATMOSPHERE REPLENISHMENT    [> ON]"
+                        },
+                        {
+                            "text": "ATMOSPHERE REPLENISHMENT    [> OFF]"
+                        }
+                    ]
+                },
                 "",
                 "GAS MIXTURE",
+                "NITROGEN       \\[\\> 0%\\]",
+                "OXYGEN         \\[\\> 100%\\]",
                 "",
-                "NITROGEN",
-                "",
-                "\\[\\> 0%\\]",
-                "",
-                "OXYGEN",
-                "",
-                "\\[\\> 100%\\]",
-                "",
-                "TEMPERATURE",
-                "",
-                "\\[\\> \\-269°C\\]",
-                "",
-                "INCREASE",
-                "",
-                "DECREASE",
+                "TEMPERATURE    \\[\\> \\-269°C\\]",
                 "",
                 {
                     "type": "link",
@@ -3060,817 +3235,2434 @@
                     "text": "# O2 FLOW BACKUP PASSWORD"
                 },
                 "",
-                "\\> 4 WAY INTERSECTION",
-                "",
-                "\\[\\> OFF\\]",
-                "",
-                "\\> AEROPONICS",
-                "",
-                "\\[\\> OFF\\]",
-                "",
-                "\\> AI CORE",
-                "",
-                "\\[\\> OFF\\]",
-                "",
-                "\\> AIR CONTROL",
-                "",
-                "\\[\\> OFF\\]",
-                "",
-                "\\> AIR FILTRATION",
-                "",
-                "\\[\\> OFF\\]",
-                "",
-                "\\> AIRLOCK CHAMBER",
-                "",
-                "\\[\\> OFF\\]",
-                "",
-                "\\> AIRLOCK CHAMBER A",
-                "",
-                "\\[\\> OFF\\]",
-                "",
-                "\\> ALGAE FARM",
-                "",
-                "\\[\\> OFF\\]",
-                "",
-                "\\> ANDROID STORAGE",
-                "",
-                "\\[\\> OFF\\]",
-                "",
-                "\\> ANIMAL STORAGE",
-                "",
-                "\\[\\> OFF\\]",
-                "",
-                "\\> ARTIFACT COMPREHENSION LABS OBSERVATION ROOM",
-                "",
-                "\\[\\> OFF\\]",
-                "",
-                "\\> ARTIFACT EXPERIMENTATION LABS OBSERVATION ROOM",
-                "",
-                "\\[\\> OFF\\]",
-                "",
-                "\\> ASSEMBLY INSPECTION",
-                "",
-                "\\[\\> OFF\\]",
-                "",
-                "\\> ASSEMBLY OVERVIEW",
-                "",
-                "\\[\\> OFF\\]",
-                "",
-                "\\> AUDITORIUM",
-                "",
-                "\\[\\> OFF\\]",
-                "",
-                "\\> BACKUP GENERATORS A/B",
-                "",
-                "\\[\\> OFF\\]",
-                "",
-                "\\> BATTERY BACKUPS",
-                "",
-                "\\[\\> OFF\\]",
-                "",
-                "\\> BIOCIDE SUPPLIES",
-                "",
-                "\\[\\> OFF\\]",
-                "",
-                "\\> BLAST FURNACES",
-                "",
-                "\\[\\> OFF\\]",
-                "",
-                "\\> BLASTING TUNNEL",
-                "",
-                "\\[\\> OFF\\]",
-                "",
-                "\\> BONE FORGE",
-                "",
-                "\\[\\> OFF\\]",
-                "",
-                "\\> BONE INSPECTION",
-                "",
-                "\\[\\> OFF\\]",
-                "",
-                "\\> BONE POLISHING",
-                "",
-                "\\[\\> OFF\\]",
-                "",
-                "\\> BRAIN CONSTRUCTION ENTRANCE",
-                "",
-                "\\[\\> OFF\\]",
-                "",
-                "\\> BRAIN INSERTION",
-                "",
-                "\\[\\> OFF\\]",
-                "",
-                "\\> BRAIN SCAN DATABANK",
-                "",
-                "\\[\\> OFF\\]",
-                "",
-                "\\> BRAIN SPACE",
-                "",
-                "\\[\\> OFF\\]",
-                "",
-                "\\> BRAIN TESTING",
-                "",
-                "\\[\\> OFF\\]",
-                "",
-                "\\> BREAK ROOM A",
-                "",
-                "\\[\\> OFF\\]",
-                "",
-                "\\> BREAK ROOM B",
-                "",
-                "\\[\\> OFF\\]",
-                "",
-                "\\> BREAK ROOM C",
-                "",
-                "\\[\\> OFF\\]",
-                "",
-                "\\> CABLE JUNCTION",
-                "",
-                "\\[\\> OFF\\]",
-                "",
-                "\\> CAFETERIA",
-                "",
-                "\\[\\> OFF\\]",
-                "",
-                "\\> CENTRAL ROUTING ROOM",
-                "",
-                "\\[\\> OFF\\]",
-                "",
-                "\\> CENTRAL SERVICE ENTRANCE",
-                "",
-                "\\[\\> OFF\\]",
-                "",
-                "\\> CIRCUIT TESTING",
-                "",
-                "\\[\\> OFF\\]",
-                "",
-                "\\> CIRCUIT WEAVER",
-                "",
-                "\\[\\> OFF\\]",
-                "",
-                "\\> CLEANROOM",
-                "",
-                "\\[\\> OFF\\]",
-                "",
-                "\\> CLEANROOM CHANGING ROOM",
-                "",
-                "\\[\\> OFF\\]",
-                "",
-                "\\> CLOTHING STORAGE",
-                "",
-                "\\[\\> OFF\\]",
-                "",
-                "\\> COMMUNICATIONS FEED",
-                "",
-                "\\[\\> OFF\\]",
-                "",
-                "\\> COMPONENT GROWTH CHAMBER",
-                "",
-                "\\[\\> OFF\\]",
-                "",
-                "\\> CONDENSATION CHAMBER",
-                "",
-                "\\[\\> OFF\\]",
-                "",
-                "\\> CONSTRUCTION ZONES",
-                "",
-                "\\[\\> OFF\\]",
-                "",
-                "\\> CONTAINMENT",
-                "",
-                "\\[\\> OFF\\]",
-                "",
-                "\\> CONTROL ROOM",
-                "",
-                "\\[\\> OFF\\]",
-                "",
-                "\\> CONTROL TERMINAL",
-                "",
-                "\\[\\> OFF\\]",
-                "",
-                "\\> COOLING DUCTS AB",
-                "",
-                "\\[\\> OFF\\]",
-                "",
-                "\\> CRAWLSPACE",
-                "",
-                "\\[\\> OFF\\]",
-                "",
-                "\\> DATA INSPECTION OFFICE",
-                "",
-                "\\[\\> OFF\\]",
-                "",
-                "\\> DATABANK BACKUPS",
-                "",
-                "\\[\\> OFF\\]",
-                "",
-                "\\> DEBURRING FACILITY",
-                "",
-                "\\[\\> OFF\\]",
-                "",
-                "\\> DECONTAMINATION",
-                "",
-                "\\[\\> OFF\\]",
-                "",
-                "\\> DEFENSE LASER CAPACITORS",
-                "",
-                "\\[\\> OFF\\]",
-                "",
-                "\\> DETECTION CYLINDER",
-                "",
-                "\\[\\> OFF\\]",
-                "",
-                "\\> DIAGNOSTIC LAB",
-                "",
-                "\\[\\> OFF\\]",
-                "",
-                "\\> DIAGNOSTICS",
-                "",
-                "\\[\\> OFF\\]",
-                "",
-                "\\> DISASSEMBLY YARD",
-                "",
-                "\\[\\> OFF\\]",
-                "",
-                "\\> DRAINAGE",
-                "",
-                "\\[\\> OFF\\]",
-                "",
-                "\\> DRONE BAY",
-                "",
-                "\\[\\> OFF\\]",
-                "",
-                "\\> DUST COLLECTOR",
-                "",
-                "\\[\\> OFF\\]",
-                "",
-                "\\> ELECTRIC GRID",
-                "",
-                "\\[\\> OFF\\]",
-                "",
-                "\\> ELECTRICAL CONDUCTION CHAMBER",
-                "",
-                "\\[\\> OFF\\]",
-                "",
-                "\\> ELEVATOR LANDING",
-                "",
-                "\\[\\> OFF\\]",
-                "",
-                "\\> EMERGENCY HEATSINK",
-                "",
-                "\\[\\> OFF\\]",
-                "",
-                "\\> EMPLOYEE REC CENTER",
-                "",
-                "\\[\\> OFF\\]",
-                "",
-                "\\> ENGINEERS' ROOM",
-                "",
-                "\\[\\> OFF\\]",
-                "",
-                "\\> ENGRAVING NEEDLES",
-                "",
-                "\\[\\> OFF\\]",
-                "",
-                "\\> ESCAPE POD BAY",
-                "",
-                "\\[\\> OFF\\]",
-                "",
-                "\\> EXECUTIVE LOUNGE",
-                "",
-                "\\[\\> OFF\\]",
-                "",
-                "\\> EXECUTIVE OFFICES",
-                "",
-                "\\[\\> OFF\\]",
-                "",
-                "\\> EXECUTIVE WASHROOM",
-                "",
-                "\\[\\> OFF\\]",
-                "",
-                "\\> EXHIBITIONS A",
-                "",
-                "\\[\\> OFF\\]",
-                "",
-                "\\> EXHIBITIONS B",
-                "",
-                "\\[\\> OFF\\]",
-                "",
-                "\\> EXHIBITIONS C",
-                "",
-                "\\[\\> OFF\\]",
-                "",
-                "\\> FARM PLANNING",
-                "",
-                "\\[\\> OFF\\]",
-                "",
-                "\\> FILTRATION SYSTEM",
-                "",
-                "\\[\\> OFF\\]",
-                "",
-                "\\> FINAL CONSTRUCTION",
-                "",
-                "\\[\\> OFF\\]",
-                "",
-                "\\> FINAL TESTING",
-                "",
-                "\\[\\> OFF\\]",
-                "",
-                "\\> FINANCIAL SIMULATION SUITE",
-                "",
-                "\\[\\> OFF\\]",
-                "",
-                "\\> FLESH SLEEVE INSERTION",
-                "",
-                "\\[\\> OFF\\]",
-                "",
-                "\\> FLOOR 3 MAINTENANCE ACCESS",
-                "",
-                "\\[\\> OFF\\]",
-                "",
-                "\\> FLOOR 5 MAINTENANCE HATCH",
-                "",
-                "\\[\\> OFF\\]",
-                "",
-                "\\> FOAM INJECTION",
-                "",
-                "\\[\\> OFF\\]",
-                "",
-                "\\> FOAM TANK",
-                "",
-                "\\[\\> OFF\\]",
-                "",
-                "\\> FOAM WARRENS",
-                "",
-                "\\[\\> OFF\\]",
-                "",
-                "\\> FOIL RECYCLING",
-                "",
-                "\\[\\> OFF\\]",
-                "",
-                "\\> FREIGHT ANDROID RECESSES",
-                "",
-                "\\[\\> OFF\\]",
-                "",
-                "\\> FUEL TANKS",
-                "",
-                "\\[\\> OFF\\]",
-                "",
-                "\\> FURNACES",
-                "",
-                "\\[\\> OFF\\]",
-                "",
-                "\\> GAS COOK\\-OFF",
-                "",
-                "\\[\\> OFF\\]",
-                "",
-                "\\> GOODS ELEVATOR",
-                "",
-                "\\[\\> OFF\\]",
-                "",
-                "\\> GRAVITY ACCLIMATOR",
-                "",
-                "\\[\\> OFF\\]",
-                "",
-                "\\> GRINDER",
-                "",
-                "\\[\\> OFF\\]",
-                "",
-                "\\> GYM",
-                "",
-                "\\[\\> OFF\\]",
-                "",
-                "\\> HAZMAT CHANGING ROOM",
-                "",
-                "\\[\\> OFF\\]",
-                "",
-                "\\> HEAD SCULPTING",
-                "",
-                "\\[\\> OFF\\]",
-                "",
-                "\\> HUMAN EMULATION LABS",
-                "",
-                "\\[\\> OFF\\]",
-                "",
-                "\\> HYDRAULICS",
-                "",
-                "\\[\\> OFF\\]",
-                "",
-                "\\> INSPECTION BOOTHS",
-                "",
-                "\\[\\> OFF\\]",
-                "",
-                "\\> ISOLATION",
-                "",
-                "\\[\\> OFF\\]",
-                "",
-                "\\> KITCHEN",
-                "",
-                "\\[\\> OFF\\]",
-                "",
-                "\\> LASER CONTROL AND ACCESS",
-                "",
-                "\\[\\> OFF\\]",
-                "",
-                "\\> LENS CALIBRATION",
-                "",
-                "\\[\\> OFF\\]",
-                "",
-                "\\> LIFT TO FLOOR 2",
-                "",
-                "\\[\\> OFF\\]",
-                "",
-                "\\> LIFT TO FLOOR 46",
-                "",
-                "\\[\\> OFF\\]",
-                "",
-                "\\> LIQUID WASTE DISPOSAL",
-                "",
-                "\\[\\> OFF\\]",
-                "",
-                "\\> LOADING DOCK",
-                "",
-                "\\[\\> OFF\\]",
-                "",
-                "\\> LOBBY",
-                "",
-                "\\[\\> OFF\\]",
-                "",
-                "\\> LOCKER ROOM",
-                "",
-                "\\[\\> OFF\\]",
-                "",
-                "\\> MAIN OFFICE",
-                "",
-                "\\[\\> OFF\\]",
-                "",
-                "\\> MAIN THRUSTERS",
-                "",
-                "\\[\\> OFF\\]",
-                "",
-                "\\> MAINTENANCE LANDING AREA",
-                "",
-                "\\[\\> OFF\\]",
-                "",
-                "\\> MAINTENANCE TERMINAL",
-                "",
-                "\\[\\> OFF\\]",
-                "",
-                "\\> MANUAL COMMUNICATIONS ROOM",
-                "",
-                "\\[\\> OFF\\]",
-                "",
-                "\\> MEDICAL ROOM",
-                "",
-                "\\[\\> OFF\\]",
-                "",
-                "\\> MEDICAL STATION",
-                "",
-                "\\[\\> OFF\\]",
-                "",
-                "\\> MEETING ROOM A",
-                "",
-                "\\[\\> OFF\\]",
-                "",
-                "\\> MEETING ROOM B",
-                "",
-                "\\[\\> OFF\\]",
-                "",
-                "\\> MEETING ROOM C",
-                "",
-                "\\[\\> OFF\\]",
-                "",
-                "\\> MEETING ROOM D",
-                "",
-                "\\[\\> OFF\\]",
-                "",
-                "\\> MICROHANGAR",
-                "",
-                "\\[\\> OFF\\]",
-                "",
-                "\\> MIND DOWNLOAD",
-                "",
-                "\\[\\> OFF\\]",
-                "",
-                "\\> MIND ZOO",
-                "",
-                "\\[\\> OFF\\]",
-                "",
-                "\\> MOLD PRESS",
-                "",
-                "\\[\\> OFF\\]",
-                "",
-                "\\> NERVE THREADING",
-                "",
-                "\\[\\> OFF\\]",
-                "",
-                "\\> NUCLEAR GENERATOR",
-                "",
-                "\\[\\> OFF\\]",
-                "",
-                "\\> NUCLEAR STORAGE",
-                "",
-                "\\[\\> OFF\\]",
-                "",
-                "\\> O2 FLOW BACKUP",
-                "",
-                "\\[\\> OFF\\]",
-                "",
-                "\\> O2 FLOW CONTROL",
-                "",
-                "\\[\\> OFF\\]",
-                "",
-                "\\> ORE CRUSHERS",
-                "",
-                "\\[\\> OFF\\]",
-                "",
-                "\\> ORGAN IMPLANTATION",
-                "",
-                "\\[\\> OFF\\]",
-                "",
-                "\\> ORGANIC REFERENCE STORAGE",
-                "",
-                "\\[\\> OFF\\]",
-                "",
-                "\\> ORGANIC RESPONSE CHAMBER",
-                "",
-                "\\[\\> OFF\\]",
-                "",
-                "\\> PANIC ROOM",
-                "",
-                "\\[\\> OFF\\]",
-                "",
-                "\\> POWER BANK",
-                "",
-                "\\[\\> OFF\\]",
-                "",
-                "\\> POWER GENERATOR",
-                "",
-                "\\[\\> OFF\\]",
-                "",
-                "\\> POWER REGULATORS",
-                "",
-                "\\[\\> OFF\\]",
-                "",
-                "\\> POWER SECTOR AIRLOCK CHAMBER",
-                "",
-                "\\[\\> OFF\\]",
-                "",
-                "\\> POWER SWITCH BOARD",
-                "",
-                "\\[\\> OFF\\]",
-                "",
-                "\\> PROCESSING STATION",
-                "",
-                "\\[\\> OFF\\]",
-                "",
-                "\\> PROTOTYPING",
-                "",
-                "\\[\\> OFF\\]",
-                "",
-                "\\> PSEUDOFLESH DIGESTION",
-                "",
-                "\\[\\> OFF\\]",
-                "",
-                "\\> PSEUDOFLESH ENGINEERING",
-                "",
-                "\\[\\> OFF\\]",
-                "",
-                "\\> PSEUDOFLESH RECYCLING",
-                "",
-                "\\[\\> OFF\\]",
-                "",
-                "\\> PSEUDOMILK EEL STORAGE",
-                "",
-                "\\[\\> OFF\\]",
-                "",
-                "\\> PSEUDOMILK INJECTION",
-                "",
-                "\\[\\> OFF\\]",
-                "",
-                "\\> PSEUDOMILK SPRAY TANK",
-                "",
-                "\\[\\> OFF\\]",
-                "",
-                "\\> PSEUDOMILK VAT",
-                "",
-                "\\[\\> OFF\\]",
-                "",
-                "\\> QA INSPECTION",
-                "",
-                "\\[\\> OFF\\]",
-                "",
-                "\\> QUARANTINE",
-                "",
-                "\\[\\> PURGE ACTIVATED\\]",
-                "",
-                "\\> QUENCHING TUBS",
-                "",
-                "\\[\\> OFF\\]",
-                "",
-                "\\> RECEIVING",
-                "",
-                "\\[\\> OFF\\]",
-                "",
-                "\\> RECEPTION",
-                "",
-                "\\[\\> OFF\\]",
-                "",
-                "\\> REJECT BIN ACCESS",
-                "",
-                "\\[\\> OFF\\]",
-                "",
-                "\\> REJECT DISPOSAL",
-                "",
-                "\\[\\> OFF\\]",
-                "",
-                "\\> RESONANCE CHAMBER",
-                "",
-                "\\[\\> OFF\\]",
-                "",
-                "\\> SANDING FACILITY",
-                "",
-                "\\[\\> OFF\\]",
-                "",
-                "\\> SCHEMATIC STORAGE",
-                "",
-                "\\[\\> OFF\\]",
-                "",
-                "\\> SCHEMATICS STORAGE",
-                "",
-                "\\[\\> OFF\\]",
-                "",
-                "\\> SCRAP RECYCLING",
-                "",
-                "\\[\\> OFF\\]",
-                "",
-                "\\> SECONDARY HANGAR",
-                "",
-                "\\[\\> OFF\\]",
-                "",
-                "\\> SECURITY CENTER",
-                "",
-                "\\[\\> OFF\\]",
-                "",
-                "\\> SECURITY CHECKPOINT ALPHA",
-                "",
-                "\\[\\> OFF\\]",
+                {
+                    "type": "list",
+                    "states": [
+                        {
+                            "text": "4 WAY INTERSECTION                                [> OFF]"
+                        },
+                        {
+                            "text": "4 WAY INTERSECTION                                [> ON]"
+                        }
+                    ]
+                },
+                "",
+                {
+                    "type": "list",
+                    "states": [
+                        {
+                            "text": "AEROPONICS                                        [> OFF]"
+                        },
+                        {
+                            "text": "AEROPONICS                                        [> ON]"
+                        }
+                    ]
+                },
+                "",
+                {
+                    "type": "list",
+                    "states": [
+                        {
+                            "text": "AI CORE                                           [> OFF]"
+                        },
+                        {
+                            "text": "AI CORE                                           [> ON]"
+                        }
+                    ]
+                },
+                "",
+                {
+                    "type": "list",
+                    "states": [
+                        {
+                            "text": "AIR CONTROL                                       [> OFF]"
+                        },
+                        {
+                            "text": "AIR CONTROL                                       [> ON]"
+                        }
+                    ]
+                },
+                "",
+                {
+                    "type": "list",
+                    "states": [
+                        {
+                            "text": "AIR FILTRATION                                    [> OFF]"
+                        },
+                        {
+                            "text": "AIR FILTRATION                                    [> ON]"
+                        }
+                    ]
+                },
+                "",
+                {
+                    "type": "list",
+                    "states": [
+                        {
+                            "text": "AIRLOCK CHAMBER                                   [> OFF]"
+                        },
+                        {
+                            "text": "AIRLOCK CHAMBER                                   [> ON]"
+                        }
+                    ]
+                },
+                "",
+                {
+                    "type": "list",
+                    "states": [
+                        {
+                            "text": "AIRLOCK CHAMBER A                                 [> OFF]"
+                        },
+                        {
+                            "text": "AIRLOCK CHAMBER A                                 [> ON]"
+                        }
+                    ]
+                },
+                "",
+                {
+                    "type": "list",
+                    "states": [
+                        {
+                            "text": "ALGAE FARM                                        [> OFF]"
+                        },
+                        {
+                            "text": "ALGAE FARM                                        [> ON]"
+                        }
+                    ]
+                },
+                "",
+                {
+                    "type": "list",
+                    "states": [
+                        {
+                            "text": "ANDROID STORAGE                                   [> OFF]"
+                        },
+                        {
+                            "text": "ANDROID STORAGE                                   [> ON]"
+                        }
+                    ]
+                },
+                "",
+                {
+                    "type": "list",
+                    "states": [
+                        {
+                            "text": "ANIMAL STORAGE                                    [> OFF]"
+                        },
+                        {
+                            "text": "ANIMAL STORAGE                                    [> ON]"
+                        }
+                    ]
+                },
+                "",
+                {
+                    "type": "list",
+                    "states": [
+                        {
+                            "text": "ARTIFACT COMPREHENSION LABS OBSERVATION ROOM      [> OFF]"
+                        },
+                        {
+                            "text": "ARTIFACT COMPREHENSION LABS OBSERVATION ROOM      [> ON]"
+                        }
+                    ]
+                },
+                "",
+                {
+                    "type": "list",
+                    "states": [
+                        {
+                            "text": "ARTIFACT EXPERIMENTATION LABS OBSERVATION ROOM    [> OFF]"
+                        },
+                        {
+                            "text": "ARTIFACT EXPERIMENTATION LABS OBSERVATION ROOM    [> ON]"
+                        }
+                    ]
+                },
+                "",
+                {
+                    "type": "list",
+                    "states": [
+                        {
+                            "text": "ASSEMBLY INSPECTION                               [> OFF]"
+                        },
+                        {
+                            "text": "ASSEMBLY INSPECTION                               [> ON]"
+                        }
+                    ]
+                },
+                "",
+                {
+                    "type": "list",
+                    "states": [
+                        {
+                            "text": "ASSEMBLY OVERVIEW                                 [> OFF]"
+                        },
+                        {
+                            "text": "ASSEMBLY OVERVIEW                                 [> ON]"
+                        }
+                    ]
+                },
+                "",
+                {
+                    "type": "list",
+                    "states": [
+                        {
+                            "text": "AUDITORIUM                                        [> OFF]"
+                        },
+                        {
+                            "text": "AUDITORIUM                                        [> ON]"
+                        }
+                    ]
+                },
+                "",
+                {
+                    "type": "list",
+                    "states": [
+                        {
+                            "text": "BACKUP GENERATORS A/B                             [> OFF]"
+                        },
+                        {
+                            "text": "BACKUP GENERATORS A/B                             [> ON]"
+                        }
+                    ]
+                },
+                "",
+                {
+                    "type": "list",
+                    "states": [
+                        {
+                            "text": "BATTERY BACKUPS                                   [> OFF]"
+                        },
+                        {
+                            "text": "BATTERY BACKUPS                                   [> ON]"
+                        }
+                    ]
+                },
+                "",
+                {
+                    "type": "list",
+                    "states": [
+                        {
+                            "text": "BIOCIDE SUPPLIES                                  [> OFF]"
+                        },
+                        {
+                            "text": "BIOCIDE SUPPLIES                                  [> ON]"
+                        }
+                    ]
+                },
+                "",
+                {
+                    "type": "list",
+                    "states": [
+                        {
+                            "text": "BLAST FURNACES                                    [> OFF]"
+                        },
+                        {
+                            "text": "BLAST FURNACES                                    [> ON]"
+                        }
+                    ]
+                },
+                "",
+                {
+                    "type": "list",
+                    "states": [
+                        {
+                            "text": "BLASTING TUNNEL                                   [> OFF]"
+                        },
+                        {
+                            "text": "BLASTING TUNNEL                                   [> ON]"
+                        }
+                    ]
+                },
+                "",
+                {
+                    "type": "list",
+                    "states": [
+                        {
+                            "text": "BONE FORGE                                        [> OFF]"
+                        },
+                        {
+                            "text": "BONE FORGE                                        [> ON]"
+                        }
+                    ]
+                },
+                "",
+                {
+                    "type": "list",
+                    "states": [
+                        {
+                            "text": "BONE INSPECTION                                   [> OFF]"
+                        },
+                        {
+                            "text": "BONE INSPECTION                                   [> ON]"
+                        }
+                    ]
+                },
+                "",
+                {
+                    "type": "list",
+                    "states": [
+                        {
+                            "text": "BONE POLISHING                                    [> OFF]"
+                        },
+                        {
+                            "text": "BONE POLISHING                                    [> ON]"
+                        }
+                    ]
+                },
+                "",
+                {
+                    "type": "list",
+                    "states": [
+                        {
+                            "text": "BRAIN CONSTRUCTION ENTRANCE                       [> OFF]"
+                        },
+                        {
+                            "text": "BRAIN CONSTRUCTION ENTRANCE                       [> ON]"
+                        }
+                    ]
+                },
+                "",
+                {
+                    "type": "list",
+                    "states": [
+                        {
+                            "text": "BRAIN INSERTION                                   [> OFF]"
+                        },
+                        {
+                            "text": "BRAIN INSERTION                                   [> ON]"
+                        }
+                    ]
+                },
+                "",
+                {
+                    "type": "list",
+                    "states": [
+                        {
+                            "text": "BRAIN SCAN DATABANK                               [> OFF]"
+                        },
+                        {
+                            "text": "BRAIN SCAN DATABANK                               [> ON]"
+                        }
+                    ]
+                },
+                "",
+                {
+                    "type": "list",
+                    "states": [
+                        {
+                            "text": "BRAIN SPACE                                       [> OFF]"
+                        },
+                        {
+                            "text": "BRAIN SPACE                                       [> ON]"
+                        }
+                    ]
+                },
+                "",
+                {
+                    "type": "list",
+                    "states": [
+                        {
+                            "text": "BRAIN TESTING                                     [> OFF]"
+                        },
+                        {
+                            "text": "BRAIN TESTING                                     [> ON]"
+                        }
+                    ]
+                },
+                "",
+                {
+                    "type": "list",
+                    "states": [
+                        {
+                            "text": "BREAK ROOM A                                      [> OFF]"
+                        },
+                        {
+                            "text": "BREAK ROOM A                                      [> ON]"
+                        }
+                    ]
+                },
+                "",
+                {
+                    "type": "list",
+                    "states": [
+                        {
+                            "text": "BREAK ROOM B                                      [> OFF]"
+                        },
+                        {
+                            "text": "BREAK ROOM B                                      [> ON]"
+                        }
+                    ]
+                },
+                "",
+                {
+                    "type": "list",
+                    "states": [
+                        {
+                            "text": "BREAK ROOM C                                      [> OFF]"
+                        },
+                        {
+                            "text": "BREAK ROOM C                                      [> ON]"
+                        }
+                    ]
+                },
+                "",
+                {
+                    "type": "list",
+                    "states": [
+                        {
+                            "text": "CABLE JUNCTION                                    [> OFF]"
+                        },
+                        {
+                            "text": "CABLE JUNCTION                                    [> ON]"
+                        }
+                    ]
+                },
+                "",
+                {
+                    "type": "list",
+                    "states": [
+                        {
+                            "text": "CAFETERIA                                         [> OFF]"
+                        },
+                        {
+                            "text": "CAFETERIA                                         [> ON]"
+                        }
+                    ]
+                },
+                "",
+                {
+                    "type": "list",
+                    "states": [
+                        {
+                            "text": "CENTRAL ROUTING ROOM                              [> OFF]"
+                        },
+                        {
+                            "text": "CENTRAL ROUTING ROOM                              [> ON]"
+                        }
+                    ]
+                },
+                "",
+                {
+                    "type": "list",
+                    "states": [
+                        {
+                            "text": "CENTRAL SERVICE ENTRANCE                          [> OFF]"
+                        },
+                        {
+                            "text": "CENTRAL SERVICE ENTRANCE                          [> ON]"
+                        }
+                    ]
+                },
+                "",
+                {
+                    "type": "list",
+                    "states": [
+                        {
+                            "text": "CIRCUIT TESTING                                   [> OFF]"
+                        },
+                        {
+                            "text": "CIRCUIT TESTING                                   [> ON]"
+                        }
+                    ]
+                },
+                "",
+                {
+                    "type": "list",
+                    "states": [
+                        {
+                            "text": "CIRCUIT WEAVER                                    [> OFF]"
+                        },
+                        {
+                            "text": "CIRCUIT WEAVER                                    [> ON]"
+                        }
+                    ]
+                },
+                "",
+                {
+                    "type": "list",
+                    "states": [
+                        {
+                            "text": "CLEANROOM                                         [> OFF]"
+                        },
+                        {
+                            "text": "CLEANROOM                                         [> ON]"
+                        }
+                    ]
+                },
+                "",
+                {
+                    "type": "list",
+                    "states": [
+                        {
+                            "text": "CLEANROOM CHANGING ROOM                           [> OFF]"
+                        },
+                        {
+                            "text": "CLEANROOM CHANGING ROOM                           [> ON]"
+                        }
+                    ]
+                },
+                "",
+                {
+                    "type": "list",
+                    "states": [
+                        {
+                            "text": "CLOTHING STORAGE                                  [> OFF]"
+                        },
+                        {
+                            "text": "CLOTHING STORAGE                                  [> ON]"
+                        }
+                    ]
+                },
+                "",
+                {
+                    "type": "list",
+                    "states": [
+                        {
+                            "text": "COMMUNICATIONS FEED                               [> OFF]"
+                        },
+                        {
+                            "text": "COMMUNICATIONS FEED                               [> ON]"
+                        }
+                    ]
+                },
+                "",
+                {
+                    "type": "list",
+                    "states": [
+                        {
+                            "text": "COMPONENT GROWTH CHAMBER                          [> OFF]"
+                        },
+                        {
+                            "text": "COMPONENT GROWTH CHAMBER                          [> ON]"
+                        }
+                    ]
+                },
+                "",
+                {
+                    "type": "list",
+                    "states": [
+                        {
+                            "text": "CONDENSATION CHAMBER                              [> OFF]"
+                        },
+                        {
+                            "text": "CONDENSATION CHAMBER                              [> ON]"
+                        }
+                    ]
+                },
+                "",
+                {
+                    "type": "list",
+                    "states": [
+                        {
+                            "text": "CONSTRUCTION ZONES                                [> OFF]"
+                        },
+                        {
+                            "text": "CONSTRUCTION ZONES                                [> ON]"
+                        }
+                    ]
+                },
+                "",
+                {
+                    "type": "list",
+                    "states": [
+                        {
+                            "text": "CONTAINMENT                                       [> OFF]"
+                        },
+                        {
+                            "text": "CONTAINMENT                                       [> ON]"
+                        }
+                    ]
+                },
+                "",
+                {
+                    "type": "list",
+                    "states": [
+                        {
+                            "text": "CONTROL ROOM                                      [> OFF]"
+                        },
+                        {
+                            "text": "CONTROL ROOM                                      [> ON]"
+                        }
+                    ]
+                },
+                "",
+                {
+                    "type": "list",
+                    "states": [
+                        {
+                            "text": "CONTROL TERMINAL                                  [> OFF]"
+                        },
+                        {
+                            "text": "CONTROL TERMINAL                                  [> ON]"
+                        }
+                    ]
+                },
+                "",
+                {
+                    "type": "list",
+                    "states": [
+                        {
+                            "text": "COOLING DUCTS AB                                  [> OFF]"
+                        },
+                        {
+                            "text": "COOLING DUCTS AB                                  [> ON]"
+                        }
+                    ]
+                },
+                "",
+                {
+                    "type": "list",
+                    "states": [
+                        {
+                            "text": "CRAWLSPACE                                        [> OFF]"
+                        },
+                        {
+                            "text": "CRAWLSPACE                                        [> ON]"
+                        }
+                    ]
+                },
+                "",
+                {
+                    "type": "list",
+                    "states": [
+                        {
+                            "text": "DATA INSPECTION OFFICE                            [> OFF]"
+                        },
+                        {
+                            "text": "DATA INSPECTION OFFICE                            [> ON]"
+                        }
+                    ]
+                },
+                "",
+                {
+                    "type": "list",
+                    "states": [
+                        {
+                            "text": "DATABANK BACKUPS                                  [> OFF]"
+                        },
+                        {
+                            "text": "DATABANK BACKUPS                                  [> ON]"
+                        }
+                    ]
+                },
+                "",
+                {
+                    "type": "list",
+                    "states": [
+                        {
+                            "text": "DEBURRING FACILITY                                [> OFF]"
+                        },
+                        {
+                            "text": "DEBURRING FACILITY                                [> ON]"
+                        }
+                    ]
+                },
+                "",
+                {
+                    "type": "list",
+                    "states": [
+                        {
+                            "text": "DECONTAMINATION                                   [> OFF]"
+                        },
+                        {
+                            "text": "DECONTAMINATION                                   [> ON]"
+                        }
+                    ]
+                },
+                "",
+                {
+                    "type": "list",
+                    "states": [
+                        {
+                            "text": "DEFENSE LASER CAPACITORS                          [> OFF]"
+                        },
+                        {
+                            "text": "DEFENSE LASER CAPACITORS                          [> ON]"
+                        }
+                    ]
+                },
+                "",
+                {
+                    "type": "list",
+                    "states": [
+                        {
+                            "text": "DETECTION CYLINDER                                [> OFF]"
+                        },
+                        {
+                            "text": "DETECTION CYLINDER                                [> ON]"
+                        }
+                    ]
+                },
+                "",
+                {
+                    "type": "list",
+                    "states": [
+                        {
+                            "text": "DIAGNOSTIC LAB                                    [> OFF]"
+                        },
+                        {
+                            "text": "DIAGNOSTIC LAB                                    [> ON]"
+                        }
+                    ]
+                },
+                "",
+                {
+                    "type": "list",
+                    "states": [
+                        {
+                            "text": "DIAGNOSTICS                                       [> OFF]"
+                        },
+                        {
+                            "text": "DIAGNOSTICS                                       [> ON]"
+                        }
+                    ]
+                },
+                "",
+                {
+                    "type": "list",
+                    "states": [
+                        {
+                            "text": "DISASSEMBLY YARD                                  [> OFF]"
+                        },
+                        {
+                            "text": "DISASSEMBLY YARD                                  [> ON]"
+                        }
+                    ]
+                },
+                "",
+                {
+                    "type": "list",
+                    "states": [
+                        {
+                            "text": "DRAINAGE                                          [> OFF]"
+                        },
+                        {
+                            "text": "DRAINAGE                                          [> ON]"
+                        }
+                    ]
+                },
+                "",
+                {
+                    "type": "list",
+                    "states": [
+                        {
+                            "text": "DRONE BAY                                         [> OFF]"
+                        },
+                        {
+                            "text": "DRONE BAY                                         [> ON]"
+                        }
+                    ]
+                },
+                "",
+                {
+                    "type": "list",
+                    "states": [
+                        {
+                            "text": "DUST COLLECTOR                                    [> OFF]"
+                        },
+                        {
+                            "text": "DUST COLLECTOR                                    [> ON]"
+                        }
+                    ]
+                },
+                "",
+                {
+                    "type": "list",
+                    "states": [
+                        {
+                            "text": "ELECTRIC GRID                                     [> OFF]"
+                        },
+                        {
+                            "text": "ELECTRIC GRID                                     [> ON]"
+                        }
+                    ]
+                },
+                "",
+                {
+                    "type": "list",
+                    "states": [
+                        {
+                            "text": "ELECTRICAL CONDUCTION CHAMBER                     [> OFF]"
+                        },
+                        {
+                            "text": "ELECTRICAL CONDUCTION CHAMBER                     [> ON]"
+                        }
+                    ]
+                },
+                "",
+                {
+                    "type": "list",
+                    "states": [
+                        {
+                            "text": "ELEVATOR LANDING                                  [> OFF]"
+                        },
+                        {
+                            "text": "ELEVATOR LANDING                                  [> ON]"
+                        }
+                    ]
+                },
+                "",
+                {
+                    "type": "list",
+                    "states": [
+                        {
+                            "text": "EMERGENCY HEATSINK                                [> OFF]"
+                        },
+                        {
+                            "text": "EMERGENCY HEATSINK                                [> ON]"
+                        }
+                    ]
+                },
+                "",
+                {
+                    "type": "list",
+                    "states": [
+                        {
+                            "text": "EMPLOYEE REC CENTER                               [> OFF]"
+                        },
+                        {
+                            "text": "EMPLOYEE REC CENTER                               [> ON]"
+                        }
+                    ]
+                },
+                "",
+                {
+                    "type": "list",
+                    "states": [
+                        {
+                            "text": "ENGINEERS' ROOM                                   [> OFF]"
+                        },
+                        {
+                            "text": "ENGINEERS' ROOM                                   [> ON]"
+                        }
+                    ]
+                },
+                "",
+                {
+                    "type": "list",
+                    "states": [
+                        {
+                            "text": "ENGRAVING NEEDLES                                 [> OFF]"
+                        },
+                        {
+                            "text": "ENGRAVING NEEDLES                                 [> ON]"
+                        }
+                    ]
+                },
+                "",
+                {
+                    "type": "list",
+                    "states": [
+                        {
+                            "text": "ESCAPE POD BAY                                    [> OFF]"
+                        },
+                        {
+                            "text": "ESCAPE POD BAY                                    [> ON]"
+                        }
+                    ]
+                },
+                "",
+                {
+                    "type": "list",
+                    "states": [
+                        {
+                            "text": "EXECUTIVE LOUNGE                                  [> OFF]"
+                        },
+                        {
+                            "text": "EXECUTIVE LOUNGE                                  [> ON]"
+                        }
+                    ]
+                },
+                "",
+                {
+                    "type": "list",
+                    "states": [
+                        {
+                            "text": "EXECUTIVE OFFICES                                 [> OFF]"
+                        },
+                        {
+                            "text": "EXECUTIVE OFFICES                                 [> ON]"
+                        }
+                    ]
+                },
+                "",
+                {
+                    "type": "list",
+                    "states": [
+                        {
+                            "text": "EXECUTIVE WASHROOM                                [> OFF]"
+                        },
+                        {
+                            "text": "EXECUTIVE WASHROOM                                [> ON]"
+                        }
+                    ]
+                },
+                "",
+                {
+                    "type": "list",
+                    "states": [
+                        {
+                            "text": "EXHIBITIONS A                                     [> OFF]"
+                        },
+                        {
+                            "text": "EXHIBITIONS A                                     [> ON]"
+                        }
+                    ]
+                },
+                "",
+                {
+                    "type": "list",
+                    "states": [
+                        {
+                            "text": "EXHIBITIONS B                                     [> OFF]"
+                        },
+                        {
+                            "text": "EXHIBITIONS B                                     [> ON]"
+                        }
+                    ]
+                },
+                "",
+                {
+                    "type": "list",
+                    "states": [
+                        {
+                            "text": "EXHIBITIONS C                                     [> OFF]"
+                        },
+                        {
+                            "text": "EXHIBITIONS C                                     [> ON]"
+                        }
+                    ]
+                },
+                "",
+                {
+                    "type": "list",
+                    "states": [
+                        {
+                            "text": "FARM PLANNING                                     [> OFF]"
+                        },
+                        {
+                            "text": "FARM PLANNING                                     [> ON]"
+                        }
+                    ]
+                },
+                "",
+                {
+                    "type": "list",
+                    "states": [
+                        {
+                            "text": "FILTRATION SYSTEM                                 [> OFF]"
+                        },
+                        {
+                            "text": "FILTRATION SYSTEM                                 [> ON]"
+                        }
+                    ]
+                },
+                "",
+                {
+                    "type": "list",
+                    "states": [
+                        {
+                            "text": "FINAL CONSTRUCTION                                [> OFF]"
+                        },
+                        {
+                            "text": "FINAL CONSTRUCTION                                [> ON]"
+                        }
+                    ]
+                },
+                "",
+                {
+                    "type": "list",
+                    "states": [
+                        {
+                            "text": "FINAL TESTING                                     [> OFF]"
+                        },
+                        {
+                            "text": "FINAL TESTING                                     [> ON]"
+                        }
+                    ]
+                },
+                "",
+                {
+                    "type": "list",
+                    "states": [
+                        {
+                            "text": "FINANCIAL SIMULATION SUITE                        [> OFF]"
+                        },
+                        {
+                            "text": "FINANCIAL SIMULATION SUITE                        [> ON]"
+                        }
+                    ]
+                },
+                "",
+                {
+                    "type": "list",
+                    "states": [
+                        {
+                            "text": "FLESH SLEEVE INSERTION                            [> OFF]"
+                        },
+                        {
+                            "text": "FLESH SLEEVE INSERTION                            [> ON]"
+                        }
+                    ]
+                },
+                "",
+                {
+                    "type": "list",
+                    "states": [
+                        {
+                            "text": "FLOOR 3 MAINTENANCE ACCESS                        [> OFF]"
+                        },
+                        {
+                            "text": "FLOOR 3 MAINTENANCE ACCESS                        [> ON]"
+                        }
+                    ]
+                },
+                "",
+                {
+                    "type": "list",
+                    "states": [
+                        {
+                            "text": "FLOOR 5 MAINTENANCE HATCH                         [> OFF]"
+                        },
+                        {
+                            "text": "FLOOR 5 MAINTENANCE HATCH                         [> ON]"
+                        }
+                    ]
+                },
+                "",
+                {
+                    "type": "list",
+                    "states": [
+                        {
+                            "text": "FOAM INJECTION                                    [> OFF]"
+                        },
+                        {
+                            "text": "FOAM INJECTION                                    [> ON]"
+                        }
+                    ]
+                },
+                "",
+                {
+                    "type": "list",
+                    "states": [
+                        {
+                            "text": "FOAM TANK                                         [> OFF]"
+                        },
+                        {
+                            "text": "FOAM TANK                                         [> ON]"
+                        }
+                    ]
+                },
+                "",
+                {
+                    "type": "list",
+                    "states": [
+                        {
+                            "text": "FOAM WARRENS                                      [> OFF]"
+                        },
+                        {
+                            "text": "FOAM WARRENS                                      [> ON]"
+                        }
+                    ]
+                },
+                "",
+                {
+                    "type": "list",
+                    "states": [
+                        {
+                            "text": "FOIL RECYCLING                                    [> OFF]"
+                        },
+                        {
+                            "text": "FOIL RECYCLING                                    [> ON]"
+                        }
+                    ]
+                },
+                "",
+                {
+                    "type": "list",
+                    "states": [
+                        {
+                            "text": "FREIGHT ANDROID RECESSES                          [> OFF]"
+                        },
+                        {
+                            "text": "FREIGHT ANDROID RECESSES                          [> ON]"
+                        }
+                    ]
+                },
+                "",
+                {
+                    "type": "list",
+                    "states": [
+                        {
+                            "text": "FUEL TANKS                                        [> OFF]"
+                        },
+                        {
+                            "text": "FUEL TANKS                                        [> ON]"
+                        }
+                    ]
+                },
+                "",
+                {
+                    "type": "list",
+                    "states": [
+                        {
+                            "text": "FURNACES                                          [> OFF]"
+                        },
+                        {
+                            "text": "FURNACES                                          [> ON]"
+                        }
+                    ]
+                },
+                "",
+                {
+                    "type": "list",
+                    "states": [
+                        {
+                            "text": "GAS COOK-OFF                                      [> OFF]"
+                        },
+                        {
+                            "text": "GAS COOK-OFF                                      [> ON]"
+                        }
+                    ]
+                },
+                "",
+                {
+                    "type": "list",
+                    "states": [
+                        {
+                            "text": "GOODS ELEVATOR                                    [> OFF]"
+                        },
+                        {
+                            "text": "GOODS ELEVATOR                                    [> ON]"
+                        }
+                    ]
+                },
+                "",
+                {
+                    "type": "list",
+                    "states": [
+                        {
+                            "text": "GRAVITY ACCLIMATOR                                [> OFF]"
+                        },
+                        {
+                            "text": "GRAVITY ACCLIMATOR                                [> ON]"
+                        }
+                    ]
+                },
+                "",
+                {
+                    "type": "list",
+                    "states": [
+                        {
+                            "text": "GRINDER                                           [> OFF]"
+                        },
+                        {
+                            "text": "GRINDER                                           [> ON]"
+                        }
+                    ]
+                },
+                "",
+                {
+                    "type": "list",
+                    "states": [
+                        {
+                            "text": "GYM                                               [> OFF]"
+                        },
+                        {
+                            "text": "GYM                                               [> ON]"
+                        }
+                    ]
+                },
+                "",
+                {
+                    "type": "list",
+                    "states": [
+                        {
+                            "text": "HAZMAT CHANGING ROOM                              [> OFF]"
+                        },
+                        {
+                            "text": "HAZMAT CHANGING ROOM                              [> ON]"
+                        }
+                    ]
+                },
+                "",
+                {
+                    "type": "list",
+                    "states": [
+                        {
+                            "text": "HEAD SCULPTING                                    [> OFF]"
+                        },
+                        {
+                            "text": "HEAD SCULPTING                                    [> ON]"
+                        }
+                    ]
+                },
+                "",
+                {
+                    "type": "list",
+                    "states": [
+                        {
+                            "text": "HUMAN EMULATION LABS                              [> OFF]"
+                        },
+                        {
+                            "text": "HUMAN EMULATION LABS                              [> ON]"
+                        }
+                    ]
+                },
+                "",
+                {
+                    "type": "list",
+                    "states": [
+                        {
+                            "text": "HYDRAULICS                                        [> OFF]"
+                        },
+                        {
+                            "text": "HYDRAULICS                                        [> ON]"
+                        }
+                    ]
+                },
+                "",
+                {
+                    "type": "list",
+                    "states": [
+                        {
+                            "text": "INSPECTION BOOTHS                                 [> OFF]"
+                        },
+                        {
+                            "text": "INSPECTION BOOTHS                                 [> ON]"
+                        }
+                    ]
+                },
+                "",
+                {
+                    "type": "list",
+                    "states": [
+                        {
+                            "text": "ISOLATION                                         [> OFF]"
+                        },
+                        {
+                            "text": "ISOLATION                                         [> ON]"
+                        }
+                    ]
+                },
+                "",
+                {
+                    "type": "list",
+                    "states": [
+                        {
+                            "text": "KITCHEN                                           [> OFF]"
+                        },
+                        {
+                            "text": "KITCHEN                                           [> ON]"
+                        }
+                    ]
+                },
+                "",
+                {
+                    "type": "list",
+                    "states": [
+                        {
+                            "text": "LASER CONTROL AND ACCESS                          [> OFF]"
+                        },
+                        {
+                            "text": "LASER CONTROL AND ACCESS                          [> ON]"
+                        }
+                    ]
+                },
+                "",
+                {
+                    "type": "list",
+                    "states": [
+                        {
+                            "text": "LENS CALIBRATION                                  [> OFF]"
+                        },
+                        {
+                            "text": "LENS CALIBRATION                                  [> ON]"
+                        }
+                    ]
+                },
+                "",
+                {
+                    "type": "list",
+                    "states": [
+                        {
+                            "text": "LIFT TO FLOOR 2                                   [> OFF]"
+                        },
+                        {
+                            "text": "LIFT TO FLOOR 2                                   [> ON]"
+                        }
+                    ]
+                },
+                "",
+                {
+                    "type": "list",
+                    "states": [
+                        {
+                            "text": "LIFT TO FLOOR 46                                  [> OFF]"
+                        },
+                        {
+                            "text": "LIFT TO FLOOR 46                                  [> ON]"
+                        }
+                    ]
+                },
+                "",
+                {
+                    "type": "list",
+                    "states": [
+                        {
+                            "text": "LIQUID WASTE DISPOSAL                             [> OFF]"
+                        },
+                        {
+                            "text": "LIQUID WASTE DISPOSAL                             [> ON]"
+                        }
+                    ]
+                },
+                "",
+                {
+                    "type": "list",
+                    "states": [
+                        {
+                            "text": "LOADING DOCK                                      [> OFF]"
+                        },
+                        {
+                            "text": "LOADING DOCK                                      [> ON]"
+                        }
+                    ]
+                },
+                "",
+                {
+                    "type": "list",
+                    "states": [
+                        {
+                            "text": "LOBBY                                             [> OFF]"
+                        },
+                        {
+                            "text": "LOBBY                                             [> ON]"
+                        }
+                    ]
+                },
+                "",
+                {
+                    "type": "list",
+                    "states": [
+                        {
+                            "text": "LOCKER ROOM                                       [> OFF]"
+                        },
+                        {
+                            "text": "LOCKER ROOM                                       [> ON]"
+                        }
+                    ]
+                },
+                "",
+                {
+                    "type": "list",
+                    "states": [
+                        {
+                            "text": "MAIN OFFICE                                       [> OFF]"
+                        },
+                        {
+                            "text": "MAIN OFFICE                                       [> ON]"
+                        }
+                    ]
+                },
+                "",
+                {
+                    "type": "list",
+                    "states": [
+                        {
+                            "text": "MAIN THRUSTERS                                    [> OFF]"
+                        },
+                        {
+                            "text": "MAIN THRUSTERS                                    [> ON]"
+                        }
+                    ]
+                },
+                "",
+                {
+                    "type": "list",
+                    "states": [
+                        {
+                            "text": "MAINTENANCE LANDING AREA                          [> OFF]"
+                        },
+                        {
+                            "text": "MAINTENANCE LANDING AREA                          [> ON]"
+                        }
+                    ]
+                },
+                "",
+                {
+                    "type": "list",
+                    "states": [
+                        {
+                            "text": "MAINTENANCE TERMINAL                              [> OFF]"
+                        },
+                        {
+                            "text": "MAINTENANCE TERMINAL                              [> ON]"
+                        }
+                    ]
+                },
+                "",
+                {
+                    "type": "list",
+                    "states": [
+                        {
+                            "text": "MANUAL COMMUNICATIONS ROOM                        [> OFF]"
+                        },
+                        {
+                            "text": "MANUAL COMMUNICATIONS ROOM                        [> ON]"
+                        }
+                    ]
+                },
+                "",
+                {
+                    "type": "list",
+                    "states": [
+                        {
+                            "text": "MEDICAL ROOM                                      [> OFF]"
+                        },
+                        {
+                            "text": "MEDICAL ROOM                                      [> ON]"
+                        }
+                    ]
+                },
+                "",
+                {
+                    "type": "list",
+                    "states": [
+                        {
+                            "text": "MEDICAL STATION                                   [> OFF]"
+                        },
+                        {
+                            "text": "MEDICAL STATION                                   [> ON]"
+                        }
+                    ]
+                },
+                "",
+                {
+                    "type": "list",
+                    "states": [
+                        {
+                            "text": "MEETING ROOM A                                    [> OFF]"
+                        },
+                        {
+                            "text": "MEETING ROOM A                                    [> ON]"
+                        }
+                    ]
+                },
+                "",
+                {
+                    "type": "list",
+                    "states": [
+                        {
+                            "text": "MEETING ROOM B                                    [> OFF]"
+                        },
+                        {
+                            "text": "MEETING ROOM B                                    [> ON]"
+                        }
+                    ]
+                },
+                "",
+                {
+                    "type": "list",
+                    "states": [
+                        {
+                            "text": "MEETING ROOM C                                    [> OFF]"
+                        },
+                        {
+                            "text": "MEETING ROOM C                                    [> ON]"
+                        }
+                    ]
+                },
+                "",
+                {
+                    "type": "list",
+                    "states": [
+                        {
+                            "text": "MEETING ROOM D                                    [> OFF]"
+                        },
+                        {
+                            "text": "MEETING ROOM D                                    [> ON]"
+                        }
+                    ]
+                },
+                "",
+                {
+                    "type": "list",
+                    "states": [
+                        {
+                            "text": "MICROHANGAR                                       [> OFF]"
+                        },
+                        {
+                            "text": "MICROHANGAR                                       [> ON]"
+                        }
+                    ]
+                },
+                "",
+                {
+                    "type": "list",
+                    "states": [
+                        {
+                            "text": "MIND DOWNLOAD                                     [> OFF]"
+                        },
+                        {
+                            "text": "MIND DOWNLOAD                                     [> ON]"
+                        }
+                    ]
+                },
+                "",
+                {
+                    "type": "list",
+                    "states": [
+                        {
+                            "text": "MIND ZOO                                          [> OFF]"
+                        },
+                        {
+                            "text": "MIND ZOO                                          [> ON]"
+                        }
+                    ]
+                },
+                "",
+                {
+                    "type": "list",
+                    "states": [
+                        {
+                            "text": "MOLD PRESS                                        [> OFF]"
+                        },
+                        {
+                            "text": "MOLD PRESS                                        [> ON]"
+                        }
+                    ]
+                },
+                "",
+                {
+                    "type": "list",
+                    "states": [
+                        {
+                            "text": "NERVE THREADING                                   [> OFF]"
+                        },
+                        {
+                            "text": "NERVE THREADING                                   [> ON]"
+                        }
+                    ]
+                },
+                "",
+                {
+                    "type": "list",
+                    "states": [
+                        {
+                            "text": "NUCLEAR GENERATOR                                 [> OFF]"
+                        },
+                        {
+                            "text": "NUCLEAR GENERATOR                                 [> ON]"
+                        }
+                    ]
+                },
+                "",
+                {
+                    "type": "list",
+                    "states": [
+                        {
+                            "text": "NUCLEAR STORAGE                                   [> OFF]"
+                        },
+                        {
+                            "text": "NUCLEAR STORAGE                                   [> ON]"
+                        }
+                    ]
+                },
+                "",
+                {
+                    "type": "list",
+                    "states": [
+                        {
+                            "text": "O2 FLOW BACKUP                                    [> OFF]"
+                        },
+                        {
+                            "text": "O2 FLOW BACKUP                                    [> ON]"
+                        }
+                    ]
+                },
+                "",
+                {
+                    "type": "list",
+                    "states": [
+                        {
+                            "text": "O2 FLOW CONTROL                                   [> OFF]"
+                        },
+                        {
+                            "text": "O2 FLOW CONTROL                                   [> ON]"
+                        }
+                    ]
+                },
+                "",
+                {
+                    "type": "list",
+                    "states": [
+                        {
+                            "text": "ORE CRUSHERS                                      [> OFF]"
+                        },
+                        {
+                            "text": "ORE CRUSHERS                                      [> ON]"
+                        }
+                    ]
+                },
+                "",
+                {
+                    "type": "list",
+                    "states": [
+                        {
+                            "text": "ORGAN IMPLANTATION                                [> OFF]"
+                        },
+                        {
+                            "text": "ORGAN IMPLANTATION                                [> ON]"
+                        }
+                    ]
+                },
+                "",
+                {
+                    "type": "list",
+                    "states": [
+                        {
+                            "text": "ORGANIC REFERENCE STORAGE                         [> OFF]"
+                        },
+                        {
+                            "text": "ORGANIC REFERENCE STORAGE                         [> ON]"
+                        }
+                    ]
+                },
+                "",
+                {
+                    "type": "list",
+                    "states": [
+                        {
+                            "text": "ORGANIC RESPONSE CHAMBER                          [> OFF]"
+                        },
+                        {
+                            "text": "ORGANIC RESPONSE CHAMBER                          [> ON]"
+                        }
+                    ]
+                },
+                "",
+                {
+                    "type": "list",
+                    "states": [
+                        {
+                            "text": "PANIC ROOM                                        [> OFF]"
+                        },
+                        {
+                            "text": "PANIC ROOM                                        [> ON]"
+                        }
+                    ]
+                },
+                "",
+                {
+                    "type": "list",
+                    "states": [
+                        {
+                            "text": "POWER BANK                                        [> OFF]"
+                        },
+                        {
+                            "text": "POWER BANK                                        [> ON]"
+                        }
+                    ]
+                },
+                "",
+                {
+                    "type": "list",
+                    "states": [
+                        {
+                            "text": "POWER GENERATOR                                   [> OFF]"
+                        },
+                        {
+                            "text": "POWER GENERATOR                                   [> ON]"
+                        }
+                    ]
+                },
+                "",
+                {
+                    "type": "list",
+                    "states": [
+                        {
+                            "text": "POWER REGULATORS                                  [> OFF]"
+                        },
+                        {
+                            "text": "POWER REGULATORS                                  [> ON]"
+                        }
+                    ]
+                },
+                "",
+                {
+                    "type": "list",
+                    "states": [
+                        {
+                            "text": "POWER SECTOR AIRLOCK CHAMBER                      [> OFF]"
+                        },
+                        {
+                            "text": "POWER SECTOR AIRLOCK CHAMBER                      [> ON]"
+                        }
+                    ]
+                },
+                "",
+                {
+                    "type": "list",
+                    "states": [
+                        {
+                            "text": "POWER SWITCH BOARD                                [> OFF]"
+                        },
+                        {
+                            "text": "POWER SWITCH BOARD                                [> ON]"
+                        }
+                    ]
+                },
+                "",
+                {
+                    "type": "list",
+                    "states": [
+                        {
+                            "text": "PROCESSING STATION                                [> OFF]"
+                        },
+                        {
+                            "text": "PROCESSING STATION                                [> ON]"
+                        }
+                    ]
+                },
+                "",
+                {
+                    "type": "list",
+                    "states": [
+                        {
+                            "text": "PROTOTYPING                                       [> OFF]"
+                        },
+                        {
+                            "text": "PROTOTYPING                                       [> ON]"
+                        }
+                    ]
+                },
+                "",
+                {
+                    "type": "list",
+                    "states": [
+                        {
+                            "text": "PSEUDOFLESH DIGESTION                             [> OFF]"
+                        },
+                        {
+                            "text": "PSEUDOFLESH DIGESTION                             [> ON]"
+                        }
+                    ]
+                },
+                "",
+                {
+                    "type": "list",
+                    "states": [
+                        {
+                            "text": "PSEUDOFLESH ENGINEERING                           [> OFF]"
+                        },
+                        {
+                            "text": "PSEUDOFLESH ENGINEERING                           [> ON]"
+                        }
+                    ]
+                },
+                "",
+                {
+                    "type": "list",
+                    "states": [
+                        {
+                            "text": "PSEUDOFLESH RECYCLING                             [> OFF]"
+                        },
+                        {
+                            "text": "PSEUDOFLESH RECYCLING                             [> ON]"
+                        }
+                    ]
+                },
+                "",
+                {
+                    "type": "list",
+                    "states": [
+                        {
+                            "text": "PSEUDOMILK EEL STORAGE                            [> OFF]"
+                        },
+                        {
+                            "text": "PSEUDOMILK EEL STORAGE                            [> ON]"
+                        }
+                    ]
+                },
+                "",
+                {
+                    "type": "list",
+                    "states": [
+                        {
+                            "text": "PSEUDOMILK INJECTION                              [> OFF]"
+                        },
+                        {
+                            "text": "PSEUDOMILK INJECTION                              [> ON]"
+                        }
+                    ]
+                },
+                "",
+                {
+                    "type": "list",
+                    "states": [
+                        {
+                            "text": "PSEUDOMILK SPRAY TANK                             [> OFF]"
+                        },
+                        {
+                            "text": "PSEUDOMILK SPRAY TANK                             [> ON]"
+                        }
+                    ]
+                },
+                "",
+                {
+                    "type": "list",
+                    "states": [
+                        {
+                            "text": "PSEUDOMILK VAT                                    [> OFF]"
+                        },
+                        {
+                            "text": "PSEUDOMILK VAT                                    [> ON]"
+                        }
+                    ]
+                },
+                "",
+                {
+                    "type": "list",
+                    "states": [
+                        {
+                            "text": "QA INSPECTION                                     [> OFF]"
+                        },
+                        {
+                            "text": "QA INSPECTION                                     [> ON]"
+                        }
+                    ]
+                },
+                "",
+                {
+                    "type": "list",
+                    "states": [
+                        {
+                            "text": "QUARANTINE                                        [> PURGE ACTIVATED]"
+                        },
+                        {
+                            "text": "QUARANTINE                                        [> ON]"
+                        },
+                        {
+                            "text": "QUARANTINE                                        [> OFF]"
+                        }
+                    ]
+                },
+                "",
+                {
+                    "type": "list",
+                    "states": [
+                        {
+                            "text": "QUENCHING TUBS                                    [> OFF]"
+                        },
+                        {
+                            "text": "QUENCHING TUBS                                    [> ON]"
+                        }
+                    ]
+                },
+                "",
+                {
+                    "type": "list",
+                    "states": [
+                        {
+                            "text": "RECEIVING                                         [> OFF]"
+                        },
+                        {
+                            "text": "RECEIVING                                         [> ON]"
+                        }
+                    ]
+                },
+                "",
+                {
+                    "type": "list",
+                    "states": [
+                        {
+                            "text": "RECEPTION                                         [> OFF]"
+                        },
+                        {
+                            "text": "RECEPTION                                         [> ON]"
+                        }
+                    ]
+                },
+                "",
+                {
+                    "type": "list",
+                    "states": [
+                        {
+                            "text": "REJECT BIN ACCESS                                 [> OFF]"
+                        },
+                        {
+                            "text": "REJECT BIN ACCESS                                 [> ON]"
+                        }
+                    ]
+                },
+                "",
+                {
+                    "type": "list",
+                    "states": [
+                        {
+                            "text": "REJECT DISPOSAL                                   [> OFF]"
+                        },
+                        {
+                            "text": "REJECT DISPOSAL                                   [> ON]"
+                        }
+                    ]
+                },
+                "",
+                {
+                    "type": "list",
+                    "states": [
+                        {
+                            "text": "RESONANCE CHAMBER                                 [> OFF]"
+                        },
+                        {
+                            "text": "RESONANCE CHAMBER                                 [> ON]"
+                        }
+                    ]
+                },
+                "",
+                {
+                    "type": "list",
+                    "states": [
+                        {
+                            "text": "SANDING FACILITY                                  [> OFF]"
+                        },
+                        {
+                            "text": "SANDING FACILITY                                  [> ON]"
+                        }
+                    ]
+                },
+                "",
+                {
+                    "type": "list",
+                    "states": [
+                        {
+                            "text": "SCHEMATIC STORAGE                                 [> OFF]"
+                        },
+                        {
+                            "text": "SCHEMATIC STORAGE                                 [> ON]"
+                        }
+                    ]
+                },
+                "",
+                {
+                    "type": "list",
+                    "states": [
+                        {
+                            "text": "SCHEMATICS STORAGE                                [> OFF]"
+                        },
+                        {
+                            "text": "SCHEMATICS STORAGE                                [> ON]"
+                        }
+                    ]
+                },
+                "",
+                {
+                    "type": "list",
+                    "states": [
+                        {
+                            "text": "SCRAP RECYCLING                                   [> OFF]"
+                        },
+                        {
+                            "text": "SCRAP RECYCLING                                   [> ON]"
+                        }
+                    ]
+                },
+                "",
+                {
+                    "type": "list",
+                    "states": [
+                        {
+                            "text": "SECONDARY HANGAR                                  [> OFF]"
+                        },
+                        {
+                            "text": "SECONDARY HANGAR                                  [> ON]"
+                        }
+                    ]
+                },
+                "",
+                {
+                    "type": "list",
+                    "states": [
+                        {
+                            "text": "SECURITY CENTER                                   [> OFF]"
+                        },
+                        {
+                            "text": "SECURITY CENTER                                   [> ON]"
+                        }
+                    ]
+                },
+                "",
+                {
+                    "type": "list",
+                    "states": [
+                        {
+                            "text": "SECURITY CHECKPOINT ALPHA                         [> OFF]"
+                        },
+                        {
+                            "text": "SECURITY CHECKPOINT ALPHA                         [> ON]"
+                        }
+                    ]
+                },
+                "",
+                {
+                    "type": "list",
+                    "states": [
+                        {
+                            "text": "SECURITY DISPATCH                                 [> OFF]"
+                        },
+                        {
+                            "text": "SECURITY DISPATCH                                 [> ON]"
+                        }
+                    ]
+                },
+                "",
+                {
+                    "type": "list",
+                    "states": [
+                        {
+                            "text": "SEMINAR ROOM                                      [> OFF]"
+                        },
+                        {
+                            "text": "SEMINAR ROOM                                      [> ON]"
+                        }
+                    ]
+                },
+                "",
+                {
+                    "type": "list",
+                    "states": [
+                        {
+                            "text": "SERVER ROOM A                                     [> OFF]"
+                        },
+                        {
+                            "text": "SERVER ROOM A                                     [> ON]"
+                        }
+                    ]
+                },
+                "",
+                {
+                    "type": "list",
+                    "states": [
+                        {
+                            "text": "SERVER ROOM B                                     [> OFF]"
+                        },
+                        {
+                            "text": "SERVER ROOM B                                     [> ON]"
+                        }
+                    ]
+                },
+                "",
+                {
+                    "type": "list",
+                    "states": [
+                        {
+                            "text": "SETTLING CHAMBER                                  [> OFF]"
+                        },
+                        {
+                            "text": "SETTLING CHAMBER                                  [> ON]"
+                        }
+                    ]
+                },
+                "",
+                {
+                    "type": "list",
+                    "states": [
+                        {
+                            "text": "SEWER MAIN                                        [> OFF]"
+                        },
+                        {
+                            "text": "SEWER MAIN                                        [> ON]"
+                        }
+                    ]
+                },
+                "",
+                {
+                    "type": "list",
+                    "states": [
+                        {
+                            "text": "SILICON CRYSTALIZATION                            [> OFF]"
+                        },
+                        {
+                            "text": "SILICON CRYSTALIZATION                            [> ON]"
+                        }
+                    ]
+                },
+                "",
+                {
+                    "type": "list",
+                    "states": [
+                        {
+                            "text": "SILICON RECYCLING                                 [> OFF]"
+                        },
+                        {
+                            "text": "SILICON RECYCLING                                 [> ON]"
+                        }
+                    ]
+                },
+                "",
+                {
+                    "type": "list",
+                    "states": [
+                        {
+                            "text": "SILICON SLICES                                    [> OFF]"
+                        },
+                        {
+                            "text": "SILICON SLICES                                    [> ON]"
+                        }
+                    ]
+                },
+                "",
+                {
+                    "type": "list",
+                    "states": [
+                        {
+                            "text": "SIMULATIONS ROOM                                  [> OFF]"
+                        },
+                        {
+                            "text": "SIMULATIONS ROOM                                  [> ON]"
+                        }
+                    ]
+                },
+                "",
+                {
+                    "type": "list",
+                    "states": [
+                        {
+                            "text": "STATIC DISCHARGE CHAMBER                          [> OFF]"
+                        },
+                        {
+                            "text": "STATIC DISCHARGE CHAMBER                          [> ON]"
+                        }
+                    ]
+                },
+                "",
+                {
+                    "type": "list",
+                    "states": [
+                        {
+                            "text": "STORAGE                                           [> OFF]"
+                        },
+                        {
+                            "text": "STORAGE                                           [> ON]"
+                        }
+                    ]
+                },
+                "",
+                {
+                    "type": "list",
+                    "states": [
+                        {
+                            "text": "STORAGE AND MAINTENANCE                           [> OFF]"
+                        },
+                        {
+                            "text": "STORAGE AND MAINTENANCE                           [> ON]"
+                        }
+                    ]
+                },
+                "",
+                {
+                    "type": "list",
+                    "states": [
+                        {
+                            "text": "SULPHATE BATH                                     [> OFF]"
+                        },
+                        {
+                            "text": "SULPHATE BATH                                     [> ON]"
+                        }
+                    ]
+                },
+                "",
+                {
+                    "type": "list",
+                    "states": [
+                        {
+                            "text": "SULPHATE STORAGE                                  [> OFF]"
+                        },
+                        {
+                            "text": "SULPHATE STORAGE                                  [> ON]"
+                        }
+                    ]
+                },
+                "",
+                {
+                    "type": "list",
+                    "states": [
+                        {
+                            "text": "SYNTHETIC PARTS STORAGE                           [> OFF]"
+                        },
+                        {
+                            "text": "SYNTHETIC PARTS STORAGE                           [> ON]"
+                        }
+                    ]
+                },
+                "",
+                {
+                    "type": "list",
+                    "states": [
+                        {
+                            "text": "TACTICAL SIMULATION SUITE                         [> OFF]"
+                        },
+                        {
+                            "text": "TACTICAL SIMULATION SUITE                         [> ON]"
+                        }
+                    ]
+                },
+                "",
+                {
+                    "type": "list",
+                    "states": [
+                        {
+                            "text": "TERMINAL ACCESS                                   [> OFF]"
+                        },
+                        {
+                            "text": "TERMINAL ACCESS                                   [> ON]"
+                        }
+                    ]
+                },
+                "",
+                {
+                    "type": "list",
+                    "states": [
+                        {
+                            "text": "THRUSTER CONTROL AND ACCESS                       [> OFF]"
+                        },
+                        {
+                            "text": "THRUSTER CONTROL AND ACCESS                       [> ON]"
+                        }
+                    ]
+                },
+                "",
+                {
+                    "type": "list",
+                    "states": [
+                        {
+                            "text": "TOILETS                                           [> OFF]"
+                        },
+                        {
+                            "text": "TOILETS                                           [> ON]"
+                        }
+                    ]
+                },
+                "",
+                {
+                    "type": "list",
+                    "states": [
+                        {
+                            "text": "TOOL DEPOT A                                      [> OFF]"
+                        },
+                        {
+                            "text": "TOOL DEPOT A                                      [> ON]"
+                        }
+                    ]
+                },
+                "",
+                {
+                    "type": "list",
+                    "states": [
+                        {
+                            "text": "TOOL DEPOT B                                      [> OFF]"
+                        },
+                        {
+                            "text": "TOOL DEPOT B                                      [> ON]"
+                        }
+                    ]
+                },
+                "",
+                {
+                    "type": "list",
+                    "states": [
+                        {
+                            "text": "TOOL DEPOT C                                      [> OFF]"
+                        },
+                        {
+                            "text": "TOOL DEPOT C                                      [> ON]"
+                        }
+                    ]
+                },
+                "",
+                {
+                    "type": "list",
+                    "states": [
+                        {
+                            "text": "TOXIN DRAINAGE                                    [> OFF]"
+                        },
+                        {
+                            "text": "TOXIN DRAINAGE                                    [> ON]"
+                        }
+                    ]
+                },
+                "",
+                {
+                    "type": "list",
+                    "states": [
+                        {
+                            "text": "TRANSITION SPIRE                                  [> OFF]"
+                        },
+                        {
+                            "text": "TRANSITION SPIRE                                  [> ON]"
+                        }
+                    ]
+                },
+                "",
+                {
+                    "type": "list",
+                    "states": [
+                        {
+                            "text": "TUNNEL                                            [> OFF]"
+                        },
+                        {
+                            "text": "TUNNEL                                            [> ON]"
+                        }
+                    ]
+                },
+                "",
+                {
+                    "type": "list",
+                    "states": [
+                        {
+                            "text": "UV LENSES                                         [> OFF]"
+                        },
+                        {
+                            "text": "UV LENSES                                         [> ON]"
+                        }
+                    ]
+                },
+                "",
+                {
+                    "type": "list",
+                    "states": [
+                        {
+                            "text": "UV SAFETY CHAMBER                                 [> OFF]"
+                        },
+                        {
+                            "text": "UV SAFETY CHAMBER                                 [> ON]"
+                        }
+                    ]
+                },
+                "",
+                {
+                    "type": "list",
+                    "states": [
+                        {
+                            "text": "VACCSUIT STORAGE                                  [> OFF]"
+                        },
+                        {
+                            "text": "VACCSUIT STORAGE                                  [> ON]"
+                        }
+                    ]
+                },
+                "",
+                {
+                    "type": "list",
+                    "states": [
+                        {
+                            "text": "VENTILATION                                       [> OFF]"
+                        },
+                        {
+                            "text": "VENTILATION                                       [> ON]"
+                        }
+                    ]
+                },
+                "",
+                {
+                    "type": "list",
+                    "states": [
+                        {
+                            "text": "VENTILATION MAINTENANCE                           [> OFF]"
+                        },
+                        {
+                            "text": "VENTILATION MAINTENANCE                           [> ON]"
+                        }
+                    ]
+                },
+                "",
+                {
+                    "type": "list",
+                    "states": [
+                        {
+                            "text": "VISITORS DOCK                                     [> OFF]"
+                        },
+                        {
+                            "text": "VISITORS DOCK                                     [> ON]"
+                        }
+                    ]
+                },
+                "",
+                {
+                    "type": "list",
+                    "states": [
+                        {
+                            "text": "WAFER CRUSHERS                                    [> OFF]"
+                        },
+                        {
+                            "text": "WAFER CRUSHERS                                    [> ON]"
+                        }
+                    ]
+                },
+                "",
+                {
+                    "type": "list",
+                    "states": [
+                        {
+                            "text": "WASTE DISPOSAL                                    [> OFF]"
+                        },
+                        {
+                            "text": "WASTE DISPOSAL                                    [> ON]"
+                        }
+                    ]
+                },
+                "",
+                {
+                    "type": "list",
+                    "states": [
+                        {
+                            "text": "WASTE FLESH RECLAMATION                           [> OFF]"
+                        },
+                        {
+                            "text": "WASTE FLESH RECLAMATION                           [> ON]"
+                        }
+                    ]
+                },
+                "",
+                {
+                    "type": "list",
+                    "states": [
+                        {
+                            "text": "WASTE RECLAMATION                                 [> OFF]"
+                        },
+                        {
+                            "text": "WASTE RECLAMATION                                 [> ON]"
+                        }
+                    ]
+                },
+                "",
+                {
+                    "type": "list",
+                    "states": [
+                        {
+                            "text": "WORKERS LOUNGE                                    [> OFF]"
+                        },
+                        {
+                            "text": "WORKERS LOUNGE                                    [> ON]"
+                        }
+                    ]
+                },
+                "",
+                {
+                    "type": "list",
+                    "states": [
+                        {
+                            "text": "ZERO GYM                                          [> OFF]"
+                        },
+                        {
+                            "text": "ZERO GYM                                          [> ON]"
+                        }
+                    ]
+                },
                 "",
                 "\\> SECURITY CHECKPOINT BRAVO",
-                "",
-                "\\[\\> OFF\\]",
-                "",
-                "\\> SECURITY DISPATCH",
-                "",
-                "\\[\\> OFF\\]",
-                "",
-                "\\> SEMINAR ROOM",
-                "",
-                "\\[\\> OFF\\]",
-                "",
-                "\\> SERVER ROOM A",
-                "",
-                "\\[\\> OFF\\]",
-                "",
-                "\\> SERVER ROOM B",
-                "",
-                "\\[\\> OFF\\]",
-                "",
-                "\\> SETTLING CHAMBER",
-                "",
-                "\\[\\> OFF\\]",
-                "",
-                "\\> SEWER MAIN",
-                "",
-                "\\[\\> OFF\\]",
-                "",
-                "\\> SILICON CRYSTALIZATION",
-                "",
-                "\\[\\> OFF\\]",
-                "",
-                "\\> SILICON RECYCLING",
-                "",
-                "\\[\\> OFF\\]",
-                "",
-                "\\> SILICON SLICES",
-                "",
-                "\\[\\> OFF\\]",
-                "",
-                "\\> SIMULATIONS ROOM",
-                "",
-                "\\[\\> OFF\\]",
-                "",
-                "\\> STATIC DISCHARGE CHAMBER",
-                "",
-                "\\[\\> OFF\\]",
-                "",
-                "\\> STORAGE",
-                "",
-                "\\[\\> OFF\\]",
-                "",
-                "\\> STORAGE AND MAINTENANCE",
-                "",
-                "\\[\\> OFF\\]",
-                "",
-                "\\> SULPHATE BATH",
-                "",
-                "\\[\\> OFF\\]",
-                "",
-                "\\> SULPHATE STORAGE",
-                "",
-                "\\[\\> OFF\\]",
-                "",
-                "\\> SYNTHETIC PARTS STORAGE",
-                "",
-                "\\[\\> OFF\\]",
-                "",
-                "\\> TACTICAL SIMULATION SUITE",
-                "",
-                "\\[\\> OFF\\]",
-                "",
-                "\\> TERMINAL ACCESS",
-                "",
-                "\\[\\> OFF\\]",
-                "",
-                "\\> THRUSTER CONTROL AND ACCESS",
-                "",
-                "\\[\\> OFF\\]",
-                "",
-                "\\> TOILETS",
-                "",
-                "\\[\\> OFF\\]",
-                "",
-                "\\> TOOL DEPOT A",
-                "",
-                "\\[\\> OFF\\]",
-                "",
-                "\\> TOOL DEPOT B",
-                "",
-                "\\[\\> OFF\\]",
-                "",
-                "\\> TOOL DEPOT C",
-                "",
-                "\\[\\> OFF\\]",
-                "",
-                "\\> TOXIN DRAINAGE",
-                "",
-                "\\[\\> OFF\\]",
-                "",
-                "\\> TRANSITION SPIRE",
-                "",
-                "\\[\\> OFF\\]",
-                "",
-                "\\> TUNNEL",
-                "",
-                "\\[\\> OFF\\]",
-                "",
-                "\\> UV LENSES",
-                "",
-                "\\[\\> OFF\\]",
-                "",
-                "\\> UV SAFETY CHAMBER",
-                "",
-                "\\[\\> OFF\\]",
-                "",
-                "\\> VACCSUIT STORAGE",
-                "",
-                "\\[\\> OFF\\]",
-                "",
-                "\\> VENTILATION",
-                "",
-                "\\[\\> OFF\\]",
-                "",
-                "\\> VENTILATION MAINTENANCE",
-                "",
-                "\\[\\> OFF\\]",
-                "",
-                "\\> VISITORS DOCK",
-                "",
-                "\\[\\> OFF\\]",
-                "",
-                "\\> WAFER CRUSHERS",
-                "",
-                "\\[\\> OFF\\]",
-                "",
-                "\\> WASTE DISPOSAL",
-                "",
-                "\\[\\> OFF\\]",
-                "",
-                "\\> WASTE FLESH RECLAMATION",
-                "",
-                "\\[\\> OFF\\]",
-                "",
-                "\\> WASTE RECLAMATION",
-                "",
-                "\\[\\> OFF\\]",
-                "",
-                "\\> WORKERS LOUNGE",
-                "",
-                "\\[\\> OFF\\]",
-                "",
-                "\\> ZERO GYM",
-                "",
-                "\\[\\> OFF\\]",
                 "",
                 {
                     "type": "link",
@@ -4100,27 +5892,23 @@
                     "text": "# ATMOSPHERE"
                 },
                 "",
-                "\\> ATMOSPHERE REPLENISHMENT",
-                "",
-                "\\[\\> ON\\]",
+                {
+                    "type": "list",
+                    "states": [
+                        {
+                            "text": "ATMOSPHERE REPLENISHMENT    [> ON]"
+                        },
+                        {
+                            "text": "ATMOSPHERE REPLENISHMENT    [> OFF]"
+                        }
+                    ]
+                },
                 "",
                 "GAS MIXTURE",
+                "NITROGEN       \\[\\> 78%\\]",
+                "OXYGEN         \\[\\> 22%\\]",
                 "",
-                "NITROGEN",
-                "",
-                "\\[\\> 78%\\]",
-                "",
-                "OXYGEN",
-                "",
-                "\\[\\> 22%\\]",
-                "",
-                "TEMPERATURE",
-                "",
-                "\\[\\> 22°C\\]",
-                "",
-                "INCREASE",
-                "",
-                "DECREASE",
+                "TEMPERATURE    \\[\\> 22°C\\]",
                 "",
                 {
                     "type": "link",
@@ -4138,9 +5926,20 @@
                     "text": "# GRAVITY"
                 },
                 "",
-                "\\>GRAVITY",
-                "",
-                "\\[\\> 1G\\]",
+                {
+                    "type": "list",
+                    "states": [
+                        {
+                            "text": "GRAVITY    [> 1G]"
+                        },
+                        {
+                            "text": "GRAVITY    [> 2G]"
+                        },
+                        {
+                            "text": "GRAVITY    [> OFF]"
+                        }
+                    ]
+                },
                 "",
                 {
                     "type": "link",
@@ -4211,45 +6010,125 @@
                     "text": "# CRYOPOD CONTROLS"
                 },
                 "",
-                "\\> CONTROL CRYOPOD 1",
+                {
+                    "type": "list",
+                    "states": [
+                        {
+                            "text": "CONTROL CRYOPOD 1     [> ACTIVE]"
+                        },
+                        {
+                            "text": "CONTROL CRYOPOD 1     [> INACTIVE]"
+                        }
+                    ]
+                },
                 "",
-                "\\[\\> ACTIVE\\]",
+                {
+                    "type": "list",
+                    "states": [
+                        {
+                            "text": "CONTROL CRYOPOD 2     [> ACTIVE]"
+                        },
+                        {
+                            "text": "CONTROL CRYOPOD 2     [> INACTIVE]"
+                        }
+                    ]
+                },
                 "",
-                "\\> CONTROL CRYOPOD 2",
+                {
+                    "type": "list",
+                    "states": [
+                        {
+                            "text": "CONTROL CRYOPOD 3     [> ACTIVE]"
+                        },
+                        {
+                            "text": "CONTROL CRYOPOD 3     [> INACTIVE]"
+                        }
+                    ]
+                },
                 "",
-                "\\[\\> ACTIVE\\]",
+                {
+                    "type": "list",
+                    "states": [
+                        {
+                            "text": "CONTROL CRYOPOD 4     [> ACTIVE]"
+                        },
+                        {
+                            "text": "CONTROL CRYOPOD 4     [> INACTIVE]"
+                        }
+                    ]
+                },
                 "",
-                "\\> CONTROL CRYOPOD 3",
+                {
+                    "type": "list",
+                    "states": [
+                        {
+                            "text": "CONTROL CRYOPOD 5     [> ACTIVE]"
+                        },
+                        {
+                            "text": "CONTROL CRYOPOD 5     [> INACTIVE]"
+                        }
+                    ]
+                },
                 "",
-                "\\[\\> ACTIVE\\]",
+                {
+                    "type": "list",
+                    "states": [
+                        {
+                            "text": "CONTROL CRYOPOD 6     [> ACTIVE]"
+                        },
+                        {
+                            "text": "CONTROL CRYOPOD 6     [> INACTIVE]"
+                        }
+                    ]
+                },
                 "",
-                "\\> CONTROL CRYOPOD 4",
+                {
+                    "type": "list",
+                    "states": [
+                        {
+                            "text": "CONTROL CRYOPOD 7     [> ACTIVE]"
+                        },
+                        {
+                            "text": "CONTROL CRYOPOD 7     [> INACTIVE]"
+                        }
+                    ]
+                },
                 "",
-                "\\[\\> ACTIVE\\]",
+                {
+                    "type": "list",
+                    "states": [
+                        {
+                            "text": "CONTROL CRYOPOD 8     [> ACTIVE]"
+                        },
+                        {
+                            "text": "CONTROL CRYOPOD 8     [> INACTIVE]"
+                        }
+                    ]
+                },
                 "",
-                "\\> CONTROL CRYOPOD 5",
+                {
+                    "type": "list",
+                    "states": [
+                        {
+                            "text": "CONTROL CRYOPOD 9     [> ACTIVE]"
+                        },
+                        {
+                            "text": "CONTROL CRYOPOD 9     [> INACTIVE]"
+                        }
+                    ]
+                },
                 "",
-                "\\[\\> ACTIVE\\]",
-                "",
-                "\\> CONTROL CRYOPOD 6",
-                "",
-                "\\[\\> ACTIVE\\]",
-                "",
-                "\\> CONTROL CRYOPOD 7",
-                "",
-                "\\[\\> ACTIVE\\]",
-                "",
-                "\\> CONTROL CRYOPOD 8",
-                "",
-                "\\[\\> ACTIVE\\]",
-                "",
-                "\\> CONTROL CRYOPOD 9",
-                "",
-                "\\[\\> ACTIVE\\]",
-                "",
-                "\\> CONTROL CRYOPOD 10",
-                "",
-                "\\[\\> ACTIVE\\]"
+                {
+                    "type": "list",
+                    "states": [
+                        {
+                            "text": "CONTROL CRYOPOD 10    [> ACTIVE]"
+                        },
+                        {
+                            "text": "CONTROL CRYOPOD 10    [> INACTIVE]"
+                        }
+                    ]
+                }
             ]
         },
         {
@@ -5470,11 +7349,19 @@
                     "text": "# QA INSPECTION"
                 },
                 "",
+                {
+                    "type": "list",
+                    "states": [
+                        {
+                            "text": "QUARANTINE ACCESS    [> LOCKED]"
+                        },
+                        {
+                            "text": "QUARANTINE ACCESS    [> OPEN]"
+                        }
+                    ]
+                },
+                "",
                 "RELEASE SUBJECT\\#:",
-                "",
-                "\\> QUARANTINE ACCESS",
-                "",
-                "\\[\\> LOCKED\\]",
                 "",
                 "\\> PURGE QUARANTINE",
                 "",
@@ -5582,31 +7469,54 @@
                     "text": "# ROOM CONTROLS"
                 },
                 "",
-                "\\> FURNITURE",
+                {
+                    "type": "list",
+                    "states": [
+                        {
+                            "text": "FURNITURE    [> MINIMAL]"
+                        },
+                        {
+                            "text": "FURNITURE    [> COMFORTABLE]"
+                        },
+                        {
+                            "text": "FURNITURE    [> LUXURY]"
+                        }
+                    ]
+                },
                 "",
-                "\\[\\> MINIMAL\\]",
+                {
+                    "type": "list",
+                    "states": [
+                        {
+                            "text": "SMELL        [> UNPLEASANT]"
+                        },
+                        {
+                            "text": "SMELL        [> NEUTRAL]"
+                        },
+                        {
+                            "text": "SMELL        [> PLEASANT]"
+                        },
+                        {
+                            "text": "SMELL        [> PHEROMONE]"
+                        }
+                    ]
+                },
                 "",
-                "\\> SMELL",
+                {
+                    "type": "list",
+                    "states": [
+                        {
+                            "text": "LIGHT        [> ON]"
+                        },
+                        {
+                            "text": "LIGHT        [> OFF]"
+                        }
+                    ]
+                },
                 "",
-                "\\[\\> UNPLEASANT\\]",
+                "SIZE        \\[\\> 50%\\]",
                 "",
-                "\\> SIZE",
-                "\\[\\> 50%\\]",
-                "",
-                "INCREASE SIZE",
-                "",
-                "DECREASE SIZE",
-                "",
-                "\\> LIGHT",
-                "",
-                "\\[\\> ON\\]",
-                "",
-                "\\> LIGHTING",
-                "\\[\\> 50%\\]",
-                "",
-                "INCREASE LIGHT",
-                "",
-                "DECREASE LIGHT"
+                "LIGHTING    \\[\\> 50%\\]"
             ]
         },
         {
@@ -5914,17 +7824,41 @@
                     "text": "# LOADING DOCK CONTROLS"
                 },
                 "",
-                "\\> AIRLOCK",
+                {
+                    "type": "list",
+                    "states": [
+                        {
+                            "text": "AIRLOCK           [> UNLOCKED]"
+                        },
+                        {
+                            "text": "AIRLOCK           [> LOCKED]"
+                        }
+                    ]
+                },
                 "",
-                "\\[\\> UNLOCKED\\]",
+                {
+                    "type": "list",
+                    "states": [
+                        {
+                            "text": "CARGO ELEVATOR    [> STORAGE]"
+                        },
+                        {
+                            "text": "CARGO ELEVATOR    [> LOADING DOCK]"
+                        }
+                    ]
+                },
                 "",
-                "\\> CARGO ELEVATOR",
-                "",
-                "\\[\\> STORAGE\\]",
-                "",
-                "\\> AUTO\\-TUG CRAFT",
-                "",
-                "\\[\\> UNLOCKED\\]",
+                {
+                    "type": "list",
+                    "states": [
+                        {
+                            "text": "AUTO-TUG CRAFT    [> UNLOCKED]"
+                        },
+                        {
+                            "text": "AUTO-TUG CRAFT    [> LOCKED]"
+                        }
+                    ]
+                },
                 "",
                 {
                     "type": "link",

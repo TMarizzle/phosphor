@@ -32,6 +32,13 @@ STATE_VAR_RE = re.compile(r"State\.variables\.([A-Za-z0-9_]+)")
 WHITESPACE_RE = re.compile(r"[ \t]+")
 BLANK_RE = re.compile(r"\n{3,}")
 MARKDOWN_LITERAL_RE = re.compile(r"([\\`*_{}\[\]()#+\-.!>~|])")
+MARKDOWN_UNESCAPE_RE = re.compile(r"\\([\\`*_{}\[\]()#+\-.!>~|])")
+STRING_SET_RE = re.compile(r"<<set\s+\$([A-Za-z0-9_]+)\s+to\s+\"([^\"]*)\"\s*>>", re.I)
+CONTROL_ROW_RE = re.compile(
+    r"<<link\s+\"([^\"]+)\">>(((?:(?!<<link).)*?))<</link>>\s*\[\>\s*<span\s+id=\"([^\"]+)\">([^<]*)</span>[^\n]*",
+    re.S | re.I,
+)
+ATMOSPHERE_SCREEN_ID_RE = re.compile(r"^floor-(\d+)-atmosphere(?:-flow)?$")
 JS_LINE_RE = re.compile(
     r"^(?:"
     r"function\s+\w+|const\s+\w+|let\s+\w+|var\s+\w+|return\s+\w|"
@@ -64,6 +71,13 @@ class Passage:
     name: str
     tags: str
     text: str
+
+
+@dataclass
+class ControlRow:
+    label: str
+    states: tuple[str, ...]
+    current: str
 
 
 class StoryParser(HTMLParser):
@@ -128,6 +142,10 @@ def clean_inline(text: str) -> str:
 
 def escape_markdown_literal(text: str) -> str:
     return MARKDOWN_LITERAL_RE.sub(r"\\\1", text)
+
+
+def unescape_markdown_literal(text: str) -> str:
+    return MARKDOWN_UNESCAPE_RE.sub(r"\1", text)
 
 
 def fix_known_text_issues(text: str) -> str:
@@ -412,6 +430,199 @@ def collapse_blank_entries(content: list[Any]) -> list[Any]:
     return collapsed
 
 
+def normalize_control_label(label: str) -> str:
+    cleaned = fix_known_text_issues(clean_inline(label))
+    return cleaned.lstrip(">").strip() or cleaned
+
+
+def rotate_states(states: list[str], current: str) -> tuple[str, ...]:
+    if not states:
+        return ()
+    if current and current in states:
+        index = states.index(current)
+        ordered = states[index:] + states[:index]
+        return tuple(ordered)
+    if current and current not in states:
+        return tuple([current] + states)
+    return tuple(states)
+
+
+def extract_simple_control_rows(raw: str, values: dict[str, str]) -> list[ControlRow]:
+    rows: list[ControlRow] = []
+
+    for match in CONTROL_ROW_RE.finditer(raw):
+        label = normalize_control_label(match.group(1))
+        body = match.group(2)
+
+        assignments: list[tuple[str, str]] = []
+        for set_match in STRING_SET_RE.finditer(body):
+            variable_name = set_match.group(1)
+            state_value = fix_known_text_issues(clean_inline(set_match.group(2)))
+            if not state_value:
+                continue
+            assignments.append((variable_name, state_value))
+
+        variable_names = {variable_name for variable_name, _ in assignments}
+        if len(variable_names) != 1:
+            continue
+
+        states: list[str] = []
+        for _, state_value in assignments:
+            if state_value not in states:
+                states.append(state_value)
+        if len(states) < 2:
+            continue
+
+        variable_name = assignments[0][0]
+        current = fix_known_text_issues(clean_inline(values.get(variable_name, "")))
+        rows.append(
+            ControlRow(
+                label=label,
+                states=rotate_states(states, current),
+                current=current,
+            )
+        )
+
+    return rows
+
+
+def filter_body_lines_for_control_rows(body_lines: list[str], control_rows: list[ControlRow]) -> list[str]:
+    hidden_lines: set[str] = set()
+    for row in control_rows:
+        normalized_label = fix_known_text_issues(WHITESPACE_RE.sub(" ", row.label).strip())
+        hidden_lines.add(normalized_label)
+        hidden_lines.add(f"> {normalized_label}")
+        hidden_lines.add(f">{normalized_label}")
+        if row.current:
+            hidden_lines.add(f"[> {row.current}]")
+
+    filtered: list[Any] = []
+    for line in body_lines:
+        display_line = fix_known_text_issues(
+            WHITESPACE_RE.sub(" ", unescape_markdown_literal(line)).strip()
+        )
+        if display_line in hidden_lines:
+            continue
+        filtered.append(line)
+
+    return collapse_blank_entries(filtered)
+
+
+def make_image_objects(
+    image_names: list[str],
+    asset_map: dict[str, str],
+    heading: str,
+) -> list[dict[str, Any]]:
+    image_objects: list[dict[str, Any]] = []
+    for image_name in image_names:
+        mapped = asset_map.get(image_name)
+        if not mapped:
+            continue
+        image_objects.append(
+            {
+                "type": "bitmap",
+                "src": mapped,
+                "alt": heading,
+                "fillWidth": True,
+            }
+        )
+    return image_objects
+
+
+def make_control_list_row(label: str, states: tuple[str, ...], label_width: int) -> dict[str, Any]:
+    return {
+        "type": "list",
+        "states": [
+            {
+                "text": f"{label.ljust(label_width)}[> {state}]",
+            }
+            for state in states
+        ],
+    }
+
+
+def make_status_line(label: str, value: str, label_width: int) -> str:
+    return escape_markdown_literal(f"{label.ljust(label_width)}[> {value}]")
+
+
+def build_atmosphere_snapshot_lines(screen_id: str, values: dict[str, str]) -> list[str]:
+    match = ATMOSPHERE_SCREEN_ID_RE.match(screen_id)
+    if not match:
+        return []
+
+    floor = match.group(1)
+    nitrogen = values.get(f"Nitrogen{floor}")
+    oxygen = values.get(f"Oxygen{floor}")
+    temperature = values.get(f"Temperature{floor}")
+    label_width = max(len("NITROGEN"), len("OXYGEN"), len("TEMPERATURE")) + 4
+
+    lines: list[str] = ["GAS MIXTURE"]
+    if nitrogen is not None:
+        lines.append(make_status_line("NITROGEN", f"{nitrogen}%", label_width))
+    if oxygen is not None:
+        lines.append(make_status_line("OXYGEN", f"{oxygen}%", label_width))
+    if temperature is not None:
+        lines.extend(
+            [
+                "",
+                make_status_line("TEMPERATURE", f"{temperature}°C", label_width),
+            ]
+        )
+    return lines
+
+
+def build_room_controls_snapshot_lines(values: dict[str, str]) -> list[str]:
+    label_width = max(len("SIZE"), len("LIGHTING")) + 4
+    lines: list[str] = []
+    size = values.get("Size")
+    lighting = values.get("Lighting")
+
+    if size is not None:
+        lines.append(make_status_line("SIZE", f"{size}%", label_width))
+    if lighting is not None:
+        lines.extend(
+            [
+                "",
+                make_status_line("LIGHTING", f"{lighting}%", label_width),
+            ]
+        )
+    return lines
+
+
+def build_control_panel_content(
+    heading: str,
+    control_rows: list[ControlRow],
+    body_lines: list[str],
+    image_objects: list[dict[str, Any]],
+    link_objects: list[dict[str, Any]],
+) -> list[Any]:
+    content: list[Any] = [make_header(heading)]
+
+    if control_rows:
+        label_width = max(len(row.label) for row in control_rows) + 4
+        content.append("")
+        for row in control_rows:
+            content.append(make_control_list_row(row.label, row.states, label_width))
+            content.append("")
+
+    if body_lines:
+        content.extend(body_lines)
+
+    if image_objects:
+        if content and content[-1] != "":
+            content.append("")
+        for image_object in image_objects:
+            content.append(image_object)
+            content.append("")
+
+    if link_objects:
+        if content and content[-1] != "":
+            content.append("")
+        content.extend(link_objects)
+
+    return collapse_blank_entries(content)
+
+
 def is_password_passage_name(name: str) -> bool:
     normalized = clean_inline(name)
     return "password" in normalized.lower()
@@ -558,6 +769,7 @@ def convert_regular_screen(
     raw = passage.text.replace("\r", "")
     heading_match = H1_RE.search(raw)
     heading = clean_inline(heading_match.group(1)) if heading_match else passage.name
+    screen_id = ids_by_name[passage.name]
     subheadings = [clean_inline(item) for item in H2_RE.findall(raw) if clean_inline(item)]
     images = IMG_RE.findall(raw)
 
@@ -568,6 +780,8 @@ def convert_regular_screen(
     body, macro_links = extract_macro_links(body)
     body, wiki_links = extract_wiki_links(body)
     body_lines = clean_body_text(body, values)
+    image_objects = make_image_objects(images, asset_map, heading)
+    control_rows = extract_simple_control_rows(raw, values)
 
     content: list[Any] = [make_header(heading)]
 
@@ -587,21 +801,8 @@ def convert_regular_screen(
         content.append("")
         content.extend(body_lines)
 
-    for image_name in images:
-        mapped = asset_map.get(image_name)
-        if not mapped:
-            continue
-        content.extend(
-            [
-                "",
-                {
-                    "type": "bitmap",
-                    "src": mapped,
-                    "alt": heading,
-                    "fillWidth": True,
-                },
-            ]
-        )
+    for image_object in image_objects:
+        content.extend(["", image_object])
 
     link_entries = macro_links + wiki_links
     link_objects = [
@@ -614,10 +815,69 @@ def convert_regular_screen(
         content.extend(link_objects)
 
     screen: dict[str, Any] = {
-        "id": ids_by_name[passage.name],
+        "id": screen_id,
         "type": "screen",
         "content": content,
     }
+
+    if screen_id == "automated-turrets":
+        turret_labels = [
+            "MACHINE GUN 1",
+            "MACHINE GUN 2",
+            "MACHINE GUN 3",
+            "MACHINE GUN 4",
+            "GRENADE LAUNCHER",
+        ]
+        turret_states = ("NON-CHOSEN", "ALL", "FALLEN", "OFF")
+        label_width = max(len(label) for label in turret_labels) + 4
+        back_link = next(
+            (
+                entry
+                for entry in link_objects
+                if isinstance(entry, dict) and entry.get("type") == "link" and entry.get("text") == "> BACK"
+            ),
+            {
+                "type": "link",
+                "text": "> BACK",
+                "target": "floor-2-defense",
+            },
+        )
+
+        turret_rows: list[Any] = [make_header(heading), ""]
+        for label in turret_labels:
+            turret_rows.append(
+                {
+                    "type": "list",
+                    "states": [
+                        {
+                            "text": f"{label.ljust(label_width)}[> {state}]",
+                        }
+                        for state in turret_states
+                    ],
+                }
+            )
+            turret_rows.append("")
+
+        turret_rows.append(back_link)
+        screen["content"] = turret_rows
+    elif control_rows:
+        if screen_id == "room-controls":
+            panel_body_lines = build_room_controls_snapshot_lines(values)
+        else:
+            atmosphere_body_lines = build_atmosphere_snapshot_lines(screen_id, values)
+            panel_body_lines = (
+                atmosphere_body_lines
+                if atmosphere_body_lines
+                else filter_body_lines_for_control_rows(body_lines, control_rows)
+            )
+
+        screen["content"] = build_control_panel_content(
+            heading,
+            control_rows,
+            panel_body_lines,
+            image_objects,
+            link_objects,
+        )
 
     goto_match = GOTO_RE.search(raw)
     if passage.name.startswith("Boot Sequence") and goto_match:
