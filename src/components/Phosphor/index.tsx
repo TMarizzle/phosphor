@@ -144,6 +144,7 @@ const USER_REPORT_SCREEN_PREFIX = "userReport:";
 interface PhosphorProps {
     json: any;
     soundEnabled?: boolean;
+    onScreenChanged?: (screenId: string) => void;
 }
 
 class Phosphor extends Component<PhosphorProps, AppState> {
@@ -808,6 +809,8 @@ class Phosphor extends Component<PhosphorProps, AppState> {
     }
 
     private _notifyScriptScreenChanged(screenId: string): void {
+        this.props.onScreenChanged && this.props.onScreenChanged(screenId);
+
         if (!this._script || !this._script.onScreenChanged) {
             return;
         }
@@ -1081,6 +1084,7 @@ class Phosphor extends Component<PhosphorProps, AppState> {
                     className: element.className,
                     commands: element.commands,
                     allowFreeInput: !!element.allowFreeInput,
+                    caseSensitive: element.caseSensitive !== false,
                     inputAction: element.inputAction,
                     state,
                     speed: element.speed,
@@ -1327,6 +1331,7 @@ class Phosphor extends Component<PhosphorProps, AppState> {
                     prompt={element.prompt}
                     commands={element.commands}
                     allowFreeInput={element.allowFreeInput}
+                    caseSensitive={element.caseSensitive}
                     inputAction={element.inputAction}
                     onCommand={this._handlePromptCommand}
                     onEnter={this._handlePromptEnter}

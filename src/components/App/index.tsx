@@ -43,6 +43,7 @@ const MODULE_QUERY_PARAM = "module";
 interface AppState {
     activeScript: BundledScript;
     activeScriptRevision: number;
+    activeTerminalScreenId: string | null;
     customScripts: BundledScript[];
     activeTheme: Theme;
     customTheme: CustomThemeConfig;
@@ -53,6 +54,7 @@ interface AppState {
     optionsDropdownOpen: boolean;
     mobileMenuOpen: boolean;
     creatorOpen: boolean;
+    creatorInitialScript: any | null;
     modulesOpen: boolean;
     previewMode: boolean;
     uploadError: string | null;
@@ -87,6 +89,7 @@ class App extends Component<any, AppState> {
         this.state = {
             activeScript,
             activeScriptRevision: 0,
+            activeTerminalScreenId: null,
             customScripts,
             activeTheme: persistedTheme,
             customTheme,
@@ -97,6 +100,7 @@ class App extends Component<any, AppState> {
             optionsDropdownOpen: false,
             mobileMenuOpen: false,
             creatorOpen: false,
+            creatorInitialScript: null,
             modulesOpen: this._hasAuthReturnParams(),
             previewMode: false,
             uploadError: null,
@@ -129,6 +133,7 @@ class App extends Component<any, AppState> {
         this._handleCreatorApply    = this._handleCreatorApply.bind(this);
         this._handleCreatorPreview  = this._handleCreatorPreview.bind(this);
         this._handlePreviewReturn   = this._handlePreviewReturn.bind(this);
+        this._handlePhosphorScreenChanged = this._handlePhosphorScreenChanged.bind(this);
         this._handleModulesOpen     = this._handleModulesOpen.bind(this);
         this._handleModulesClose    = this._handleModulesClose.bind(this);
         this._handleGoogleSignIn    = this._handleGoogleSignIn.bind(this);
@@ -270,6 +275,28 @@ class App extends Component<any, AppState> {
             delete cleanedJson.config.previewSidebarListMode;
         }
         return cleanedJson;
+    }
+
+    private _buildCreatorInitialScript(scriptJson: any, screenId?: string | null): any {
+        const seededJson = JSON.parse(JSON.stringify(scriptJson || {}));
+        if (!screenId || !Array.isArray(seededJson?.screens)) {
+            return seededJson;
+        }
+
+        const screenExists = seededJson.screens.some((screen: any) => {
+            return screen && typeof screen.id === "string" && screen.id === screenId;
+        });
+        if (!screenExists) {
+            return seededJson;
+        }
+
+        seededJson.config = {
+            ...(seededJson.config || {}),
+            previewStartScreen: screenId,
+            previewSidebarListMode: "screens",
+        };
+        delete seededJson.config.previewSelectedElementIndex;
+        return seededJson;
     }
 
     private _readModuleIdFromLocation(): string | null {
@@ -460,8 +487,10 @@ class App extends Component<any, AppState> {
         this.setState((prev) => ({
             activeScript: nextScript,
             activeScriptRevision: prev.activeScriptRevision + 1,
+            activeTerminalScreenId: null,
             activeModule: module as ModuleRecord | null,
             creatorOpen: false,
+            creatorInitialScript: null,
             previewMode: false,
             uploadError: null as string | null,
             modulesBusy: false,
@@ -645,11 +674,13 @@ class App extends Component<any, AppState> {
         this.setState((prev) => ({
             activeScript: script,
             activeScriptRevision: prev.activeScriptRevision + 1,
+            activeTerminalScreenId: null,
             activeModule: resolvedActiveModule,
             scriptDropdownOpen: false,
             optionsDropdownOpen: false,
             customThemeEditorOpen: false,
             mobileMenuOpen: false,
+            creatorInitialScript: null,
             previewMode: false,
             uploadError: null as string | null,
         }));
@@ -750,6 +781,10 @@ class App extends Component<any, AppState> {
     private _handleCreatorOpen(): void {
         this.setState({
             creatorOpen: true,
+            creatorInitialScript: this._buildCreatorInitialScript(
+                this.state.activeScript.json,
+                this.state.activeTerminalScreenId
+            ),
             scriptDropdownOpen: false,
             optionsDropdownOpen: false,
             customThemeEditorOpen: false,
@@ -760,7 +795,10 @@ class App extends Component<any, AppState> {
     }
 
     private _handleCreatorClose(): void {
-        this.setState({ creatorOpen: false });
+        this.setState({
+            creatorOpen: false,
+            creatorInitialScript: null,
+        });
     }
 
     private _handleCreatorApply(scriptJson: any): void {
@@ -791,8 +829,10 @@ class App extends Component<any, AppState> {
             return {
                 activeScript: nextScript,
                 activeScriptRevision: prev.activeScriptRevision + 1,
+                activeTerminalScreenId: null,
                 customScripts,
                 creatorOpen: false,
+                creatorInitialScript: null,
                 scriptDropdownOpen: false,
                 optionsDropdownOpen: false,
                 customThemeEditorOpen: false,
@@ -849,7 +889,9 @@ class App extends Component<any, AppState> {
         this.setState((prev) => ({
             activeScript: previewScript,
             activeScriptRevision: prev.activeScriptRevision + 1,
+            activeTerminalScreenId: null,
             creatorOpen: false,
+            creatorInitialScript: null,
             scriptDropdownOpen: false,
             optionsDropdownOpen: false,
             customThemeEditorOpen: false,
@@ -862,12 +904,26 @@ class App extends Component<any, AppState> {
     private _handlePreviewReturn(): void {
         this.setState({
             creatorOpen: true,
+            creatorInitialScript: this._buildCreatorInitialScript(
+                this.state.activeScript.json,
+                this.state.activeTerminalScreenId
+            ),
             scriptDropdownOpen: false,
             optionsDropdownOpen: false,
             customThemeEditorOpen: false,
             mobileMenuOpen: false,
             previewMode: false,
             uploadError: null as string | null,
+        });
+    }
+
+    private _handlePhosphorScreenChanged(screenId: string): void {
+        if (!screenId || screenId === this.state.activeTerminalScreenId) {
+            return;
+        }
+
+        this.setState({
+            activeTerminalScreenId: screenId,
         });
     }
 
@@ -904,12 +960,14 @@ class App extends Component<any, AppState> {
                     return {
                         activeScript: customScript,
                         activeScriptRevision: prev.activeScriptRevision + 1,
+                        activeTerminalScreenId: null,
                         customScripts,
                         activeModule: null as ModuleRecord | null,
                         scriptDropdownOpen: false,
                         optionsDropdownOpen: false,
                         customThemeEditorOpen: false,
                         mobileMenuOpen: false,
+                        creatorInitialScript: null,
                         previewMode: false,
                         uploadError: null as string | null,
                     };
@@ -1065,8 +1123,10 @@ class App extends Component<any, AppState> {
             this.setState((prev) => ({
                 activeScript: nextScript,
                 activeScriptRevision: prev.activeScriptRevision + 1,
+                activeTerminalScreenId: null,
                 activeModule: savedModule,
                 myModules: this._upsertModuleRecord(prev.myModules, savedModule),
+                creatorInitialScript: null,
                 modulesBusy: false,
                 modulesNotice: ownedActiveModule ? "Module updated." : "Module created.",
             }));
@@ -1118,6 +1178,7 @@ class App extends Component<any, AppState> {
             optionsDropdownOpen,
             mobileMenuOpen,
             creatorOpen,
+            creatorInitialScript,
             modulesOpen,
             previewMode,
             uploadError,
@@ -1420,11 +1481,12 @@ class App extends Component<any, AppState> {
                     key={`${activeScript.id}:${activeScriptRevision}`}
                     json={activeScript.json}
                     soundEnabled={soundEnabled}
+                    onScreenChanged={this._handlePhosphorScreenChanged}
                 />
 
                 {creatorOpen && (
                     <ScriptCreator
-                        initialScript={activeScript.json}
+                        initialScript={creatorInitialScript || activeScript.json}
                         onApply={this._handleCreatorApply}
                         onPreview={this._handleCreatorPreview}
                         onClose={this._handleCreatorClose}

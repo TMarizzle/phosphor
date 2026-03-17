@@ -2324,6 +2324,7 @@ const ScriptCreator: FC<ScriptCreatorProps> = ({ initialScript, onApply, onPrevi
                 element = {
                     type: "prompt",
                     prompt: "> ",
+                    caseSensitive: true,
                     commands: [
                         {
                             command: "back",
@@ -3474,6 +3475,18 @@ const ScriptCreator: FC<ScriptCreatorProps> = ({ initialScript, onApply, onPrevi
                                                             <input
                                                                 value={selectedElement.prompt || ""}
                                                                 onChange={(e) => updateElement({ ...selectedElement, prompt: e.target.value })}
+                                                            />
+                                                        </label>
+
+                                                        <label className="script-creator__field">
+                                                            <span>Case Sensitive</span>
+                                                            <CreatorSelect
+                                                                value={selectedElement.caseSensitive === false ? "false" : "true"}
+                                                                options={BOOLEAN_OPTIONS}
+                                                                onChange={(nextValue) => updateElement({
+                                                                    ...selectedElement,
+                                                                    caseSensitive: nextValue === "true",
+                                                                })}
                                                             />
                                                         </label>
 

@@ -131,15 +131,28 @@ class Bitmap extends Component<BitmapProps, BitmapState> {
         const w = image.width;
         const h = image.height;
 
-        const dw = w * resolution;
-        const dh = h * resolution;
+        const dw = Math.max(1, Math.round(w * resolution));
+        const dh = Math.max(1, Math.round(h * resolution));
+        const buffer = document.createElement("canvas");
+        const bufferCtx = buffer.getContext("2d");
+        if (!bufferCtx) {
+            return;
+        }
+
+        buffer.width = dw;
+        buffer.height = dh;
+
+        // Downsample into a clean buffer first so transparent pixels do not
+        // accumulate from previous animation frames on the main canvas.
+        bufferCtx.imageSmoothingEnabled = false;
+        bufferCtx.clearRect(0, 0, dw, dh);
+        bufferCtx.drawImage(image, 0, 0, dw, dh);
 
         // trun off smoothing to ensure it's pixelated
         ctx.imageSmoothingEnabled = false;
-        // shrink the image
-        ctx.drawImage(image, 0, 0, dw, dh);
+        ctx.clearRect(0, 0, w, h);
         // then draw the above bitmap at then expected image size without resampling
-        ctx.drawImage(canvas, 0, 0, dw, dh, 0, 0, w, h);
+        ctx.drawImage(buffer, 0, 0, dw, dh, 0, 0, w, h);
     }
 
     private _clearAnimationTimer = () => {
@@ -190,6 +203,7 @@ class Bitmap extends Component<BitmapProps, BitmapState> {
                     this.setState({
                         naturalWidth: w,
                     }, () => {
+                        ctx.clearRect(0, 0, w, h);
                         ctx.drawImage(image, 0, 0);
                         onComplete && onComplete();
                     });

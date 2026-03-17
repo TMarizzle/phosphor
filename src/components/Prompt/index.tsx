@@ -9,6 +9,7 @@ export interface PromptProps {
     className?: string;
     disabled?: boolean;
     allowFreeInput?: boolean;
+    caseSensitive?: boolean;
     inputAction?: any;
 
     onCommand?: (command: string, action: any) => void;
@@ -26,6 +27,7 @@ const Prompt: FC<PromptProps> = (props) => {
         className,
         commands,
         allowFreeInput,
+        caseSensitive,
         inputAction,
         onCommand,
         onEnter,
@@ -65,12 +67,22 @@ const Prompt: FC<PromptProps> = (props) => {
         }
 
         const submitted = value.trim();
+        const normalizeCommand = (entry: string): string => {
+            return caseSensitive === false ? entry.toLowerCase() : entry;
+        };
         if (!submitted.length) {
             setValue("");
             return;
         }
 
-        const command = commands && commands.find(element => element.command === submitted);
+        const submittedNormalized = normalizeCommand(submitted);
+        const command = commands && commands.find((element) => {
+            if (!element || typeof element.command !== "string") {
+                return false;
+            }
+
+            return normalizeCommand(element.command) === submittedNormalized;
+        });
         setValue("");
 
         if (command) {

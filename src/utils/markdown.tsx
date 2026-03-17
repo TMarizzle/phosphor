@@ -90,7 +90,6 @@ const findFirstInlineToken = (value: string): InlineTokenMatch | null => {
         { kind: "underline", regex: /\+\+([^+\n]+)\+\+/ }, // legacy support
         { kind: "strikethrough", regex: /~~([^~\n]+)~~/ },
         { kind: "italic", regex: /\*([^*\n]+)\*/ },
-        { kind: "italic", regex: /_([^_\n]+)_/ },
     ];
 
     let best: InlineTokenMatch | null = null;
@@ -310,7 +309,6 @@ const stripInlineMarkdown = (value: string): string => {
     output = output.replace(/\+\+([^+\n]+)\+\+/g, "$1");
     output = output.replace(/\*\*([^*\n]+)\*\*/g, "$1");
     output = output.replace(/\*([^*\n]+)\*/g, "$1");
-    output = output.replace(/_([^_\n]+)_/g, "$1");
     return decodeEscapedMarkdown(output);
 };
 
