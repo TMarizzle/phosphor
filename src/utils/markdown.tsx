@@ -14,6 +14,11 @@ const HEADING_PATTERN = /^(#{1,6})\s+(.+)$/;
 const BULLET_PATTERN = /^\s*[-*+]\s+(.+)$/;
 const HORIZONTAL_RULE_PATTERN = /^\s*([-*_])(?:\s*\1){2,}\s*$/;
 
+export interface MarkdownHeadingMatch {
+    level: number;
+    text: string;
+}
+
 interface BlockquoteLine {
     level: number;
     text: string;
@@ -53,6 +58,19 @@ const parseBlockquoteLine = (line: string): BlockquoteLine | null => {
 
 const decodeEscapedMarkdown = (value: string): string => {
     return value.replace(/\\([\\`*_{}\[\]()#+\-.!>~|])/g, "$1");
+};
+
+export const parseMarkdownHeading = (value: string): MarkdownHeadingMatch | null => {
+    const trimmed = (value || "").trim();
+    const headingMatch = HEADING_PATTERN.exec(trimmed);
+    if (!headingMatch) {
+        return null;
+    }
+
+    return {
+        level: Math.min(6, headingMatch[1].length),
+        text: headingMatch[2],
+    };
 };
 
 const sanitizeHref = (value: string): string | null => {
@@ -214,15 +232,14 @@ export const renderMarkdown = (text: string): ReactNode[] => {
             continue;
         }
 
-        const headingMatch = HEADING_PATTERN.exec(trimmed);
+        const headingMatch = parseMarkdownHeading(trimmed);
         if (headingMatch) {
-            const level = Math.min(6, headingMatch[1].length);
             blocks.push(
                 <div
                     key={`md-heading-${blockIndex++}`}
-                    className={`__md-heading __md-heading--h${level}`}
+                    className={`__md-heading __md-heading--h${headingMatch.level}`}
                 >
-                    {renderInlineMarkdown(headingMatch[2], `md-heading-inline-${lineIndex}`)}
+                    {renderInlineMarkdown(headingMatch.text, `md-heading-inline-${lineIndex}`)}
                 </div>
             );
             lineIndex++;
@@ -325,9 +342,9 @@ export const markdownToPlainText = (text: string): string => {
             return "----------------";
         }
 
-        const headingMatch = HEADING_PATTERN.exec(trimmed);
+        const headingMatch = parseMarkdownHeading(trimmed);
         if (headingMatch) {
-            return stripInlineMarkdown(headingMatch[2]);
+            return stripInlineMarkdown(headingMatch.text);
         }
 
         const bulletMatch = BULLET_PATTERN.exec(line);

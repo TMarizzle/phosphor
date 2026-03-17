@@ -1,4 +1,5 @@
 import React, { Component, ReactElement } from "react";
+import { markdownToPlainText, parseMarkdownHeading } from "../../utils/markdown";
 
 // css
 import "./style.scss";
@@ -6,6 +7,7 @@ import "./style.scss";
 interface TeletypeProps {
     text: string; // text to animate
     className?: string; // css class
+    headingLevel?: number; // optional markdown heading level for styled typing
     autostart?: boolean; // start animating immediately? default = true
     autocomplete?: boolean; // skip animating and instead fully render? default = false
     speed?: number; // optional animation speed in ms; default = 20
@@ -68,8 +70,10 @@ class Teletype extends Component<TeletypeProps, TeletypeState> {
     }
 
     public render(): ReactElement {
-        const { text, className } = this.props;
+        const { className } = this.props;
         const { char, done, active, } = this.state;
+        const headingLevel = this._getHeadingLevel();
+        const text = this._getDisplayText();
 
         const visible = text.substr(0, char); // already rendered
         const cursor = text.substr(char, 1) || " "; // " " ensures the curosr is briefly visible for line breaks
@@ -80,14 +84,25 @@ class Teletype extends Component<TeletypeProps, TeletypeState> {
         }
 
         const css = ["__teletype__", className ? className : null].join(" ").trim();
-
-        return (
-            <div className={css}>
+        const content = (
+            <>
                 <span className="visible">{visible}</span>
                 <span className="cursor" ref={this._cursorRef}>{cursor}</span>
                 <span className="hidden">{hidden}</span>
-            </div>
+            </>
         );
+
+        if (headingLevel) {
+            return (
+                <div className={css}>
+                    <div className={`__md-heading __md-heading--h${headingLevel}`}>
+                        {content}
+                    </div>
+                </div>
+            );
+        }
+
+        return <div className={css}>{content}</div>;
     }
 
     public componentDidMount(): void {
@@ -115,7 +130,7 @@ class Teletype extends Component<TeletypeProps, TeletypeState> {
         if (!prevProps.autocomplete && this.props.autocomplete && !this.state.done) {
             this._clearAnimateTimer();
             this.setState({
-                char: this.props.text.length,
+                char: this._getDisplayText().length,
                 active: false,
                 done: true,
                 paused: false,
@@ -199,7 +214,8 @@ class Teletype extends Component<TeletypeProps, TeletypeState> {
     }
 
     private _updateState(): void {
-        const { text, onCharDrawn, } = this.props;
+        const { onCharDrawn, } = this.props;
+        const text = this._getDisplayText();
         const {
             char,
             active,
@@ -250,6 +266,32 @@ class Teletype extends Component<TeletypeProps, TeletypeState> {
             done: nextDone,
             paused: nextPaused,
         });
+    }
+
+    private _getHeadingLevel(): number | null {
+        if (typeof this.props.headingLevel === "number" && Number.isFinite(this.props.headingLevel)) {
+            return Math.min(6, Math.max(1, Math.floor(this.props.headingLevel)));
+        }
+
+        if (this.props.text.includes("\n")) {
+            return null;
+        }
+
+        const heading = parseMarkdownHeading(this.props.text);
+        return heading ? heading.level : null;
+    }
+
+    private _getDisplayText(): string {
+        if (typeof this.props.headingLevel === "number" && Number.isFinite(this.props.headingLevel)) {
+            return this.props.text;
+        }
+
+        const headingLevel = this._getHeadingLevel();
+        if (headingLevel) {
+            return markdownToPlainText(this.props.text);
+        }
+
+        return this.props.text;
     }
 
     private _onComplete(): void {

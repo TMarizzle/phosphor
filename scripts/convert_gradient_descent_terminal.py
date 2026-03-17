@@ -42,6 +42,22 @@ JS_LINE_RE = re.compile(
     re.I,
 )
 
+KNOWN_TEXT_REPLACEMENTS: list[tuple[re.Pattern[str], str]] = [
+    (re.compile(r"\bACCES\b"), "ACCESS"),
+    (re.compile(r"\bacces\b"), "access"),
+    (re.compile(r"\bvaccuums\b"), "vacuums"),
+    (re.compile(r"\bthe the\b"), "the"),
+    (re.compile(r"\bmalfuntional\b"), "malfunctioning"),
+    (re.compile(r"\bOperatin\b"), "Operating"),
+    (re.compile(r"\bSuccesfull\b"), "Successful"),
+    (re.compile(r"\bSuccesful\b"), "Successful"),
+    (re.compile(r"\bLifesupport\b"), "Life Support"),
+]
+
+SPECIAL_TEXT_REPLACEMENTS = {
+    "Choose the access point of the player.": "Choose an access point.",
+}
+
 
 @dataclass
 class Passage:
@@ -114,6 +130,16 @@ def escape_markdown_literal(text: str) -> str:
     return MARKDOWN_LITERAL_RE.sub(r"\\\1", text)
 
 
+def fix_known_text_issues(text: str) -> str:
+    value = text
+    for original, replacement in SPECIAL_TEXT_REPLACEMENTS.items():
+        if value == original:
+            value = replacement
+    for pattern, replacement in KNOWN_TEXT_REPLACEMENTS:
+        value = pattern.sub(replacement, value)
+    return value
+
+
 def strip_decorative_quote_prefix(lines: list[str]) -> list[str]:
     meaningful = [line for line in lines if line]
     if len(meaningful) < 3:
@@ -138,7 +164,7 @@ def strip_decorative_quote_prefix(lines: list[str]) -> list[str]:
 
 def escape_body_lines(lines: list[str]) -> list[str]:
     return [
-        escape_markdown_literal(line) if line else ""
+        escape_markdown_literal(fix_known_text_issues(line)) if line else ""
         for line in lines
     ]
 
@@ -282,6 +308,33 @@ def copy_assets(asset_map: dict[str, str], source_dir: Path, dest_dir: Path) -> 
         shutil.copy2(source, dest_dir / dest_name)
 
 
+def build_passage_referrer_map(passages: list[Passage]) -> dict[str, list[str]]:
+    referrers: dict[str, list[str]] = {passage.name: [] for passage in passages}
+
+    for passage in passages:
+        raw = passage.text.replace("\r", "")
+        body = COMMENT_RE.sub("", raw)
+        body = HTML_COMMENT_RE.sub("", body)
+        body = HTML_SCRIPT_RE.sub("", body)
+        body = SCRIPT_BLOCK_RE.sub("", body)
+        body = H1_RE.sub("\n", body)
+        body = H2_RE.sub("\n", body)
+        body = IMG_RE.sub("\n", body)
+        body, macro_links = extract_macro_links(body)
+        _, wiki_links = extract_wiki_links(body)
+
+        for entry in macro_links + wiki_links:
+            target_name = clean_inline(entry.get("target", ""))
+            if not target_name or target_name == passage.name:
+                continue
+
+            target_referrers = referrers.setdefault(target_name, [])
+            if passage.name not in target_referrers:
+                target_referrers.append(passage.name)
+
+    return referrers
+
+
 def build_password_reference(passwords_path: Path) -> list[Any]:
     if not passwords_path.exists():
         return []
@@ -302,7 +355,7 @@ def build_password_reference(passwords_path: Path) -> list[Any]:
                 content.append("")
                 previous_blank = True
             continue
-        content.append(escape_markdown_literal(line))
+        content.append(escape_markdown_literal(fix_known_text_issues(line)))
         previous_blank = False
 
     content.extend(
@@ -319,7 +372,7 @@ def build_password_reference(passwords_path: Path) -> list[Any]:
 
 
 def make_header(title: str) -> dict[str, str]:
-    heading = clean_inline(title or "UNTITLED").lstrip("#").strip() or "UNTITLED"
+    heading = fix_known_text_issues(clean_inline(title or "UNTITLED").lstrip("#").strip() or "UNTITLED")
     return {
         "type": "text",
         "text": f"# {escape_markdown_literal(heading)}",
@@ -359,48 +412,105 @@ def collapse_blank_entries(content: list[Any]) -> list[Any]:
     return collapsed
 
 
+def is_password_passage_name(name: str) -> bool:
+    normalized = clean_inline(name)
+    return "password" in normalized.lower()
+
+
+def pick_first_valid_target(
+    candidate_names: list[str],
+    ids_by_name: dict[str, str],
+    allow_password_targets: bool = True,
+) -> str:
+    for candidate_name in candidate_names:
+        if candidate_name not in ids_by_name:
+            continue
+        if not allow_password_targets and is_password_passage_name(candidate_name):
+            continue
+        return candidate_name
+    return ""
+
+
 def convert_password_screen(
     passage: Passage,
     ids_by_name: dict[str, str],
     values: dict[str, str],
+    referrers_by_name: dict[str, list[str]],
 ) -> dict[str, Any]:
     heading_match = H1_RE.search(passage.text)
     heading = clean_inline(heading_match.group(1)) if heading_match else passage.name
     success_match = ENGINE_PLAY_RE.search(passage.text)
     success_target = clean_inline(success_match.group(1)) if success_match else ""
     back_links = [parse_wiki_link(match.group(1)) for match in WIKI_LINK_RE.finditer(passage.text)]
-    back_target = ""
-    for label, target in back_links:
-        if "back" in label.lower():
-            back_target = target
-            break
-    if not back_target and back_links:
-        back_target = back_links[0][1]
+    preferred_back_targets = [
+        target
+        for label, target in back_links
+        if "back" in label.lower()
+    ]
+    any_back_targets = [target for _, target in back_links]
+    referrer_targets = [
+        referring_name
+        for referring_name in referrers_by_name.get(passage.name, [])
+        if referring_name != passage.name
+    ]
+    back_target = (
+        pick_first_valid_target(preferred_back_targets, ids_by_name, allow_password_targets=False)
+        or pick_first_valid_target(any_back_targets, ids_by_name, allow_password_targets=False)
+        or pick_first_valid_target(referrer_targets, ids_by_name, allow_password_targets=False)
+        or pick_first_valid_target([success_target], ids_by_name, allow_password_targets=False)
+        or pick_first_valid_target(preferred_back_targets, ids_by_name)
+        or pick_first_valid_target(any_back_targets, ids_by_name)
+        or pick_first_valid_target(referrer_targets, ids_by_name)
+        or pick_first_valid_target([success_target], ids_by_name)
+    )
 
     password_var_match = STATE_VAR_RE.search(passage.text)
     password_var = password_var_match.group(1) if password_var_match else ""
     password_value = values.get(password_var, "")
+    screen_id = ids_by_name[passage.name]
+    back_action: dict[str, Any] = {
+        "type": "action",
+        "action": "back",
+    }
+    if back_target in ids_by_name:
+        back_action["target"] = ids_by_name[back_target]
+    if screen_id == "reception-password":
+        back_action = {
+            "type": "link",
+            "target": "starting-screen",
+        }
 
     commands: list[dict[str, Any]] = []
-    if password_value and success_target in ids_by_name:
-        commands.append(
-            {
-                "command": password_value,
-                "action": {
-                    "type": "link",
-                    "target": ids_by_name[success_target],
-                },
-            }
-        )
+    seen_commands: set[str] = set()
+    success_target_id = ids_by_name.get(success_target)
+    if success_target_id:
+        success_action = {
+            "type": "link",
+            "target": success_target_id,
+        }
+        if password_value:
+            commands.append(
+                {
+                    "command": password_value,
+                    "action": dict(success_action),
+                }
+            )
+            seen_commands.add(password_value)
 
-    if back_target in ids_by_name:
+        if "HACK" not in seen_commands:
+            commands.append(
+                {
+                    "command": "HACK",
+                    "action": dict(success_action),
+                }
+            )
+            seen_commands.add("HACK")
+
+    if "back" not in seen_commands:
         commands.append(
             {
                 "command": "back",
-                "action": {
-                    "type": "link",
-                    "target": ids_by_name[back_target],
-                },
+                "action": dict(back_action),
             }
         )
 
@@ -409,9 +519,6 @@ def convert_password_screen(
         "",
         escape_markdown_literal("Enter password."),
     ]
-
-    if back_target in ids_by_name:
-        content.append(escape_markdown_literal("Type back to return."))
 
     content.extend(
         [
@@ -424,20 +531,19 @@ def convert_password_screen(
         ]
     )
 
-    if back_target in ids_by_name:
-        content.extend(
-            [
-                "",
-                {
-                    "type": "link",
-                    "text": "> BACK",
-                    "target": ids_by_name[back_target],
-                },
-            ]
-        )
+    content.extend(
+        [
+            "",
+            {
+                "type": "link",
+                "text": "> BACK",
+                "target": [dict(back_action)],
+            },
+        ]
+    )
 
     return {
-        "id": ids_by_name[passage.name],
+        "id": screen_id,
         "type": "screen",
         "content": content,
     }
@@ -532,6 +638,7 @@ def convert_story(
     passwords_path: Path,
 ) -> dict[str, Any]:
     ids_by_name = {passage.name: slugify(passage.name) for passage in passages}
+    referrers_by_name = build_passage_referrer_map(passages)
     screens: list[dict[str, Any]] = []
     blocked_targets = {
         target_id
@@ -555,7 +662,7 @@ def convert_story(
         if passage.name == "Settings":
             continue
         if "Password" in passage.name:
-            screens.append(convert_password_screen(passage, ids_by_name, values))
+            screens.append(convert_password_screen(passage, ids_by_name, values, referrers_by_name))
             continue
         screens.append(convert_regular_screen(passage, ids_by_name, values, asset_map))
 
@@ -598,7 +705,7 @@ def convert_story(
             isinstance(entry, str)
             and (
                 "Click Settings to change the look of the terminal" in entry
-                or "Standard time from clicking an acces point to the start of the boot sequence is 1 second." in entry
+                or "Standard time from clicking" in entry
                 or "adjust the duration below" in entry
             )
         )
@@ -613,14 +720,38 @@ def convert_story(
                     filtered_content.append(entry)
                     continue
 
-                if entry.get("type") == "link" and entry.get("target") in blocked_targets:
-                    continue
+                if entry.get("type") == "link":
+                    entry_target = entry.get("target")
+                    if isinstance(entry_target, str) and entry_target in blocked_targets:
+                        continue
+
+                    if isinstance(entry_target, list):
+                        next_targets = []
+                        for target_entry in entry_target:
+                            if not isinstance(target_entry, dict):
+                                next_targets.append(target_entry)
+                                continue
+
+                            nested_target = target_entry.get("target")
+                            if isinstance(nested_target, str) and nested_target in blocked_targets:
+                                continue
+
+                            next_targets.append(target_entry)
+
+                        if not next_targets:
+                            continue
+
+                        filtered_content.append({
+                            **entry,
+                            "target": next_targets,
+                        })
+                        continue
 
                 if entry.get("type") == "prompt":
                     next_commands = [
                         command
                         for command in entry.get("commands", [])
-                        if command.get("action", {}).get("type") != "link"
+                        if command.get("action", {}).get("type") not in {"link", "action"}
                         or command.get("action", {}).get("target") not in blocked_targets
                     ]
                     filtered_content.append({
@@ -673,12 +804,23 @@ def main() -> None:
     missing_targets: list[str] = []
     for screen in story["screens"]:
         for entry in screen.get("content", []):
-            if isinstance(entry, dict) and entry.get("type") == "link" and entry.get("target") not in screen_ids:
-                missing_targets.append(f"{screen['id']} -> {entry.get('target')}")
+            if isinstance(entry, dict) and entry.get("type") == "link":
+                target = entry.get("target")
+                if isinstance(target, str):
+                    if target not in screen_ids:
+                        missing_targets.append(f"{screen['id']} -> {target}")
+                elif isinstance(target, list):
+                    for target_entry in target:
+                        if not isinstance(target_entry, dict):
+                            continue
+                        nested_target = target_entry.get("target")
+                        if isinstance(nested_target, str) and nested_target not in screen_ids:
+                            missing_targets.append(f"{screen['id']} -> {nested_target}")
             if isinstance(entry, dict) and entry.get("type") == "prompt":
                 for command in entry.get("commands", []):
+                    action_type = command.get("action", {}).get("type")
                     target = command.get("action", {}).get("target")
-                    if command.get("action", {}).get("type") == "link" and target not in screen_ids:
+                    if action_type in {"link", "action"} and isinstance(target, str) and target not in screen_ids:
                         missing_targets.append(f"{screen['id']} prompt -> {target}")
         on_done_target = screen.get("onDone", {}).get("target")
         if on_done_target and on_done_target not in screen_ids:

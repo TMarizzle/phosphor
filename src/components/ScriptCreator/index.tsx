@@ -1351,6 +1351,7 @@ const ScriptCreator: FC<ScriptCreatorProps> = ({ initialScript, onApply, onPrevi
     const initialSelectedScreenId = getInitialSelectedScreenId(initialScript);
     const [script, setScript] = useState<any>(() => ensureScriptShape(initialScript));
     const [selectedScreenId, setSelectedScreenId] = useState<string>(() => initialSelectedScreenId);
+    const [screenIdDraft, setScreenIdDraft] = useState<string>(() => initialSelectedScreenId);
     const [schemaRootId, setSchemaRootId] = useState<string>(() => initialSelectedScreenId);
     const [selectedElementIndex, setSelectedElementIndex] = useState<number>(() => {
         return getInitialSelectedElementIndex(initialScript, initialSelectedScreenId);
@@ -1713,6 +1714,10 @@ const ScriptCreator: FC<ScriptCreatorProps> = ({ initialScript, onApply, onPrevi
                 return matchingDialogContentKeySet.has(`${selectedDialog.id}:${item.index}`);
             });
     }, [matchingDialogContentKeySet, selectedDialog?.id, selectedDialogContent, shouldFilterListsToMatches]);
+
+    useEffect(() => {
+        setScreenIdDraft(selectedScreen?.id || "");
+    }, [selectedScreen?.id]);
 
     const resetSearchNavigation = (): void => {
         pendingSearchSelectionModeRef.current = null;
@@ -2661,6 +2666,15 @@ const ScriptCreator: FC<ScriptCreatorProps> = ({ initialScript, onApply, onPrevi
         setSelectedScreenId(nextId);
     };
 
+    const handleScreenIdDraftChange = (nextIdRaw: string) => {
+        setScreenIdDraft(nextIdRaw);
+        renameScreenId(nextIdRaw);
+    };
+
+    const handleScreenIdDraftBlur = () => {
+        setScreenIdDraft(selectedScreen?.id || "");
+    };
+
     const applyScript = () => {
         onApply(cloneJson(script));
     };
@@ -3184,8 +3198,9 @@ const ScriptCreator: FC<ScriptCreatorProps> = ({ initialScript, onApply, onPrevi
                                     <label className="script-creator__field">
                                         <span>Screen ID</span>
                                         <input
-                                            value={selectedScreen.id}
-                                            onChange={(e) => renameScreenId(e.target.value)}
+                                            value={screenIdDraft}
+                                            onChange={(e) => handleScreenIdDraftChange(e.target.value)}
+                                            onBlur={handleScreenIdDraftBlur}
                                         />
                                     </label>
 

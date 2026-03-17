@@ -27,9 +27,7 @@
                     "target": "password-reference"
                 },
                 "",
-                "Choose the acces point of the player\\.",
-                "",
-                "Standard time from clicking an acces point to the start of the boot sequence is 1 second\\.",
+                "Choose the access point of the player\\.",
                 "",
                 {
                     "type": "link",
@@ -121,7 +119,7 @@
                 "22B Password Security = LWvJt8qZ",
                 "22B Password Logistics = Sadie1412",
                 "22B Password Root = Monarch",
-                "22B Password Lifesupport = e2vBR4kA",
+                "22B Password Life Support = e2vBR4kA",
                 "",
                 "Floor 3\\.1",
                 "32A Password Router = hunter2",
@@ -236,6 +234,31 @@
                                 "type": "link",
                                 "target": "reception"
                             }
+                        },
+                        {
+                            "command": "HACK",
+                            "action": {
+                                "type": "link",
+                                "target": "reception"
+                            }
+                        },
+                        {
+                            "command": "back",
+                            "action": {
+                                "type": "link",
+                                "target": "starting-screen"
+                            }
+                        }
+                    ]
+                },
+                "",
+                {
+                    "type": "link",
+                    "text": "> BACK",
+                    "target": [
+                        {
+                            "type": "link",
+                            "target": "starting-screen"
                         }
                     ]
                 }
@@ -505,7 +528,7 @@
                 "",
                 "Guan Shi: Hey, you know what sucks?",
                 "",
-                "Phil: vaccuums",
+                "Phil: vacuums",
                 "",
                 "Guan Shi: Hey, you know what sucks in a metaphorical sense?",
                 "",
@@ -535,7 +558,7 @@
                 "",
                 "Kevyn: HI @EVERYBODY; I AM THE NEW INTER\\!\\!\\!\\!\\!\\!\\!\\!\\!\\!",
                 "",
-                "Judge: try pressing the the Caps Lock key",
+                "Judge: try pressing the Caps Lock key",
                 "",
                 "Kevyn: O THANKS\\!\\!\\! ITS SO MUCH EASIER TO WRITE NOW\\!\\!\\!\\!\\!\\!\\!",
                 "",
@@ -682,7 +705,7 @@
                 "",
                 "Raines: I’ve tried\\. HR just says it’s being optimized and to bear with it\\. Something’s not right, Carter\\. I’m worried we’re just cogs in a malfunctioning machine\\.",
                 "",
-                "Carter: To be fair, we are just cogs in a malfuntional machine\\.",
+                "Carter: To be fair, we are just cogs in a malfunctioning machine\\.",
                 "",
                 "Raines: Can't wait to see your malfunctioning machine later ¬‿¬ 😏",
                 "",
@@ -837,7 +860,7 @@
                 "No deviations from set parameters\\.",
                 "",
                 "Summary",
-                "All synthetic production shows significant deterioration\\. Operatin out of standard parameters\\. Personnel change advised\\.",
+                "All synthetic production shows significant deterioration\\. Operating out of standard parameters\\. Personnel change advised\\.",
                 "Lubrication levels: Suboptimal\\. Intense maintenance required\\.",
                 "Temperature control: Stable\\.",
                 "7 Major System Errors detected\\. 7/7 due to staff failure\\.",
@@ -880,7 +903,7 @@
                 "Next scheduled check: 2144\\.04\\.23",
                 "",
                 "Summary",
-                "Succesfull integration of infiltrator android production\\. All synthetic production lines operating within normal parameters\\.",
+                "Successful integration of infiltrator android production\\. All synthetic production lines operating within normal parameters\\.",
                 "Lubrication levels: Optimal\\.",
                 "Temperature control: Stable\\.",
                 "11 minor anomalies detected\\. Temperature modulation adjusted\\. Anomalie extermination in roughly 24 hours\\.",
@@ -929,7 +952,6 @@
                 },
                 "",
                 "Enter password\\.",
-                "Type back to return\\.",
                 "",
                 {
                     "type": "prompt",
@@ -943,10 +965,18 @@
                             }
                         },
                         {
-                            "command": "back",
+                            "command": "HACK",
                             "action": {
                                 "type": "link",
-                                "target": "reception-password"
+                                "target": "floor-1-intranet-router"
+                            }
+                        },
+                        {
+                            "command": "back",
+                            "action": {
+                                "type": "action",
+                                "action": "back",
+                                "target": "network"
                             }
                         }
                     ]
@@ -955,7 +985,13 @@
                 {
                     "type": "link",
                     "text": "> BACK",
-                    "target": "reception-password"
+                    "target": [
+                        {
+                            "type": "action",
+                            "action": "back",
+                            "target": "network"
+                        }
+                    ]
                 }
             ]
         },
@@ -1015,7 +1051,6 @@
                 },
                 "",
                 "Enter password\\.",
-                "Type back to return\\.",
                 "",
                 {
                     "type": "prompt",
@@ -1029,10 +1064,18 @@
                             }
                         },
                         {
-                            "command": "back",
+                            "command": "HACK",
                             "action": {
                                 "type": "link",
-                                "target": "floor-1-intranet-router-password"
+                                "target": "logistics-hub"
+                            }
+                        },
+                        {
+                            "command": "back",
+                            "action": {
+                                "type": "action",
+                                "action": "back",
+                                "target": "floor-1-intranet-router"
                             }
                         }
                     ]
@@ -1041,7 +1084,13 @@
                 {
                     "type": "link",
                     "text": "> BACK",
-                    "target": "floor-1-intranet-router-password"
+                    "target": [
+                        {
+                            "type": "action",
+                            "action": "back",
+                            "target": "floor-1-intranet-router"
+                        }
+                    ]
                 }
             ]
         },
@@ -1055,7 +1104,6 @@
                 },
                 "",
                 "Enter password\\.",
-                "Type back to return\\.",
                 "",
                 {
                     "type": "prompt",
@@ -1069,10 +1117,18 @@
                             }
                         },
                         {
-                            "command": "back",
+                            "command": "HACK",
                             "action": {
                                 "type": "link",
-                                "target": "floor-1-intranet-router-password"
+                                "target": "admin"
+                            }
+                        },
+                        {
+                            "command": "back",
+                            "action": {
+                                "type": "action",
+                                "action": "back",
+                                "target": "floor-1-intranet-router"
                             }
                         }
                     ]
@@ -1081,7 +1137,13 @@
                 {
                     "type": "link",
                     "text": "> BACK",
-                    "target": "floor-1-intranet-router-password"
+                    "target": [
+                        {
+                            "type": "action",
+                            "action": "back",
+                            "target": "floor-1-intranet-router"
+                        }
+                    ]
                 }
             ]
         },
@@ -1095,7 +1157,6 @@
                 },
                 "",
                 "Enter password\\.",
-                "Type back to return\\.",
                 "",
                 {
                     "type": "prompt",
@@ -1109,10 +1170,18 @@
                             }
                         },
                         {
-                            "command": "back",
+                            "command": "HACK",
                             "action": {
                                 "type": "link",
-                                "target": "floor-1-intranet-router-password"
+                                "target": "monarch-trap"
+                            }
+                        },
+                        {
+                            "command": "back",
+                            "action": {
+                                "type": "action",
+                                "action": "back",
+                                "target": "floor-1-intranet-router"
                             }
                         }
                     ]
@@ -1121,7 +1190,13 @@
                 {
                     "type": "link",
                     "text": "> BACK",
-                    "target": "floor-1-intranet-router-password"
+                    "target": [
+                        {
+                            "type": "action",
+                            "action": "back",
+                            "target": "floor-1-intranet-router"
+                        }
+                    ]
                 }
             ]
         },
@@ -1209,7 +1284,6 @@
                 },
                 "",
                 "Enter password\\.",
-                "Type back to return\\.",
                 "",
                 {
                     "type": "prompt",
@@ -1223,10 +1297,18 @@
                             }
                         },
                         {
-                            "command": "back",
+                            "command": "HACK",
                             "action": {
                                 "type": "link",
-                                "target": "floor-1-intranet-router-password"
+                                "target": "security-hub"
+                            }
+                        },
+                        {
+                            "command": "back",
+                            "action": {
+                                "type": "action",
+                                "action": "back",
+                                "target": "floor-1-intranet-router"
                             }
                         }
                     ]
@@ -1235,7 +1317,13 @@
                 {
                     "type": "link",
                     "text": "> BACK",
-                    "target": "floor-1-intranet-router-password"
+                    "target": [
+                        {
+                            "type": "action",
+                            "action": "back",
+                            "target": "floor-1-intranet-router"
+                        }
+                    ]
                 }
             ]
         },
@@ -1330,7 +1418,6 @@
                 },
                 "",
                 "Enter password\\.",
-                "Type back to return\\.",
                 "",
                 {
                     "type": "prompt",
@@ -1344,10 +1431,18 @@
                             }
                         },
                         {
-                            "command": "back",
+                            "command": "HACK",
                             "action": {
                                 "type": "link",
-                                "target": "admin-password"
+                                "target": "floor-1-life-support-hub"
+                            }
+                        },
+                        {
+                            "command": "back",
+                            "action": {
+                                "type": "action",
+                                "action": "back",
+                                "target": "admin"
                             }
                         }
                     ]
@@ -1356,7 +1451,13 @@
                 {
                     "type": "link",
                     "text": "> BACK",
-                    "target": "admin-password"
+                    "target": [
+                        {
+                            "type": "action",
+                            "action": "back",
+                            "target": "admin"
+                        }
+                    ]
                 }
             ]
         },
@@ -2369,6 +2470,33 @@
                                 "type": "link",
                                 "target": "hel-terminal"
                             }
+                        },
+                        {
+                            "command": "HACK",
+                            "action": {
+                                "type": "link",
+                                "target": "hel-terminal"
+                            }
+                        },
+                        {
+                            "command": "back",
+                            "action": {
+                                "type": "action",
+                                "action": "back",
+                                "target": "hel-terminal"
+                            }
+                        }
+                    ]
+                },
+                "",
+                {
+                    "type": "link",
+                    "text": "> BACK",
+                    "target": [
+                        {
+                            "type": "action",
+                            "action": "back",
+                            "target": "hel-terminal"
                         }
                     ]
                 }
@@ -2384,7 +2512,6 @@
                 },
                 "",
                 "Enter password\\.",
-                "Type back to return\\.",
                 "",
                 {
                     "type": "prompt",
@@ -2398,9 +2525,17 @@
                             }
                         },
                         {
-                            "command": "back",
+                            "command": "HACK",
                             "action": {
                                 "type": "link",
+                                "target": "mind-bank"
+                            }
+                        },
+                        {
+                            "command": "back",
+                            "action": {
+                                "type": "action",
+                                "action": "back",
                                 "target": "hel-terminal"
                             }
                         }
@@ -2410,7 +2545,13 @@
                 {
                     "type": "link",
                     "text": "> BACK",
-                    "target": "hel-terminal"
+                    "target": [
+                        {
+                            "type": "action",
+                            "action": "back",
+                            "target": "hel-terminal"
+                        }
+                    ]
                 }
             ]
         },
@@ -2635,6 +2776,33 @@
                                 "type": "link",
                                 "target": "o2-flow-control"
                             }
+                        },
+                        {
+                            "command": "HACK",
+                            "action": {
+                                "type": "link",
+                                "target": "o2-flow-control"
+                            }
+                        },
+                        {
+                            "command": "back",
+                            "action": {
+                                "type": "action",
+                                "action": "back",
+                                "target": "o2-flow-control"
+                            }
+                        }
+                    ]
+                },
+                "",
+                {
+                    "type": "link",
+                    "text": "> BACK",
+                    "target": [
+                        {
+                            "type": "action",
+                            "action": "back",
+                            "target": "o2-flow-control"
                         }
                     ]
                 }
@@ -2851,6 +3019,33 @@
                                 "type": "link",
                                 "target": "o2-flow-backup"
                             }
+                        },
+                        {
+                            "command": "HACK",
+                            "action": {
+                                "type": "link",
+                                "target": "o2-flow-backup"
+                            }
+                        },
+                        {
+                            "command": "back",
+                            "action": {
+                                "type": "action",
+                                "action": "back",
+                                "target": "o2-flow-backup"
+                            }
+                        }
+                    ]
+                },
+                "",
+                {
+                    "type": "link",
+                    "text": "> BACK",
+                    "target": [
+                        {
+                            "type": "action",
+                            "action": "back",
+                            "target": "o2-flow-backup"
                         }
                     ]
                 }
@@ -3975,6 +4170,33 @@
                                 "type": "link",
                                 "target": "floor-3-life-support"
                             }
+                        },
+                        {
+                            "command": "HACK",
+                            "action": {
+                                "type": "link",
+                                "target": "floor-3-life-support"
+                            }
+                        },
+                        {
+                            "command": "back",
+                            "action": {
+                                "type": "action",
+                                "action": "back",
+                                "target": "floor-3-life-support"
+                            }
+                        }
+                    ]
+                },
+                "",
+                {
+                    "type": "link",
+                    "text": "> BACK",
+                    "target": [
+                        {
+                            "type": "action",
+                            "action": "back",
+                            "target": "floor-3-life-support"
                         }
                     ]
                 }
@@ -4401,7 +4623,6 @@
                 },
                 "",
                 "Enter password\\.",
-                "Type back to return\\.",
                 "",
                 {
                     "type": "prompt",
@@ -4415,9 +4636,17 @@
                             }
                         },
                         {
-                            "command": "back",
+                            "command": "HACK",
                             "action": {
                                 "type": "link",
+                                "target": "maintenance-router"
+                            }
+                        },
+                        {
+                            "command": "back",
+                            "action": {
+                                "type": "action",
+                                "action": "back",
                                 "target": "maintenance"
                             }
                         }
@@ -4427,7 +4656,13 @@
                 {
                     "type": "link",
                     "text": "> BACK",
-                    "target": "maintenance"
+                    "target": [
+                        {
+                            "type": "action",
+                            "action": "back",
+                            "target": "maintenance"
+                        }
+                    ]
                 }
             ]
         },
@@ -5237,7 +5472,7 @@
                 "",
                 "RELEASE SUBJECT\\#:",
                 "",
-                "\\> QUARANTINE ACCES",
+                "\\> QUARANTINE ACCESS",
                 "",
                 "\\[\\> LOCKED\\]",
                 "",
@@ -5275,6 +5510,33 @@
                                 "type": "link",
                                 "target": "qa-inspection"
                             }
+                        },
+                        {
+                            "command": "HACK",
+                            "action": {
+                                "type": "link",
+                                "target": "qa-inspection"
+                            }
+                        },
+                        {
+                            "command": "back",
+                            "action": {
+                                "type": "action",
+                                "action": "back",
+                                "target": "qa-inspection"
+                            }
+                        }
+                    ]
+                },
+                "",
+                {
+                    "type": "link",
+                    "text": "> BACK",
+                    "target": [
+                        {
+                            "type": "action",
+                            "action": "back",
+                            "target": "qa-inspection"
                         }
                     ]
                 }
@@ -5368,6 +5630,33 @@
                                 "type": "link",
                                 "target": "navigation"
                             }
+                        },
+                        {
+                            "command": "HACK",
+                            "action": {
+                                "type": "link",
+                                "target": "navigation"
+                            }
+                        },
+                        {
+                            "command": "back",
+                            "action": {
+                                "type": "action",
+                                "action": "back",
+                                "target": "navigation"
+                            }
+                        }
+                    ]
+                },
+                "",
+                {
+                    "type": "link",
+                    "text": "> BACK",
+                    "target": [
+                        {
+                            "type": "action",
+                            "action": "back",
+                            "target": "navigation"
                         }
                     ]
                 }

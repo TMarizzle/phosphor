@@ -39,7 +39,7 @@ import {
     TerminalScriptActionMeta,
     TerminalScriptApi,
 } from "../../scripts/terminal";
-import { markdownToPlainText } from "../../utils/markdown";
+import { markdownToPlainText, parseMarkdownHeading } from "../../utils/markdown";
 
 interface AppState {
     screens: Screen[];
@@ -1194,11 +1194,15 @@ class Phosphor extends Component<PhosphorProps, AppState> {
             const text = (type === ScreenDataType.Text)
                 ? markdownToPlainText(sourceText || "")
                 : (sourceText || "");
+            const headingLevel = type === ScreenDataType.Text
+                ? (parseMarkdownHeading(sourceText || "")?.level || undefined)
+                : undefined;
             const handleRendered = () => this._activateNextScreenData();
             return (
                 <Teletype
                     key={key}
                     text={text}
+                    headingLevel={headingLevel}
                     onComplete={handleRendered}
                     onNewLine={this._handleTeletypeNewLine}
                     onCharDrawn={this._handleTeletypeCharDrawn}
@@ -1384,6 +1388,76 @@ class Phosphor extends Component<PhosphorProps, AppState> {
         return null;
     }
 
+    private _transitionToScreen(targetScreen: string, isBackNavigation = false): void {
+        const currentScreenId = this.state.activeScreenId;
+
+        if (!targetScreen) {
+            return;
+        }
+
+        this._clearScreenDoneTimer();
+
+        const screen = this._getScreen(targetScreen);
+        if (!screen || !screen.content || !screen.content.length) {
+            return;
+        }
+
+        if (isBackNavigation) {
+            this._playPowerOff();
+        } else {
+            this._playPowerOn();
+        }
+
+        if (currentScreenId) {
+            this._unloadScreen();
+        }
+
+        this.setState({
+            activeScreenId: targetScreen,
+            activeElementId: null,
+            skipTextAnimation: false,
+        }, () => {
+            this._activateScreen();
+            this._notifyScriptScreenChanged(targetScreen);
+        });
+    }
+
+    private _goBack(fallbackTarget?: string): void {
+        const currentScreenId = this.state.activeScreenId;
+        let previousScreenId = "";
+
+        while (this._screenHistory.length) {
+            const candidate = this._screenHistory[this._screenHistory.length - 1];
+            const candidateScreen = this._getScreen(candidate);
+            if (candidate
+                && candidate !== currentScreenId
+                && candidateScreen
+                && candidateScreen.content
+                && candidateScreen.content.length) {
+                previousScreenId = candidate;
+                break;
+            }
+
+            this._screenHistory.pop();
+        }
+
+        const targetScreen = previousScreenId || fallbackTarget || "";
+        if (!targetScreen || targetScreen === currentScreenId) {
+            return;
+        }
+
+        const target = this._getScreen(targetScreen);
+        if (!target || !target.content || !target.content.length) {
+            return;
+        }
+
+        if (previousScreenId) {
+            this._screenHistory.pop();
+        }
+
+        this._transitionToScreen(targetScreen, true);
+    }
+
     private _changeScreen(targetScreen: string): void {
         const currentScreenId = this.state.activeScreenId;
         const isSameScreen = targetScreen === currentScreenId;
@@ -1392,8 +1466,6 @@ class Phosphor extends Component<PhosphorProps, AppState> {
         if (!targetScreen) {
             return;
         }
-
-        this._clearScreenDoneTimer();
 
         const screen = this._getScreen(targetScreen);
         if (!screen || !screen.content || !screen.content.length) {
@@ -1414,26 +1486,7 @@ class Phosphor extends Component<PhosphorProps, AppState> {
             }
         }
 
-        if (isBackNavigation) {
-            this._playPowerOff();
-        } else {
-            this._playPowerOn();
-        }
-
-        // todo: handle missing screen
-        // unload the current screen first
-        if (currentScreenId) {
-            this._unloadScreen();
-        }
-
-        this.setState({
-            activeScreenId: targetScreen,
-            activeElementId: null,
-            skipTextAnimation: false,
-        }, () => {
-            this._activateScreen();
-            this._notifyScriptScreenChanged(targetScreen);
-        });
+        this._transitionToScreen(targetScreen, isBackNavigation);
     }
 
     private _setElementState(id: string, state: ScreenDataState): void {
@@ -1720,6 +1773,11 @@ class Phosphor extends Component<PhosphorProps, AppState> {
             this._resetPersistentState(() => {
                 target && this._changeScreen(target);
             });
+            return;
+        }
+
+        if (action === "back") {
+            this._goBack(target);
             return;
         }
 
