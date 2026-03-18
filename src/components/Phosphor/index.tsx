@@ -143,6 +143,7 @@ const USER_REPORT_SCREEN_PREFIX = "userReport:";
 
 interface PhosphorProps {
     json: any;
+    defaultTextSpeed?: number;
     soundEnabled?: boolean;
     onScreenChanged?: (screenId: string) => void;
 }
@@ -501,6 +502,22 @@ class Phosphor extends Component<PhosphorProps, AppState> {
         if (state.target) {
             this._changeScreen(state.target);
         }
+    }
+
+    private _getResolvedTextSpeed(element: any): number | undefined {
+        const elementSpeed = typeof element?.speed === "number" && Number.isFinite(element.speed) && element.speed > 0
+            ? element.speed
+            : undefined;
+        if (elementSpeed !== undefined) {
+            return elementSpeed;
+        }
+
+        const defaultTextSpeed = this.props.defaultTextSpeed;
+        if (typeof defaultTextSpeed === "number" && Number.isFinite(defaultTextSpeed) && defaultTextSpeed > 0) {
+            return defaultTextSpeed;
+        }
+
+        return undefined;
     }
 
     private _parseScreens(): void {
@@ -1197,6 +1214,7 @@ class Phosphor extends Component<PhosphorProps, AppState> {
             const headingLevel = type === ScreenDataType.Text
                 ? (parseMarkdownHeading(sourceText || "")?.level || undefined)
                 : undefined;
+            const speed = this._getResolvedTextSpeed(element);
             const handleRendered = () => this._activateNextScreenData();
             return (
                 <Teletype
@@ -1208,7 +1226,7 @@ class Phosphor extends Component<PhosphorProps, AppState> {
                     onCharDrawn={this._handleTeletypeCharDrawn}
                     autocomplete={this.state.skipTextAnimation}
                     className={element.className}
-                    speed={element.speed}
+                    speed={speed}
                 />
             );
         }
@@ -1217,6 +1235,7 @@ class Phosphor extends Component<PhosphorProps, AppState> {
         if (type === ScreenDataType.Toggle) {
             const text = this._getCyclerText(element.states);
             const className = this._getCyclerClassName(element.className, element.states);
+            const speed = this._getResolvedTextSpeed(element);
             const handleRendered = () => this._activateNextScreenData();
             return (
                 <Teletype
@@ -1227,6 +1246,7 @@ class Phosphor extends Component<PhosphorProps, AppState> {
                     onCharDrawn={this._handleTeletypeCharDrawn}
                     autocomplete={this.state.skipTextAnimation}
                     className={className}
+                    speed={speed}
                 />
             );
         }
@@ -1234,6 +1254,7 @@ class Phosphor extends Component<PhosphorProps, AppState> {
         if (type === ScreenDataType.List) {
             const text = this._getCyclerText(element.states);
             const className = this._getCyclerClassName(element.className, element.states);
+            const speed = this._getResolvedTextSpeed(element);
             const handleRendered = () => this._activateNextScreenData();
             return (
                 <Teletype
@@ -1244,6 +1265,7 @@ class Phosphor extends Component<PhosphorProps, AppState> {
                     onCharDrawn={this._handleTeletypeCharDrawn}
                     autocomplete={this.state.skipTextAnimation}
                     className={className}
+                    speed={speed}
                 />
             );
         }

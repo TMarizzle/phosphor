@@ -100,6 +100,33 @@ const sanitizeHref = (value: string): string | null => {
     return href;
 };
 
+const isEscapedAt = (value: string, index: number): boolean => {
+    let slashCount = 0;
+    let cursor = index - 1;
+
+    while (cursor >= 0 && value[cursor] === "\\") {
+        slashCount++;
+        cursor--;
+    }
+
+    return slashCount % 2 === 1;
+};
+
+const findFirstUnescapedMatch = (value: string, regex: RegExp): RegExpExecArray | null => {
+    const flags = regex.flags.includes("g") ? regex.flags : `${regex.flags}g`;
+    const pattern = new RegExp(regex.source, flags);
+    let match = pattern.exec(value);
+
+    while (match) {
+        if (typeof match.index === "number" && !isEscapedAt(value, match.index)) {
+            return match;
+        }
+        match = pattern.exec(value);
+    }
+
+    return null;
+};
+
 const findFirstInlineToken = (value: string): InlineTokenMatch | null => {
     const patterns: Array<{ kind: InlineTokenType; regex: RegExp }> = [
         { kind: "link", regex: /\[([^\]\n]+)\]\(([^)\n]+)\)/ },
@@ -113,7 +140,7 @@ const findFirstInlineToken = (value: string): InlineTokenMatch | null => {
     let best: InlineTokenMatch | null = null;
 
     patterns.forEach((pattern) => {
-        const match = pattern.regex.exec(value);
+        const match = findFirstUnescapedMatch(value, pattern.regex);
         if (!match || typeof match.index !== "number") {
             return;
         }
@@ -319,14 +346,25 @@ export const renderMarkdown = (text: string): ReactNode[] => {
 };
 
 const stripInlineMarkdown = (value: string): string => {
-    let output = value;
-    output = output.replace(/\[([^\]\n]+)\]\(([^)\n]+)\)/g, "$1");
-    output = output.replace(/~~([^~\n]+)~~/g, "$1");
-    output = output.replace(/__([^_\n]+)__/g, "$1");
-    output = output.replace(/\+\+([^+\n]+)\+\+/g, "$1");
-    output = output.replace(/\*\*([^*\n]+)\*\*/g, "$1");
-    output = output.replace(/\*([^*\n]+)\*/g, "$1");
-    return decodeEscapedMarkdown(output);
+    let output = "";
+    let rest = value;
+
+    while (rest.length) {
+        const match = findFirstInlineToken(rest);
+        if (!match) {
+            output += decodeEscapedMarkdown(rest);
+            break;
+        }
+
+        if (match.index > 0) {
+            output += decodeEscapedMarkdown(rest.slice(0, match.index));
+        }
+
+        output += stripInlineMarkdown(match.content);
+        rest = rest.slice(match.index + match.raw.length);
+    }
+
+    return output;
 };
 
 export const markdownToPlainText = (text: string): string => {

@@ -168,7 +168,7 @@ const sanitizeBaseThemeId = (value: string): string => {
     return THEMES.some((theme) => theme.id === value) ? value : DEFAULT_THEME.id;
 };
 
-const sanitizeCustomTheme = (customTheme: Partial<CustomThemeConfig> | null | undefined): CustomThemeConfig => {
+export const sanitizeCustomTheme = (customTheme: Partial<CustomThemeConfig> | null | undefined): CustomThemeConfig => {
     const legacyTheme = (customTheme || {}) as Partial<CustomThemeConfig> & { aiHex?: string };
     return {
         baseThemeId: sanitizeBaseThemeId(legacyTheme.baseThemeId || DEFAULT_CUSTOM_THEME.baseThemeId),

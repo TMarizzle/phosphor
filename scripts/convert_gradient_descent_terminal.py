@@ -1033,6 +1033,8 @@ def convert_story(
             "name": "Gradient Descent Terminal Archive",
             "author": "PimPee / converted for Phosphor",
             "script": None,
+            "theme": "green",
+            "defaultTextSpeed": 12,
         },
         "screens": screens,
         "dialogs": [],

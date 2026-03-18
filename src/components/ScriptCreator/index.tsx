@@ -1,5 +1,11 @@
 import React, { FC, useEffect, useId, useMemo, useRef, useState } from "react";
 import "./style.scss";
+import {
+    THEMES,
+    DEFAULT_CUSTOM_THEME,
+    CustomThemeConfig,
+    sanitizeCustomTheme,
+} from "../../themes";
 
 interface ScriptCreatorProps {
     initialScript: any;
@@ -673,6 +679,17 @@ const SCREEN_TYPE_OPTIONS: CreatorSelectOption[] = [
     { value: "static", label: "static" },
 ];
 
+const SCRIPT_THEME_OPTIONS: CreatorSelectOption[] = [
+    { value: "", label: "(use app theme)" },
+    ...THEMES.map((theme) => ({ value: theme.id, label: theme.name })),
+    { value: "custom", label: "CUSTOM" },
+];
+
+const CUSTOM_THEME_BASE_OPTIONS: CreatorSelectOption[] = THEMES.map((theme) => ({
+    value: theme.id,
+    label: theme.name,
+}));
+
 const DIALOG_TYPE_OPTIONS: CreatorSelectOption[] = [
     { value: "alert", label: "alert" },
     { value: "confirm", label: "confirm" },
@@ -718,11 +735,70 @@ const cloneJson = <T,>(value: T): T => {
     }
 };
 
+const normalizeScriptThemePreset = (value: any): string => {
+    if (typeof value !== "string") {
+        return "";
+    }
+
+    const normalized = value.trim().toLowerCase();
+    if (!normalized.length) {
+        return "";
+    }
+
+    if (normalized === "custom") {
+        return normalized;
+    }
+
+    return THEMES.some((theme) => theme.id === normalized) ? normalized : "";
+};
+
+const parseOptionalPositiveNumber = (value: any): number | undefined => {
+    const parsed = typeof value === "number"
+        ? value
+        : (typeof value === "string" && value.trim().length ? Number(value) : Number.NaN);
+
+    if (!Number.isFinite(parsed) || parsed <= 0) {
+        return undefined;
+    }
+
+    return parsed;
+};
+
+const getScriptCustomThemeConfig = (script: any): CustomThemeConfig => {
+    return sanitizeCustomTheme(script?.config?.customTheme || DEFAULT_CUSTOM_THEME);
+};
+
 const ensureScriptShape = (raw: any): any => {
     const base = cloneJson(raw && typeof raw === "object" ? raw : createDefaultScript());
     if (!base.config || typeof base.config !== "object") {
         base.config = {};
     }
+    if (typeof base.config.name !== "string") {
+        base.config.name = "Custom Script";
+    }
+    if (typeof base.config.author !== "string") {
+        base.config.author = "";
+    }
+
+    const normalizedTheme = normalizeScriptThemePreset(base.config.theme ?? base.config.themeId);
+    if (normalizedTheme.length) {
+        base.config.theme = normalizedTheme;
+    } else {
+        delete base.config.theme;
+    }
+    delete base.config.themeId;
+
+    const defaultTextSpeed = parseOptionalPositiveNumber(base.config.defaultTextSpeed);
+    if (defaultTextSpeed === undefined) {
+        delete base.config.defaultTextSpeed;
+    } else {
+        base.config.defaultTextSpeed = defaultTextSpeed;
+    }
+
+    if (base.config.customTheme !== undefined) {
+        base.config.customTheme = sanitizeCustomTheme(base.config.customTheme);
+    }
+
     if (!Array.isArray(base.screens)) {
         base.screens = [];
     }
@@ -1383,6 +1459,8 @@ const ScriptCreator: FC<ScriptCreatorProps> = ({ initialScript, onApply, onPrevi
     const resizeStartXRef = useRef<number>(0);
     const resizeStartWidthRef = useRef<number>(DEFAULT_SIDEBAR_WIDTH);
     const pendingSearchSelectionModeRef = useRef<PendingSearchSelectionMode | null>(null);
+    const scriptThemePreset = normalizeScriptThemePreset(script.config?.theme);
+    const scriptCustomTheme = getScriptCustomThemeConfig(script);
 
     const handleEditorMarkdownShortcut = (event: React.KeyboardEvent<HTMLElement>): void => {
         const nativeEvent = event.nativeEvent as KeyboardEvent & { isComposing?: boolean };
@@ -1940,13 +2018,33 @@ const ScriptCreator: FC<ScriptCreatorProps> = ({ initialScript, onApply, onPrevi
         setScript((prev: any) => ensureScriptShape(updater(prev)));
     };
 
-    const updateConfig = (key: string, value: string) => {
+    const updateConfig = (key: string, value: any) => {
         updateScript((prev) => ({
             ...prev,
             config: {
                 ...prev.config,
                 [key]: value,
             },
+        }));
+    };
+
+    const removeConfigKey = (key: string) => {
+        updateScript((prev) => {
+            const nextConfig = {
+                ...prev.config,
+            };
+            delete nextConfig[key];
+            return {
+                ...prev,
+                config: nextConfig,
+            };
+        });
+    };
+
+    const updateCustomThemeConfig = (patch: Partial<CustomThemeConfig>) => {
+        updateConfig("customTheme", sanitizeCustomTheme({
+            ...scriptCustomTheme,
+            ...patch,
         }));
     };
 
@@ -3094,6 +3192,126 @@ const ScriptCreator: FC<ScriptCreatorProps> = ({ initialScript, onApply, onPrevi
                                     onChange={(e) => updateConfig("author", e.target.value)}
                                 />
                             </label>
+
+                            <label className="script-creator__field">
+                                <span>Theme Preset</span>
+                                <CreatorSelect
+                                    value={scriptThemePreset}
+                                    options={SCRIPT_THEME_OPTIONS}
+                                    onChange={(nextValue) => {
+                                        if (!nextValue.length) {
+                                            removeConfigKey("theme");
+                                            return;
+                                        }
+
+                                        if (nextValue === "custom" && script.config?.customTheme === undefined) {
+                                            updateScript((prev) => ({
+                                                ...prev,
+                                                config: {
+                                                    ...prev.config,
+                                                    theme: "custom",
+                                                    customTheme: sanitizeCustomTheme(prev.config?.customTheme || DEFAULT_CUSTOM_THEME),
+                                                },
+                                            }));
+                                            return;
+                                        }
+
+                                        updateConfig("theme", nextValue);
+                                    }}
+                                />
+                            </label>
+
+                            <label className="script-creator__field">
+                                <span>Default Text Speed (ms)</span>
+                                <input
+                                    type="number"
+                                    min="1"
+                                    step="1"
+                                    value={script.config?.defaultTextSpeed ?? ""}
+                                    onChange={(e) => {
+                                        const nextValue = e.target.value;
+                                        if (!nextValue.length) {
+                                            removeConfigKey("defaultTextSpeed");
+                                            return;
+                                        }
+
+                                        const parsed = parseOptionalPositiveNumber(nextValue);
+                                        if (parsed === undefined) {
+                                            return;
+                                        }
+
+                                        updateConfig("defaultTextSpeed", parsed);
+                                    }}
+                                />
+                            </label>
+
+                            {scriptThemePreset === "custom" && (
+                                <>
+                                    <label className="script-creator__field">
+                                        <span>Custom Theme Base</span>
+                                        <CreatorSelect
+                                            value={scriptCustomTheme.baseThemeId}
+                                            options={CUSTOM_THEME_BASE_OPTIONS}
+                                            fallbackLabel={scriptCustomTheme.baseThemeId}
+                                            onChange={(nextValue) => updateCustomThemeConfig({ baseThemeId: nextValue })}
+                                        />
+                                    </label>
+
+                                    <label className="script-creator__field">
+                                        <span>FG</span>
+                                        <input
+                                            type="color"
+                                            value={scriptCustomTheme.fgHex}
+                                            onChange={(e) => updateCustomThemeConfig({ fgHex: e.target.value })}
+                                        />
+                                    </label>
+
+                                    <label className="script-creator__field">
+                                        <span>Alert</span>
+                                        <input
+                                            type="color"
+                                            value={scriptCustomTheme.alertHex}
+                                            onChange={(e) => updateCustomThemeConfig({ alertHex: e.target.value })}
+                                        />
+                                    </label>
+
+                                    <label className="script-creator__field">
+                                        <span>Emphasis</span>
+                                        <input
+                                            type="color"
+                                            value={scriptCustomTheme.emphasisHex}
+                                            onChange={(e) => updateCustomThemeConfig({ emphasisHex: e.target.value })}
+                                        />
+                                    </label>
+
+                                    <label className="script-creator__field">
+                                        <span>Notice</span>
+                                        <input
+                                            type="color"
+                                            value={scriptCustomTheme.noticeHex}
+                                            onChange={(e) => updateCustomThemeConfig({ noticeHex: e.target.value })}
+                                        />
+                                    </label>
+
+                                    <label className="script-creator__field">
+                                        <span>Hyperlink</span>
+                                        <input
+                                            type="color"
+                                            value={scriptCustomTheme.hyperlinkHex}
+                                            onChange={(e) => updateCustomThemeConfig({ hyperlinkHex: e.target.value })}
+                                        />
+                                    </label>
+
+                                    <label className="script-creator__field">
+                                        <span>System</span>
+                                        <input
+                                            type="color"
+                                            value={scriptCustomTheme.systemHex}
+                                            onChange={(e) => updateCustomThemeConfig({ systemHex: e.target.value })}
+                                        />
+                                    </label>
+                                </>
+                            )}
                         </div>
 
                         <div className="script-creator__list-header">

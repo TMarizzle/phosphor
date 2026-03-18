@@ -16,6 +16,7 @@ import {
     persistCustomTheme,
     persistTheme,
     applyTheme,
+    sanitizeCustomTheme,
 } from "../../themes";
 import {
     ModuleRecord,
@@ -83,6 +84,7 @@ class App extends Component<any, AppState> {
         const soundEnabled = loadPersistedSoundEnabled();
         const customScripts = this._loadCustomScripts();
         const activeScript = this._resolveInitialActiveScript(customScripts);
+        const initialThemeState = this._resolveThemeStateForScript(activeScript.json, persistedTheme, customTheme);
         this._headerRef = React.createRef<HTMLElement>();
         this._titleRef = React.createRef<HTMLAnchorElement>();
         this._controlsRef = React.createRef<HTMLDivElement>();
@@ -91,8 +93,8 @@ class App extends Component<any, AppState> {
             activeScriptRevision: 0,
             activeTerminalScreenId: null,
             customScripts,
-            activeTheme: persistedTheme,
-            customTheme,
+            activeTheme: initialThemeState.activeTheme,
+            customTheme: initialThemeState.customTheme,
             customThemeEditorOpen: false,
             headerCompact: false,
             soundEnabled,
@@ -265,6 +267,57 @@ class App extends Component<any, AppState> {
             label: module.title.toUpperCase().slice(0, 24),
             json: scriptJsonOverride || module.script_json,
         };
+    }
+
+    private _resolveThemeStateForScript(
+        scriptJson: any,
+        fallbackTheme?: Theme,
+        fallbackCustomTheme?: CustomThemeConfig
+    ): Pick<AppState, "activeTheme" | "customTheme"> {
+        const rawThemeId = typeof scriptJson?.config?.theme === "string"
+            ? scriptJson.config.theme
+            : (typeof scriptJson?.config?.themeId === "string" ? scriptJson.config.themeId : "");
+        const themeId = rawThemeId.trim().toLowerCase();
+
+        if (themeId === "custom") {
+            const customTheme = sanitizeCustomTheme(scriptJson?.config?.customTheme);
+            return {
+                activeTheme: createCustomTheme(customTheme),
+                customTheme,
+            };
+        }
+
+        const presetTheme = THEMES.find((theme) => theme.id === themeId);
+        if (presetTheme) {
+            return {
+                activeTheme: presetTheme,
+                customTheme: fallbackCustomTheme || loadPersistedCustomTheme(),
+            };
+        }
+
+        return {
+            activeTheme: fallbackTheme || loadPersistedTheme(),
+            customTheme: fallbackCustomTheme || loadPersistedCustomTheme(),
+        };
+    }
+
+    private _applyScriptThemePreset(scriptJson: any): Pick<AppState, "activeTheme" | "customTheme"> {
+        const nextThemeState = this._resolveThemeStateForScript(scriptJson);
+        applyTheme(nextThemeState.activeTheme);
+        return nextThemeState;
+    }
+
+    private _getScriptDefaultTextSpeed(scriptJson: any): number | undefined {
+        const rawValue = scriptJson?.config?.defaultTextSpeed;
+        const parsed = typeof rawValue === "number"
+            ? rawValue
+            : (typeof rawValue === "string" && rawValue.trim().length ? Number(rawValue) : Number.NaN);
+
+        if (!Number.isFinite(parsed) || parsed <= 0) {
+            return undefined;
+        }
+
+        return parsed;
     }
 
     private _sanitizeScriptJson(scriptJson: any): any {
@@ -484,11 +537,31 @@ class App extends Component<any, AppState> {
         }
     ): void {
         const nextScript = this._buildModuleScript(module);
-        this.setState((prev) => ({
+        const nextThemeState = this._applyScriptThemePreset(nextScript.json);
+        this.setState((prev): Pick<AppState,
+            "activeScript"
+            | "activeScriptRevision"
+            | "activeTerminalScreenId"
+            | "activeModule"
+            | "activeTheme"
+            | "customTheme"
+            | "creatorOpen"
+            | "creatorInitialScript"
+            | "previewMode"
+            | "uploadError"
+            | "modulesBusy"
+            | "modulesError"
+            | "modulesNotice"
+            | "scriptDropdownOpen"
+            | "optionsDropdownOpen"
+            | "customThemeEditorOpen"
+            | "mobileMenuOpen"
+        > => ({
             activeScript: nextScript,
             activeScriptRevision: prev.activeScriptRevision + 1,
             activeTerminalScreenId: null,
             activeModule: module as ModuleRecord | null,
+            ...nextThemeState,
             creatorOpen: false,
             creatorInitialScript: null,
             previewMode: false,
@@ -671,11 +744,27 @@ class App extends Component<any, AppState> {
         }
         const nextActiveModule = this._isModuleScriptId(script.id) ? this.state.activeModule : null;
         const resolvedActiveModule = this._findModuleByScriptId(script.id) || nextActiveModule;
-        this.setState((prev) => ({
+        const nextThemeState = this._applyScriptThemePreset(script.json);
+        this.setState((prev): Pick<AppState,
+            "activeScript"
+            | "activeScriptRevision"
+            | "activeTerminalScreenId"
+            | "activeModule"
+            | "activeTheme"
+            | "customTheme"
+            | "scriptDropdownOpen"
+            | "optionsDropdownOpen"
+            | "customThemeEditorOpen"
+            | "mobileMenuOpen"
+            | "creatorInitialScript"
+            | "previewMode"
+            | "uploadError"
+        > => ({
             activeScript: script,
             activeScriptRevision: prev.activeScriptRevision + 1,
             activeTerminalScreenId: null,
             activeModule: resolvedActiveModule,
+            ...nextThemeState,
             scriptDropdownOpen: false,
             optionsDropdownOpen: false,
             customThemeEditorOpen: false,
@@ -818,8 +907,25 @@ class App extends Component<any, AppState> {
             label: label.toUpperCase().slice(0, 24),
             json: cleanedJson,
         };
+        const nextThemeState = this._applyScriptThemePreset(cleanedJson);
 
-        this.setState((prev) => {
+        this.setState((prev): Pick<AppState,
+            "activeScript"
+            | "activeScriptRevision"
+            | "activeTerminalScreenId"
+            | "customScripts"
+            | "activeTheme"
+            | "customTheme"
+            | "creatorOpen"
+            | "creatorInitialScript"
+            | "scriptDropdownOpen"
+            | "optionsDropdownOpen"
+            | "customThemeEditorOpen"
+            | "mobileMenuOpen"
+            | "previewMode"
+            | "uploadError"
+            | "modulesNotice"
+        > => {
             const customScripts = editingActiveModule
                 ? prev.customScripts
                 : this._upsertCustomScripts(prev.customScripts, nextScript);
@@ -831,6 +937,7 @@ class App extends Component<any, AppState> {
                 activeScriptRevision: prev.activeScriptRevision + 1,
                 activeTerminalScreenId: null,
                 customScripts,
+                ...nextThemeState,
                 creatorOpen: false,
                 creatorInitialScript: null,
                 scriptDropdownOpen: false,
@@ -885,11 +992,27 @@ class App extends Component<any, AppState> {
             label: label.toUpperCase().slice(0, 24),
             json: previewJson,
         };
+        const nextThemeState = this._applyScriptThemePreset(previewJson);
 
-        this.setState((prev) => ({
+        this.setState((prev): Pick<AppState,
+            "activeScript"
+            | "activeScriptRevision"
+            | "activeTerminalScreenId"
+            | "activeTheme"
+            | "customTheme"
+            | "creatorOpen"
+            | "creatorInitialScript"
+            | "scriptDropdownOpen"
+            | "optionsDropdownOpen"
+            | "customThemeEditorOpen"
+            | "mobileMenuOpen"
+            | "previewMode"
+            | "uploadError"
+        > => ({
             activeScript: previewScript,
             activeScriptRevision: prev.activeScriptRevision + 1,
             activeTerminalScreenId: null,
+            ...nextThemeState,
             creatorOpen: false,
             creatorInitialScript: null,
             scriptDropdownOpen: false,
@@ -954,7 +1077,23 @@ class App extends Component<any, AppState> {
                     label: label.toUpperCase().slice(0, 24),
                     json: parsed,
                 };
-                this.setState((prev) => {
+                const nextThemeState = this._applyScriptThemePreset(parsed);
+                this.setState((prev): Pick<AppState,
+                    "activeScript"
+                    | "activeScriptRevision"
+                    | "activeTerminalScreenId"
+                    | "customScripts"
+                    | "activeTheme"
+                    | "customTheme"
+                    | "activeModule"
+                    | "scriptDropdownOpen"
+                    | "optionsDropdownOpen"
+                    | "customThemeEditorOpen"
+                    | "mobileMenuOpen"
+                    | "creatorInitialScript"
+                    | "previewMode"
+                    | "uploadError"
+                > => {
                     const customScripts = this._upsertCustomScripts(prev.customScripts, customScript);
                     this._persistCustomScripts(customScripts);
                     return {
@@ -962,6 +1101,7 @@ class App extends Component<any, AppState> {
                         activeScriptRevision: prev.activeScriptRevision + 1,
                         activeTerminalScreenId: null,
                         customScripts,
+                        ...nextThemeState,
                         activeModule: null as ModuleRecord | null,
                         scriptDropdownOpen: false,
                         optionsDropdownOpen: false,
@@ -1120,7 +1260,16 @@ class App extends Component<any, AppState> {
             });
 
             const nextScript = this._buildModuleScript(savedModule, cleanedScriptJson);
-            this.setState((prev) => ({
+            this.setState((prev): Pick<AppState,
+                "activeScript"
+                | "activeScriptRevision"
+                | "activeTerminalScreenId"
+                | "activeModule"
+                | "myModules"
+                | "creatorInitialScript"
+                | "modulesBusy"
+                | "modulesNotice"
+            > => ({
                 activeScript: nextScript,
                 activeScriptRevision: prev.activeScriptRevision + 1,
                 activeTerminalScreenId: null,
@@ -1480,6 +1629,7 @@ class App extends Component<any, AppState> {
                 <Phosphor
                     key={`${activeScript.id}:${activeScriptRevision}`}
                     json={activeScript.json}
+                    defaultTextSpeed={this._getScriptDefaultTextSpeed(activeScript.json)}
                     soundEnabled={soundEnabled}
                     onScreenChanged={this._handlePhosphorScreenChanged}
                 />

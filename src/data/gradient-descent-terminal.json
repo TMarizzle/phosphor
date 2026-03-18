@@ -2,7 +2,9 @@
     "config": {
         "name": "Gradient Descent Terminal Archive",
         "author": "PimPee / converted for Phosphor",
-        "script": null
+        "script": null,
+        "theme": "green",
+        "defaultTextSpeed": 12
     },
     "screens": [
         {
@@ -241,20 +243,14 @@
                                 "type": "link",
                                 "target": "reception"
                             }
-                        },
-                        {
-                            "command": "back",
-                            "action": {
-                                "type": "link",
-                                "target": "starting-screen"
-                            }
                         }
                     ]
                 },
                 "",
+                "======",
                 {
                     "type": "link",
-                    "text": "> BACK",
+                    "text": "< BACK",
                     "target": [
                         {
                             "type": "link",
@@ -283,9 +279,10 @@
                     "text": "> SOLITAIRE TOURNAMENT",
                     "target": "union-newsletter"
                 },
+                "======",
                 {
                     "type": "link",
-                    "text": "> BACK",
+                    "text": "< BACK",
                     "target": "reception"
                 }
             ]
@@ -309,9 +306,10 @@
                     "text": "> SILLY COLLEAGUES",
                     "target": "jokes"
                 },
+                "======",
                 {
                     "type": "link",
-                    "text": "> BACK",
+                    "text": "< BACK",
                     "target": "reception"
                 }
             ]
@@ -335,9 +333,10 @@
                     "text": "> MAP",
                     "target": "map-floor-1"
                 },
+                "======",
                 {
                     "type": "link",
-                    "text": "> BACK",
+                    "text": "< BACK",
                     "target": "network"
                 }
             ]
@@ -361,9 +360,10 @@
                 "Do not FUCK around with suspicious nodes",
                 "YOU are the only person that can keep yourself safe",
                 "",
+                "======",
                 {
                     "type": "link",
-                    "text": "> BACK",
+                    "text": "< BACK",
                     "target": "reception"
                 }
             ]
@@ -409,9 +409,10 @@
                 "Best regards,",
                 "CLOUDBANK Human Resources Division",
                 "",
+                "======",
                 {
                     "type": "link",
-                    "text": "> BACK",
+                    "text": "< BACK",
                     "target": "e-mail"
                 }
             ]
@@ -443,9 +444,10 @@
                 "In Solidarity,",
                 "The Underground Union",
                 "",
+                "======",
                 {
                     "type": "link",
-                    "text": "> BACK",
+                    "text": "< BACK",
                     "target": "e-mail"
                 }
             ]
@@ -479,9 +481,10 @@
                     "text": "> ENTRY4",
                     "target": "joke4"
                 },
+                "======",
                 {
                     "type": "link",
-                    "text": "> BACK",
+                    "text": "< BACK",
                     "target": "chat"
                 }
             ]
@@ -510,9 +513,10 @@
                     "text": "> RAINES CARTER 2143_01_16",
                     "target": "chat3"
                 },
+                "======",
                 {
                     "type": "link",
-                    "text": "> BACK",
+                    "text": "< BACK",
                     "target": "chat"
                 }
             ]
@@ -540,9 +544,10 @@
                 "",
                 "\\-\\-\\- User \"Guan Shi\" left the channel \\-\\-\\-",
                 "",
+                "======",
                 {
                     "type": "link",
-                    "text": "> BACK",
+                    "text": "< BACK",
                     "target": "jokes"
                 }
             ]
@@ -564,9 +569,10 @@
                 "",
                 "Judge\\-Mental: ♥♥♥♥ me",
                 "",
+                "======",
                 {
                     "type": "link",
-                    "text": "> BACK",
+                    "text": "< BACK",
                     "target": "jokes"
                 }
             ]
@@ -586,9 +592,10 @@
                 "Kevyn: wait",
                 "Kevyn: never mind",
                 "",
+                "======",
                 {
                     "type": "link",
-                    "text": "> BACK",
+                    "text": "< BACK",
                     "target": "jokes"
                 }
             ]
@@ -631,9 +638,10 @@
                 "",
                 "Kevyn: oh, ok\\.",
                 "",
+                "======",
                 {
                     "type": "link",
-                    "text": "> BACK",
+                    "text": "< BACK",
                     "target": "jokes"
                 }
             ]
@@ -673,9 +681,10 @@
                 "",
                 "Raines: 1900 it is\\. I’ll see you then :\\)",
                 "",
+                "======",
                 {
                     "type": "link",
-                    "text": "> BACK",
+                    "text": "< BACK",
                     "target": "david-carter"
                 }
             ]
@@ -713,9 +722,10 @@
                 "",
                 "\\-\\-\\- User \"Carter\" left the channel \\-\\-\\-",
                 "",
+                "======",
                 {
                     "type": "link",
-                    "text": "> BACK",
+                    "text": "< BACK",
                     "target": "david-carter"
                 }
             ]
@@ -761,9 +771,10 @@
                 "",
                 "Carter: Talk soon, Emma\\. Take care\\.",
                 "",
+                "======",
                 {
                     "type": "link",
-                    "text": "> BACK",
+                    "text": "< BACK",
                     "target": "david-carter"
                 }
             ]
@@ -792,9 +803,10 @@
                     "text": "> FINAL WARNING",
                     "target": "log3"
                 },
+                "======",
                 {
                     "type": "link",
-                    "text": "> BACK",
+                    "text": "< BACK",
                     "target": "shared-files"
                 }
             ]
@@ -829,9 +841,10 @@
                 "No anomalies detected\\.",
                 "Next scheduled check: 2143\\.09\\.23",
                 "",
+                "======",
                 {
                     "type": "link",
-                    "text": "> BACK",
+                    "text": "< BACK",
                     "target": "logs"
                 }
             ]
@@ -866,9 +879,10 @@
                 "7 Major System Errors detected\\. 7/7 due to staff failure\\.",
                 "Next scheduled check: 2144\\.02\\.19",
                 "",
+                "======",
                 {
                     "type": "link",
-                    "text": "> BACK",
+                    "text": "< BACK",
                     "target": "logs"
                 }
             ]
@@ -909,9 +923,10 @@
                 "11 minor anomalies detected\\. Temperature modulation adjusted\\. Anomalie extermination in roughly 24 hours\\.",
                 "Next scheduled check: 2143\\.09\\.23",
                 "",
+                "======",
                 {
                     "type": "link",
-                    "text": "> BACK",
+                    "text": "< BACK",
                     "target": "logs"
                 }
             ]
@@ -935,9 +950,10 @@
                     "text": "> INTRANET ROUTER",
                     "target": "floor-1-intranet-router-password"
                 },
+                "======",
                 {
                     "type": "link",
-                    "text": "> BACK",
+                    "text": "< BACK",
                     "target": "reception"
                 }
             ]
@@ -970,21 +986,14 @@
                                 "type": "link",
                                 "target": "floor-1-intranet-router"
                             }
-                        },
-                        {
-                            "command": "back",
-                            "action": {
-                                "type": "action",
-                                "action": "back",
-                                "target": "network"
-                            }
                         }
                     ]
                 },
                 "",
+                "======",
                 {
                     "type": "link",
-                    "text": "> BACK",
+                    "text": "< BACK",
                     "target": [
                         {
                             "type": "action",
@@ -1069,21 +1078,14 @@
                                 "type": "link",
                                 "target": "logistics-hub"
                             }
-                        },
-                        {
-                            "command": "back",
-                            "action": {
-                                "type": "action",
-                                "action": "back",
-                                "target": "floor-1-intranet-router"
-                            }
                         }
                     ]
                 },
                 "",
+                "======",
                 {
                     "type": "link",
-                    "text": "> BACK",
+                    "text": "< BACK",
                     "target": [
                         {
                             "type": "action",
@@ -1122,21 +1124,14 @@
                                 "type": "link",
                                 "target": "admin"
                             }
-                        },
-                        {
-                            "command": "back",
-                            "action": {
-                                "type": "action",
-                                "action": "back",
-                                "target": "floor-1-intranet-router"
-                            }
                         }
                     ]
                 },
                 "",
+                "======",
                 {
                     "type": "link",
-                    "text": "> BACK",
+                    "text": "< BACK",
                     "target": [
                         {
                             "type": "action",
@@ -1175,21 +1170,14 @@
                                 "type": "link",
                                 "target": "monarch-trap"
                             }
-                        },
-                        {
-                            "command": "back",
-                            "action": {
-                                "type": "action",
-                                "action": "back",
-                                "target": "floor-1-intranet-router"
-                            }
                         }
                     ]
                 },
                 "",
+                "======",
                 {
                     "type": "link",
-                    "text": "> BACK",
+                    "text": "< BACK",
                     "target": [
                         {
                             "type": "action",
@@ -1259,9 +1247,10 @@
                     ]
                 },
                 "",
+                "======",
                 {
                     "type": "link",
-                    "text": "> BACK",
+                    "text": "< BACK",
                     "target": "security-hub"
                 }
             ]
@@ -1299,9 +1288,10 @@
                     ]
                 },
                 "",
+                "======",
                 {
                     "type": "link",
-                    "text": "> BACK",
+                    "text": "< BACK",
                     "target": "security-hub"
                 }
             ]
@@ -1334,21 +1324,14 @@
                                 "type": "link",
                                 "target": "security-hub"
                             }
-                        },
-                        {
-                            "command": "back",
-                            "action": {
-                                "type": "action",
-                                "action": "back",
-                                "target": "floor-1-intranet-router"
-                            }
                         }
                     ]
                 },
                 "",
+                "======",
                 {
                     "type": "link",
-                    "text": "> BACK",
+                    "text": "< BACK",
                     "target": [
                         {
                             "type": "action",
@@ -1427,9 +1410,10 @@
                     "fillWidth": true
                 },
                 "",
+                "======",
                 {
                     "type": "link",
-                    "text": "> BACK",
+                    "text": "< BACK",
                     "target": "shared-files"
                 }
             ]
@@ -1492,21 +1476,14 @@
                                 "type": "link",
                                 "target": "floor-1-life-support-hub"
                             }
-                        },
-                        {
-                            "command": "back",
-                            "action": {
-                                "type": "action",
-                                "action": "back",
-                                "target": "admin"
-                            }
                         }
                     ]
                 },
                 "",
+                "======",
                 {
                     "type": "link",
-                    "text": "> BACK",
+                    "text": "< BACK",
                     "target": [
                         {
                             "type": "action",
@@ -1575,9 +1552,10 @@
                 "",
                 "TEMPERATURE    \\[\\> 22°C\\]",
                 "",
+                "======",
                 {
                     "type": "link",
-                    "text": "> BACK",
+                    "text": "< BACK",
                     "target": "floor-1-life-support-hub"
                 }
             ]
@@ -1606,9 +1584,10 @@
                     ]
                 },
                 "",
+                "======",
                 {
                     "type": "link",
-                    "text": "> BACK",
+                    "text": "< BACK",
                     "target": "floor-1-life-support-hub"
                 }
             ]
@@ -1668,9 +1647,10 @@
                 "",
                 "Do not mess with these\\.\\.\\.",
                 "",
+                "======",
                 {
                     "type": "link",
-                    "text": "> BACK",
+                    "text": "< BACK",
                     "target": "floor-1-life-support-hub"
                 }
             ]
@@ -1771,9 +1751,10 @@
                 "",
                 "Speak, King of Eden\\!",
                 "",
+                "======",
                 {
                     "type": "link",
-                    "text": "> BACK",
+                    "text": "< BACK",
                     "target": "menu"
                 }
             ]
@@ -1797,9 +1778,10 @@
                     "text": "> DOOR CONTROLS",
                     "target": "floor-2-door-controls"
                 },
+                "======",
                 {
                     "type": "link",
-                    "text": "> BACK",
+                    "text": "< BACK",
                     "target": "menu"
                 }
             ]
@@ -1823,9 +1805,10 @@
                     "text": "> GRAVITY",
                     "target": "floor-2-gravity"
                 },
+                "======",
                 {
                     "type": "link",
-                    "text": "> BACK",
+                    "text": "< BACK",
                     "target": "menu"
                 }
             ]
@@ -1929,9 +1912,10 @@
                     ]
                 },
                 "",
+                "======",
                 {
                     "type": "link",
-                    "text": "> BACK",
+                    "text": "< BACK",
                     "target": "floor-2-defense"
                 }
             ]
@@ -2017,9 +2001,10 @@
                     ]
                 },
                 "",
+                "======",
                 {
                     "type": "link",
-                    "text": "> BACK",
+                    "text": "< BACK",
                     "target": "floor-2-defense"
                 }
             ]
@@ -2051,9 +2036,10 @@
                 "",
                 "TEMPERATURE    \\[\\> 22°C\\]",
                 "",
+                "======",
                 {
                     "type": "link",
-                    "text": "> BACK",
+                    "text": "< BACK",
                     "target": "floor-2-life-support"
                 }
             ]
@@ -2082,9 +2068,10 @@
                     ]
                 },
                 "",
+                "======",
                 {
                     "type": "link",
-                    "text": "> BACK",
+                    "text": "< BACK",
                     "target": "floor-2-life-support"
                 }
             ]
@@ -2276,9 +2263,10 @@
                 "Peak in Data Point \\#3 indicates a period of heightened mental activity\\.",
                 "\\-\\-\\-\\-\\-\\-\\-\\-\\-\\-\\-\\-\\-\\-\\-\\-\\-\\-\\-\\-\\-\\-\\-\\-\\-\\-\\-\\-\\-\\-\\-\\-\\-\\-\\-\\-\\-\\-\\-\\-\\-\\-\\-\\-\\-\\-\\-\\-\\-\\-\\-\\-\\-\\-\\-\\-\\-\\-\\-\\-\\-\\-",
                 "",
+                "======",
                 {
                     "type": "link",
-                    "text": "> BACK",
+                    "text": "< BACK",
                     "target": "mind-bank"
                 }
             ]
@@ -2309,9 +2297,10 @@
                     "text": "> Mathematical Circle Subject #20",
                     "target": "mind-bank-3"
                 },
+                "======",
                 {
                     "type": "link",
-                    "text": "> BACK",
+                    "text": "< BACK",
                     "target": "mind-bank-password"
                 }
             ]
@@ -2439,9 +2428,10 @@
                 "Data shows minimal variability with a strong peak in Data Point \\#3\\.",
                 "\\-\\-\\-\\-\\-\\-\\-\\-\\-\\-\\-\\-\\-\\-\\-\\-\\-\\-\\-\\-\\-\\-\\-\\-\\-\\-\\-\\-\\-\\-\\-\\-\\-\\-\\-\\-\\-\\-\\-\\-\\-\\-\\-\\-\\-\\-\\-\\-\\-\\-\\-\\-\\-\\-\\-\\-\\-\\-\\-\\-\\-\\-",
                 "",
+                "======",
                 {
                     "type": "link",
-                    "text": "> BACK",
+                    "text": "< BACK",
                     "target": "mind-bank"
                 }
             ]
@@ -2569,9 +2559,10 @@
                 "Data shows minimal variability with a strong peak in Data Point \\#3\\.",
                 "\\-\\-\\-\\-\\-\\-\\-\\-\\-\\-\\-\\-\\-\\-\\-\\-\\-\\-\\-\\-\\-\\-\\-\\-\\-\\-\\-\\-\\-\\-\\-\\-\\-\\-\\-\\-\\-\\-\\-\\-\\-\\-\\-\\-\\-\\-\\-\\-\\-\\-\\-\\-\\-\\-\\-\\-\\-\\-\\-\\-\\-\\-",
                 "",
+                "======",
                 {
                     "type": "link",
-                    "text": "> BACK",
+                    "text": "< BACK",
                     "target": "mind-bank"
                 }
             ]
@@ -2665,21 +2656,14 @@
                                 "type": "link",
                                 "target": "hel-terminal"
                             }
-                        },
-                        {
-                            "command": "back",
-                            "action": {
-                                "type": "action",
-                                "action": "back",
-                                "target": "hel-terminal"
-                            }
                         }
                     ]
                 },
                 "",
+                "======",
                 {
                     "type": "link",
-                    "text": "> BACK",
+                    "text": "< BACK",
                     "target": [
                         {
                             "type": "action",
@@ -2718,21 +2702,14 @@
                                 "type": "link",
                                 "target": "mind-bank"
                             }
-                        },
-                        {
-                            "command": "back",
-                            "action": {
-                                "type": "action",
-                                "action": "back",
-                                "target": "hel-terminal"
-                            }
                         }
                     ]
                 },
                 "",
+                "======",
                 {
                     "type": "link",
-                    "text": "> BACK",
+                    "text": "< BACK",
                     "target": [
                         {
                             "type": "action",
@@ -2765,9 +2742,10 @@
                 "",
                 "RELEASE SUBJECT\\#:",
                 "",
+                "======",
                 {
                     "type": "link",
-                    "text": "> BACK",
+                    "text": "< BACK",
                     "target": "hel-terminal"
                 }
             ]
@@ -2912,9 +2890,10 @@
                 "",
                 "TEMPERATURE    \\[\\> 22°C\\]",
                 "",
+                "======",
                 {
                     "type": "link",
-                    "text": "> BACK",
+                    "text": "< BACK",
                     "target": "o2-flow-control"
                 }
             ]
@@ -2943,9 +2922,10 @@
                     ]
                 },
                 "",
+                "======",
                 {
                     "type": "link",
-                    "text": "> BACK",
+                    "text": "< BACK",
                     "target": "o2-flow-control"
                 }
             ]
@@ -2978,21 +2958,14 @@
                                 "type": "link",
                                 "target": "o2-flow-control"
                             }
-                        },
-                        {
-                            "command": "back",
-                            "action": {
-                                "type": "action",
-                                "action": "back",
-                                "target": "o2-flow-control"
-                            }
                         }
                     ]
                 },
                 "",
+                "======",
                 {
                     "type": "link",
-                    "text": "> BACK",
+                    "text": "< BACK",
                     "target": [
                         {
                             "type": "action",
@@ -3030,9 +3003,10 @@
                 "",
                 "TEMPERATURE    \\[\\> 22°C\\]",
                 "",
+                "======",
                 {
                     "type": "link",
-                    "text": "> BACK",
+                    "text": "< BACK",
                     "target": "o2-flow-control"
                 }
             ]
@@ -3064,9 +3038,10 @@
                 "",
                 "TEMPERATURE    \\[\\> 22°C\\]",
                 "",
+                "======",
                 {
                     "type": "link",
-                    "text": "> BACK",
+                    "text": "< BACK",
                     "target": "o2-flow-control"
                 }
             ]
@@ -3098,9 +3073,10 @@
                 "",
                 "TEMPERATURE    \\[\\> 22°C\\]",
                 "",
+                "======",
                 {
                     "type": "link",
-                    "text": "> BACK",
+                    "text": "< BACK",
                     "target": "o2-flow-control"
                 }
             ]
@@ -3132,9 +3108,10 @@
                 "",
                 "TEMPERATURE    \\[\\> 22°C\\]",
                 "",
+                "======",
                 {
                     "type": "link",
-                    "text": "> BACK",
+                    "text": "< BACK",
                     "target": "o2-flow-control"
                 }
             ]
@@ -3166,9 +3143,10 @@
                 "",
                 "TEMPERATURE    \\[\\> \\-269°C\\]",
                 "",
+                "======",
                 {
                     "type": "link",
-                    "text": "> BACK",
+                    "text": "< BACK",
                     "target": "o2-flow-control"
                 }
             ]
@@ -3201,21 +3179,14 @@
                                 "type": "link",
                                 "target": "o2-flow-backup"
                             }
-                        },
-                        {
-                            "command": "back",
-                            "action": {
-                                "type": "action",
-                                "action": "back",
-                                "target": "o2-flow-backup"
-                            }
                         }
                     ]
                 },
                 "",
+                "======",
                 {
                     "type": "link",
-                    "text": "> BACK",
+                    "text": "< BACK",
                     "target": [
                         {
                             "type": "action",
@@ -5910,9 +5881,10 @@
                 "",
                 "TEMPERATURE    \\[\\> 22°C\\]",
                 "",
+                "======",
                 {
                     "type": "link",
-                    "text": "> BACK",
+                    "text": "< BACK",
                     "target": "floor-3-life-support"
                 }
             ]
@@ -5941,9 +5913,10 @@
                     ]
                 },
                 "",
+                "======",
                 {
                     "type": "link",
-                    "text": "> BACK",
+                    "text": "< BACK",
                     "target": "floor-3-life-support"
                 }
             ]
@@ -5976,21 +5949,14 @@
                                 "type": "link",
                                 "target": "floor-3-life-support"
                             }
-                        },
-                        {
-                            "command": "back",
-                            "action": {
-                                "type": "action",
-                                "action": "back",
-                                "target": "floor-3-life-support"
-                            }
                         }
                     ]
                 },
                 "",
+                "======",
                 {
                     "type": "link",
-                    "text": "> BACK",
+                    "text": "< BACK",
                     "target": [
                         {
                             "type": "action",
@@ -6185,9 +6151,10 @@
                     "text": "> REPORT4855",
                     "target": "mreport9"
                 },
+                "======",
                 {
                     "type": "link",
-                    "text": "> BACK",
+                    "text": "< BACK",
                     "target": "maintenance"
                 }
             ]
@@ -6237,9 +6204,10 @@
                 "5\\. Circuit Weaving \\(CW\\-22\\)",
                 "Routine checks indicated no significant issues, though several wire tensioners needed adjustment for improved accuracy\\. This unit remains operational with no further adjustments needed until next quarter\\.",
                 "",
+                "======",
                 {
                     "type": "link",
-                    "text": "> BACK",
+                    "text": "< BACK",
                     "target": "maintenance-schedule"
                 }
             ]
@@ -6268,9 +6236,10 @@
                 "5\\. Gravity Acclimator \\(GA\\-12\\)",
                 "The unit has been performing within acceptable parameters\\. The gyroscopic stabilizers were recalibrated, and a minor adjustment was made to the magnetic dampeners\\. Operational stability improved, though the system should be monitored during the next power surge tests\\.",
                 "",
+                "======",
                 {
                     "type": "link",
-                    "text": "> BACK",
+                    "text": "< BACK",
                     "target": "maintenance-schedule"
                 }
             ]
@@ -6299,9 +6268,10 @@
                 "5\\. Final Testing \\(FT\\-11\\)",
                 "Operational checks completed, with all testing chambers reporting normal functioning\\. One of the feedback sensors was replaced due to inconsistent readings during the previous month’s cycle\\. No major maintenance is expected in the next few months\\.",
                 "",
+                "======",
                 {
                     "type": "link",
-                    "text": "> BACK",
+                    "text": "< BACK",
                     "target": "maintenance-schedule"
                 }
             ]
@@ -6330,9 +6300,10 @@
                 "5\\. Blasting Tunnel \\(BT\\-15\\)",
                 "Debris buildup in the exhaust ports caused a minor drop in output pressure\\. The exhaust system has been cleared, and operational flow has been restored\\. Tunnel integrity remains solid, with no signs of structural wear\\. Future inspections are planned in four months\\.",
                 "",
+                "======",
                 {
                     "type": "link",
-                    "text": "> BACK",
+                    "text": "< BACK",
                     "target": "maintenance-schedule"
                 }
             ]
@@ -6361,9 +6332,10 @@
                 "5\\. Construction Units \\(CU\\-10\\)",
                 "A minor software update was applied to improve coordination between units during final assembly\\. No mechanical adjustments were necessary, and the system is working smoothly\\. No further maintenance is planned for the next quarter\\.",
                 "",
+                "======",
                 {
                     "type": "link",
-                    "text": "> BACK",
+                    "text": "< BACK",
                     "target": "maintenance-schedule"
                 }
             ]
@@ -6392,9 +6364,10 @@
                 "5\\. Flesh\\-Sleeve Insertion \\(FSI\\-13\\)",
                 "Inspection revealed no significant mechanical or electrical issues\\. A minor software patch was applied to improve precision in sleeve alignment\\. The system is performing at full efficiency, with no additional maintenance needed for the upcoming cycle\\.",
                 "",
+                "======",
                 {
                     "type": "link",
-                    "text": "> BACK",
+                    "text": "< BACK",
                     "target": "maintenance-schedule"
                 }
             ]
@@ -6423,9 +6396,10 @@
                 "5\\. Final Construction \\(FC\\-11\\)",
                 "Regular maintenance was conducted, and alignment systems were checked\\. All sensors are functioning within normal parameters\\. No further intervention required at this time\\.",
                 "",
+                "======",
                 {
                     "type": "link",
-                    "text": "> BACK",
+                    "text": "< BACK",
                     "target": "maintenance-schedule"
                 }
             ]
@@ -6454,9 +6428,10 @@
                 "5\\. Nuclear Generator \\(NG\\-04\\)",
                 "Routine inspection showed stable power output\\. Cooling lines were checked, with no pressure loss detected\\. No further maintenance is necessary until the next planned downtime\\.",
                 "",
+                "======",
                 {
                     "type": "link",
-                    "text": "> BACK",
+                    "text": "< BACK",
                     "target": "maintenance-schedule"
                 }
             ]
@@ -6485,9 +6460,10 @@
                 "5\\. Power Bank \\(PB\\-08\\)",
                 "Diagnostics show all power cells operating within normal limits\\. Energy retention and discharge rates remain consistent\\. A minor software update was applied to enhance energy output efficiency\\. No further maintenance planned for the next cycle\\.",
                 "",
+                "======",
                 {
                     "type": "link",
-                    "text": "> BACK",
+                    "text": "< BACK",
                     "target": "maintenance-schedule"
                 }
             ]
@@ -6520,21 +6496,14 @@
                                 "type": "link",
                                 "target": "maintenance-router"
                             }
-                        },
-                        {
-                            "command": "back",
-                            "action": {
-                                "type": "action",
-                                "action": "back",
-                                "target": "maintenance"
-                            }
                         }
                     ]
                 },
                 "",
+                "======",
                 {
                     "type": "link",
-                    "text": "> BACK",
+                    "text": "< BACK",
                     "target": [
                         {
                             "type": "action",
@@ -6590,9 +6559,10 @@
                     "text": "> MAINTENANCE LAYOUT",
                     "target": "maintenance-layout"
                 },
+                "======",
                 {
                     "type": "link",
-                    "text": "> BACK",
+                    "text": "< BACK",
                     "target": "maintenance-router"
                 }
             ]
@@ -6610,9 +6580,10 @@
                 "",
                 "Thank you for submitting your brainscan to the Brainscan Bank\\.",
                 "",
+                "======",
                 {
                     "type": "link",
-                    "text": "> BACK",
+                    "text": "< BACK",
                     "target": "maintenance-router"
                 }
             ]
@@ -6652,9 +6623,10 @@
                 "Conclusion",
                 "The maintenance activities over the past quarter have effectively sustained our machinery's functionality and safety\\. As we look to the future, it is crucial to maintain our equipment in peak condition to facilitate the anticipated adjustments in our production strategy\\. By staying proactive, we can ensure a seamless transition as our operational focus evolves over the coming months\\.",
                 "",
+                "======",
                 {
                     "type": "link",
-                    "text": "> BACK",
+                    "text": "< BACK",
                     "target": "meeting-room"
                 }
             ]
@@ -6675,9 +6647,10 @@
                     "fillWidth": true
                 },
                 "",
+                "======",
                 {
                     "type": "link",
-                    "text": "> BACK",
+                    "text": "< BACK",
                     "target": "meeting-room"
                 }
             ]
@@ -6698,9 +6671,10 @@
                     "fillWidth": true
                 },
                 "",
+                "======",
                 {
                     "type": "link",
-                    "text": "> BACK",
+                    "text": "< BACK",
                     "target": "menu"
                 }
             ]
@@ -6809,9 +6783,10 @@
                 "Mind Status:",
                 "Current directives in place for final stages of urban\\-target termination protocols\\. 100% functional\\.",
                 "",
+                "======",
                 {
                     "type": "link",
-                    "text": "> BACK",
+                    "text": "< BACK",
                     "target": "mind-zoo"
                 }
             ]
@@ -6876,9 +6851,10 @@
                 "Mind Status:",
                 "Fully operational and functioning as intended for high\\-priority stealth missions\\. Proceeding to advanced urban stealth protocol deployment\\.",
                 "",
+                "======",
                 {
                     "type": "link",
-                    "text": "> BACK",
+                    "text": "< BACK",
                     "target": "mind-zoo"
                 }
             ]
@@ -6932,9 +6908,10 @@
                 "Ethics Override Code: Alpha\\-8X3Z",
                 "Mind Status: Fully operational, engaged in large\\-scale urban disruption and neutralization protocols\\. Current focus on dismantling critical infrastructure in human population zones\\.",
                 "",
+                "======",
                 {
                     "type": "link",
-                    "text": "> BACK",
+                    "text": "< BACK",
                     "target": "mind-zoo"
                 }
             ]
@@ -6991,9 +6968,10 @@
                 "Mind Status:",
                 "Current directives are in place for urban target apprehension protocols\\. 100% functional\\.",
                 "",
+                "======",
                 {
                     "type": "link",
-                    "text": "> BACK",
+                    "text": "< BACK",
                     "target": "mind-zoo"
                 }
             ]
@@ -7080,9 +7058,10 @@
                 "",
                 "Note: Deployment is advised with caution due to potential instability in operational settings\\.",
                 "",
+                "======",
                 {
                     "type": "link",
-                    "text": "> BACK",
+                    "text": "< BACK",
                     "target": "data-inspection"
                 }
             ]
@@ -7132,9 +7111,10 @@
                 "",
                 "Note: Caution is advised in deployment, as strong opinions on work practices may lead to conflicts in environments that encourage innovation over tradition\\.",
                 "",
+                "======",
                 {
                     "type": "link",
-                    "text": "> BACK",
+                    "text": "< BACK",
                     "target": "data-inspection"
                 }
             ]
@@ -7184,9 +7164,10 @@
                 "",
                 "Note: Exercise caution when deploying this personality in sensitive environments; ethical considerations may be compromised for personal gain\\.",
                 "",
+                "======",
                 {
                     "type": "link",
-                    "text": "> BACK",
+                    "text": "< BACK",
                     "target": "data-inspection"
                 }
             ]
@@ -7235,9 +7216,10 @@
                 "",
                 "Note: Caution is advised when interacting with this personality due to potential instability; his obsessive nature may lead to unpredictable behaviors\\.",
                 "",
+                "======",
                 {
                     "type": "link",
-                    "text": "> BACK",
+                    "text": "< BACK",
                     "target": "data-inspection"
                 }
             ]
@@ -7281,9 +7263,10 @@
                 "",
                 "Note: Deployment is advised with caution due to potential instability in operational settings\\.",
                 "",
+                "======",
                 {
                     "type": "link",
-                    "text": "> BACK",
+                    "text": "< BACK",
                     "target": "data-inspection"
                 }
             ]
@@ -7333,9 +7316,10 @@
                 "",
                 "Note: Exercise caution when deploying this personality in sensitive environments; ethical considerations may be compromised for personal gain\\.",
                 "",
+                "======",
                 {
                     "type": "link",
-                    "text": "> BACK",
+                    "text": "< BACK",
                     "target": "data-inspection"
                 }
             ]
@@ -7404,21 +7388,14 @@
                                 "type": "link",
                                 "target": "qa-inspection"
                             }
-                        },
-                        {
-                            "command": "back",
-                            "action": {
-                                "type": "action",
-                                "action": "back",
-                                "target": "qa-inspection"
-                            }
                         }
                     ]
                 },
                 "",
+                "======",
                 {
                     "type": "link",
-                    "text": "> BACK",
+                    "text": "< BACK",
                     "target": [
                         {
                             "type": "action",
@@ -7547,21 +7524,14 @@
                                 "type": "link",
                                 "target": "navigation"
                             }
-                        },
-                        {
-                            "command": "back",
-                            "action": {
-                                "type": "action",
-                                "action": "back",
-                                "target": "navigation"
-                            }
                         }
                     ]
                 },
                 "",
+                "======",
                 {
                     "type": "link",
-                    "text": "> BACK",
+                    "text": "< BACK",
                     "target": [
                         {
                             "type": "action",
@@ -7654,9 +7624,10 @@
                 "• Trajectory: Displayed as a planned route \\(green line\\) through multiple occupied systems, awaiting launch\\.",
                 "• Target: The gas giant Hercules\\-9 is marked in red as the final destination\\.",
                 "",
+                "======",
                 {
                     "type": "link",
-                    "text": "> BACK",
+                    "text": "< BACK",
                     "target": "navigation"
                 }
             ]
@@ -7707,9 +7678,10 @@
                 "• Trajectory: Displayed as a planned route \\(green line\\) through multiple occupied systems, awaiting launch\\.",
                 "• Target: The gas giant Zephyr\\-12 is marked in red as the final destination\\.",
                 "",
+                "======",
                 {
                     "type": "link",
-                    "text": "> BACK",
+                    "text": "< BACK",
                     "target": "navigation"
                 }
             ]
@@ -7757,9 +7729,10 @@
                 "• Trajectory: Displayed as a planned route \\(green line\\) through multiple occupied systems, awaiting launch\\.",
                 "• Target: The gas giant Orion\\-5 is marked in red as the final destination\\.",
                 "",
+                "======",
                 {
                     "type": "link",
-                    "text": "> BACK",
+                    "text": "< BACK",
                     "target": "navigation"
                 }
             ]
@@ -7808,9 +7781,10 @@
                 "• Trajectory: Displayed as a planned route \\(green line\\) through multiple occupied systems, awaiting launch\\.",
                 "• Target: The gas giant Neptune\\-7 is marked in red as the final destination\\.",
                 "",
+                "======",
                 {
                     "type": "link",
-                    "text": "> BACK",
+                    "text": "< BACK",
                     "target": "navigation"
                 }
             ]
@@ -7883,9 +7857,10 @@
                     "fillWidth": true
                 },
                 "",
+                "======",
                 {
                     "type": "link",
-                    "text": "> BACK",
+                    "text": "< BACK",
                     "target": "control-room"
                 }
             ]
