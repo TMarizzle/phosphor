@@ -2,7 +2,7 @@
     "config": {
         "name": "Gradient Descent Terminal Archive",
         "author": "PimPee / converted for Phosphor",
-        "script": null,
+        "script": "gradient-descent-terminal",
         "theme": "green",
         "defaultTextSpeed": 12
     },
@@ -18,10 +18,10 @@
                 "",
                 {
                     "type": "text",
-                    "className": "notice",
-                    "text": "Converted from PimPee/GradientDescentTerminal \\(Twine/SugarCube\\) into a Phosphor archive script\\."
+                    "className": "alert",
+                    "text": "Converted from PimPee/GradientDescentTerminal (Twine/SugarCube) into a Phosphor module."
                 },
-                "Twine\\-only control logic is flattened to readable terminal snapshots in this export\\.",
+                "Stateful controls are recreated where supported by Phosphor script hooks.",
                 "",
                 {
                     "type": "link",
@@ -152,29 +152,98 @@
             "content": [
                 {
                     "type": "text",
-                    "text": "# TRAC PC\\-9800 Series System Terminal"
+                    "text": "# TRAC PC\\-9800 Series System Terminal",
+                    "speed": 6
                 },
-                "",
-                "Reythorne OS Version 6\\.20",
-                "Copyright \\(C\\) 2981, 2987 Reythorne Corp\\. / TRAC Corporation",
-                "",
-                "EEEE I3000000032940xf100110303B77500EEEE I400000004294\\_M8\\_BL1\\_10221D113B323EEEE5",
-                "no sdio debug board detected",
-                "TE : 102609",
-                "BT : 11:30:18 Mar 14 2314",
-                "",
-                "Boot From SPI",
-                "ucl decompress\\.\\.\\.pass",
-                "0x12345678",
-                "Boot from internal device 1st SPI",
-                "",
-                "TE : 512897",
-                "",
-                "System Started"
+                {
+                    "type": "text",
+                    "text": "",
+                    "speed": 6
+                },
+                {
+                    "type": "text",
+                    "text": "Reythorne OS Version 6\\.20",
+                    "speed": 6
+                },
+                {
+                    "type": "text",
+                    "text": "Copyright \\(C\\) 2981, 2987 Reythorne Corp\\. / TRAC Corporation",
+                    "speed": 6
+                },
+                {
+                    "type": "text",
+                    "text": "",
+                    "speed": 6
+                },
+                {
+                    "type": "text",
+                    "text": "EEEE I3000000032940xf100110303B77500EEEE I400000004294\\_M8\\_BL1\\_10221D113B323EEEE5",
+                    "speed": 6
+                },
+                {
+                    "type": "text",
+                    "text": "no sdio debug board detected",
+                    "speed": 6
+                },
+                {
+                    "type": "text",
+                    "text": "TE : 102609",
+                    "speed": 6
+                },
+                {
+                    "type": "text",
+                    "text": "BT : 11:30:18 Mar 14 2314",
+                    "speed": 6
+                },
+                {
+                    "type": "text",
+                    "text": "",
+                    "speed": 6
+                },
+                {
+                    "type": "text",
+                    "text": "Boot From SPI",
+                    "speed": 6
+                },
+                {
+                    "type": "text",
+                    "text": "ucl decompress\\.\\.\\.pass",
+                    "speed": 6
+                },
+                {
+                    "type": "text",
+                    "text": "0x12345678",
+                    "speed": 6
+                },
+                {
+                    "type": "text",
+                    "text": "Boot from internal device 1st SPI",
+                    "speed": 6
+                },
+                {
+                    "type": "text",
+                    "text": "",
+                    "speed": 6
+                },
+                {
+                    "type": "text",
+                    "text": "TE : 512897",
+                    "speed": 6
+                },
+                {
+                    "type": "text",
+                    "text": "",
+                    "speed": 6
+                },
+                {
+                    "type": "text",
+                    "text": "System Started",
+                    "speed": 6
+                }
             ],
             "onDone": {
                 "target": "reception-password",
-                "delayMs": 2600
+                "delayMs": 1200
             }
         },
         {
@@ -279,6 +348,7 @@
                     "text": "> SOLITAIRE TOURNAMENT",
                     "target": "union-newsletter"
                 },
+                "",
                 "======",
                 {
                     "type": "link",
@@ -306,6 +376,7 @@
                     "text": "> SILLY COLLEAGUES",
                     "target": "jokes"
                 },
+                "",
                 "======",
                 {
                     "type": "link",
@@ -333,6 +404,7 @@
                     "text": "> MAP",
                     "target": "map-floor-1"
                 },
+                "",
                 "======",
                 {
                     "type": "link",
@@ -481,6 +553,7 @@
                     "text": "> ENTRY4",
                     "target": "joke4"
                 },
+                "",
                 "======",
                 {
                     "type": "link",
@@ -513,6 +586,7 @@
                     "text": "> RAINES CARTER 2143_01_16",
                     "target": "chat3"
                 },
+                "",
                 "======",
                 {
                     "type": "link",
@@ -803,6 +877,7 @@
                     "text": "> FINAL WARNING",
                     "target": "log3"
                 },
+                "",
                 "======",
                 {
                     "type": "link",
@@ -950,6 +1025,7 @@
                     "text": "> INTRANET ROUTER",
                     "target": "floor-1-intranet-router-password"
                 },
+                "",
                 "======",
                 {
                     "type": "link",
@@ -1427,14 +1503,12 @@
                     "text": "# ADMIN"
                 },
                 "",
-                "<\\>",
-                "",
-                "ADMIN:",
-                "RECEPTION:",
-                "INTRANET:",
-                "LOGISTICS:",
-                "SECURITY:",
-                "LIFE SUPPORT:",
+                "ADMIN: ILikeCats95",
+                "RECEPTION: 1234",
+                "INTRANET: 3oKJjnDu",
+                "LOGISTICS: Sadie1412",
+                "SECURITY: LWvJt8qZ",
+                "LIFE SUPPORT: e2vBR4kA",
                 "",
                 {
                     "type": "link",
@@ -1538,19 +1612,88 @@
                     "type": "list",
                     "states": [
                         {
-                            "text": "ATMOSPHERE REPLENISHMENT    [> ON]"
+                            "text": "ATMOSPHERE REPLENISHMENT    [> ON]",
+                            "active": true,
+                            "action": "setAtmosphereReplenishment",
+                            "target": "floor-1-atmosphere:on"
                         },
                         {
-                            "text": "ATMOSPHERE REPLENISHMENT    [> OFF]"
+                            "text": "ATMOSPHERE REPLENISHMENT    [> OFF]",
+                            "action": "setAtmosphereReplenishment",
+                            "target": "floor-1-atmosphere:off"
                         }
-                    ]
+                    ],
+                    "scriptId": "atmosphereReplenishment"
                 },
                 "",
                 "GAS MIXTURE",
-                "NITROGEN       \\[\\> 78%\\]",
-                "OXYGEN         \\[\\> 22%\\]",
+                {
+                    "type": "link",
+                    "text": "NITROGEN                    [> 78%]",
+                    "target": [
+                        {
+                            "type": "action",
+                            "action": "adjustAtmosphere",
+                            "target": "floor-1-atmosphere",
+                            "field": "nitrogen",
+                            "delta": 1
+                        },
+                        {
+                            "type": "action",
+                            "action": "adjustAtmosphere",
+                            "target": "floor-1-atmosphere",
+                            "field": "nitrogen",
+                            "delta": -1,
+                            "shiftKey": true
+                        }
+                    ],
+                    "scriptId": "atmosphereNitrogen"
+                },
+                {
+                    "type": "link",
+                    "text": "OXYGEN                      [> 22%]",
+                    "target": [
+                        {
+                            "type": "action",
+                            "action": "adjustAtmosphere",
+                            "target": "floor-1-atmosphere",
+                            "field": "oxygen",
+                            "delta": 1
+                        },
+                        {
+                            "type": "action",
+                            "action": "adjustAtmosphere",
+                            "target": "floor-1-atmosphere",
+                            "field": "oxygen",
+                            "delta": -1,
+                            "shiftKey": true
+                        }
+                    ],
+                    "scriptId": "atmosphereOxygen"
+                },
                 "",
-                "TEMPERATURE    \\[\\> 22°C\\]",
+                {
+                    "type": "link",
+                    "text": "TEMPERATURE                 [> 22°C]",
+                    "target": [
+                        {
+                            "type": "action",
+                            "action": "adjustAtmosphere",
+                            "target": "floor-1-atmosphere",
+                            "field": "temperature",
+                            "delta": 1
+                        },
+                        {
+                            "type": "action",
+                            "action": "adjustAtmosphere",
+                            "target": "floor-1-atmosphere",
+                            "field": "temperature",
+                            "delta": -1,
+                            "shiftKey": true
+                        }
+                    ],
+                    "scriptId": "atmosphereTemperature"
+                },
                 "",
                 "======",
                 {
@@ -1601,49 +1744,193 @@
                     "text": "# ESCAPE POD BAY"
                 },
                 "",
-                "LAUNCH ESCAPE POD 1",
-                "",
-                "\\[\\> LAUNCHED\\]",
-                "",
-                "LAUNCH ESCAPE POD 2",
-                "",
-                "\\[\\> LAUNCHED\\]",
-                "",
-                "LAUNCH ESCAPE POD 3",
-                "",
-                "\\[\\> LAUNCHED\\]",
-                "",
-                "LAUNCH ESCAPE POD 4",
-                "",
-                "\\[\\> LAUNCHED\\]",
-                "",
-                "LAUNCH ESCAPE POD 5",
-                "",
-                "\\[\\> LAUNCHED\\]",
-                "",
-                "LAUNCH ESCAPE POD 6",
-                "",
-                "\\[\\> LAUNCHED\\]",
-                "",
-                "LAUNCH ESCAPE POD 7",
-                "",
-                "\\[\\> LAUNCHED\\]",
-                "",
-                "LAUNCH ESCAPE POD 8",
-                "",
-                "\\[\\> LAUNCHED\\]",
-                "",
-                "LAUNCH ESCAPE POD 9",
-                "",
-                "\\[\\> LAUNCHED\\]",
-                "",
-                "LAUNCH ESCAPE POD 10",
-                "",
-                "\\[\\> LAUNCHED\\]",
-                "",
-                "LAUNCH ESCAPE POD 11",
-                "",
-                "\\[\\> LAUNCHED\\]",
+                {
+                    "type": "list",
+                    "states": [
+                        {
+                            "text": "LAUNCH ESCAPE POD 1         [> DOCKED]",
+                            "active": true,
+                            "action": "setEscapePodState",
+                            "target": "pod-1:docked"
+                        },
+                        {
+                            "text": "LAUNCH ESCAPE POD 1         [> LAUNCHED]",
+                            "action": "setEscapePodState",
+                            "target": "pod-1:launched"
+                        }
+                    ],
+                    "scriptId": "escapePod1"
+                },
+                {
+                    "type": "list",
+                    "states": [
+                        {
+                            "text": "LAUNCH ESCAPE POD 2         [> DOCKED]",
+                            "active": true,
+                            "action": "setEscapePodState",
+                            "target": "pod-2:docked"
+                        },
+                        {
+                            "text": "LAUNCH ESCAPE POD 2         [> LAUNCHED]",
+                            "action": "setEscapePodState",
+                            "target": "pod-2:launched"
+                        }
+                    ],
+                    "scriptId": "escapePod2"
+                },
+                {
+                    "type": "list",
+                    "states": [
+                        {
+                            "text": "LAUNCH ESCAPE POD 3         [> DOCKED]",
+                            "active": true,
+                            "action": "setEscapePodState",
+                            "target": "pod-3:docked"
+                        },
+                        {
+                            "text": "LAUNCH ESCAPE POD 3         [> LAUNCHED]",
+                            "action": "setEscapePodState",
+                            "target": "pod-3:launched"
+                        }
+                    ],
+                    "scriptId": "escapePod3"
+                },
+                {
+                    "type": "list",
+                    "states": [
+                        {
+                            "text": "LAUNCH ESCAPE POD 4         [> DOCKED]",
+                            "active": true,
+                            "action": "setEscapePodState",
+                            "target": "pod-4:docked"
+                        },
+                        {
+                            "text": "LAUNCH ESCAPE POD 4         [> LAUNCHED]",
+                            "action": "setEscapePodState",
+                            "target": "pod-4:launched"
+                        }
+                    ],
+                    "scriptId": "escapePod4"
+                },
+                {
+                    "type": "list",
+                    "states": [
+                        {
+                            "text": "LAUNCH ESCAPE POD 5         [> DOCKED]",
+                            "active": true,
+                            "action": "setEscapePodState",
+                            "target": "pod-5:docked"
+                        },
+                        {
+                            "text": "LAUNCH ESCAPE POD 5         [> LAUNCHED]",
+                            "action": "setEscapePodState",
+                            "target": "pod-5:launched"
+                        }
+                    ],
+                    "scriptId": "escapePod5"
+                },
+                {
+                    "type": "list",
+                    "states": [
+                        {
+                            "text": "LAUNCH ESCAPE POD 6         [> DOCKED]",
+                            "active": true,
+                            "action": "setEscapePodState",
+                            "target": "pod-6:docked"
+                        },
+                        {
+                            "text": "LAUNCH ESCAPE POD 6         [> LAUNCHED]",
+                            "action": "setEscapePodState",
+                            "target": "pod-6:launched"
+                        }
+                    ],
+                    "scriptId": "escapePod6"
+                },
+                {
+                    "type": "list",
+                    "states": [
+                        {
+                            "text": "LAUNCH ESCAPE POD 7         [> DOCKED]",
+                            "active": true,
+                            "action": "setEscapePodState",
+                            "target": "pod-7:docked"
+                        },
+                        {
+                            "text": "LAUNCH ESCAPE POD 7         [> LAUNCHED]",
+                            "action": "setEscapePodState",
+                            "target": "pod-7:launched"
+                        }
+                    ],
+                    "scriptId": "escapePod7"
+                },
+                {
+                    "type": "list",
+                    "states": [
+                        {
+                            "text": "LAUNCH ESCAPE POD 8         [> DOCKED]",
+                            "active": true,
+                            "action": "setEscapePodState",
+                            "target": "pod-8:docked"
+                        },
+                        {
+                            "text": "LAUNCH ESCAPE POD 8         [> LAUNCHED]",
+                            "action": "setEscapePodState",
+                            "target": "pod-8:launched"
+                        }
+                    ],
+                    "scriptId": "escapePod8"
+                },
+                {
+                    "type": "list",
+                    "states": [
+                        {
+                            "text": "LAUNCH ESCAPE POD 9         [> DOCKED]",
+                            "active": true,
+                            "action": "setEscapePodState",
+                            "target": "pod-9:docked"
+                        },
+                        {
+                            "text": "LAUNCH ESCAPE POD 9         [> LAUNCHED]",
+                            "action": "setEscapePodState",
+                            "target": "pod-9:launched"
+                        }
+                    ],
+                    "scriptId": "escapePod9"
+                },
+                {
+                    "type": "list",
+                    "states": [
+                        {
+                            "text": "LAUNCH ESCAPE POD 10        [> DOCKED]",
+                            "active": true,
+                            "action": "setEscapePodState",
+                            "target": "pod-10:docked"
+                        },
+                        {
+                            "text": "LAUNCH ESCAPE POD 10        [> LAUNCHED]",
+                            "action": "setEscapePodState",
+                            "target": "pod-10:launched"
+                        }
+                    ],
+                    "scriptId": "escapePod10"
+                },
+                {
+                    "type": "list",
+                    "states": [
+                        {
+                            "text": "LAUNCH ESCAPE POD 11        [> DOCKED]",
+                            "active": true,
+                            "action": "setEscapePodState",
+                            "target": "pod-11:docked"
+                        },
+                        {
+                            "text": "LAUNCH ESCAPE POD 11        [> LAUNCHED]",
+                            "action": "setEscapePodState",
+                            "target": "pod-11:launched"
+                        }
+                    ],
+                    "scriptId": "escapePod11"
+                },
                 "",
                 "Do not mess with these\\.\\.\\.",
                 "",
@@ -1664,8 +1951,6 @@
                     "text": "# ROOT"
                 },
                 "",
-                "<\\>",
-                "",
                 "SYSTEM INITIALIZING",
                 "",
                 "Booting up",
@@ -1684,29 +1969,98 @@
             "content": [
                 {
                     "type": "text",
-                    "text": "# TRAC PC\\-9800 Series System Terminal"
+                    "text": "# TRAC PC\\-9800 Series System Terminal",
+                    "speed": 6
                 },
-                "",
-                "Reythorne OS Version 6\\.20",
-                "Copyright \\(C\\) 2981, 2987 Reythorne Corp\\. / TRAC Corporation",
-                "",
-                "EEEE I3000000032940xf100110303B77500EEEE I400000004294\\_M8\\_BL1\\_10221D113B323EEEE5",
-                "no sdio debug board detected",
-                "TE : 102609",
-                "BT : 11:30:18 Mar 14 2314",
-                "",
-                "Boot From SPI",
-                "ucl decompress\\.\\.\\.pass",
-                "0x12345678",
-                "Boot from internal device 1st SPI",
-                "",
-                "TE : 512897",
-                "",
-                "System Started"
+                {
+                    "type": "text",
+                    "text": "",
+                    "speed": 6
+                },
+                {
+                    "type": "text",
+                    "text": "Reythorne OS Version 6\\.20",
+                    "speed": 6
+                },
+                {
+                    "type": "text",
+                    "text": "Copyright \\(C\\) 2981, 2987 Reythorne Corp\\. / TRAC Corporation",
+                    "speed": 6
+                },
+                {
+                    "type": "text",
+                    "text": "",
+                    "speed": 6
+                },
+                {
+                    "type": "text",
+                    "text": "EEEE I3000000032940xf100110303B77500EEEE I400000004294\\_M8\\_BL1\\_10221D113B323EEEE5",
+                    "speed": 6
+                },
+                {
+                    "type": "text",
+                    "text": "no sdio debug board detected",
+                    "speed": 6
+                },
+                {
+                    "type": "text",
+                    "text": "TE : 102609",
+                    "speed": 6
+                },
+                {
+                    "type": "text",
+                    "text": "BT : 11:30:18 Mar 14 2314",
+                    "speed": 6
+                },
+                {
+                    "type": "text",
+                    "text": "",
+                    "speed": 6
+                },
+                {
+                    "type": "text",
+                    "text": "Boot From SPI",
+                    "speed": 6
+                },
+                {
+                    "type": "text",
+                    "text": "ucl decompress\\.\\.\\.pass",
+                    "speed": 6
+                },
+                {
+                    "type": "text",
+                    "text": "0x12345678",
+                    "speed": 6
+                },
+                {
+                    "type": "text",
+                    "text": "Boot from internal device 1st SPI",
+                    "speed": 6
+                },
+                {
+                    "type": "text",
+                    "text": "",
+                    "speed": 6
+                },
+                {
+                    "type": "text",
+                    "text": "TE : 512897",
+                    "speed": 6
+                },
+                {
+                    "type": "text",
+                    "text": "",
+                    "speed": 6
+                },
+                {
+                    "type": "text",
+                    "text": "System Started",
+                    "speed": 6
+                }
             ],
             "onDone": {
                 "target": "menu",
-                "delayMs": 2600
+                "delayMs": 1200
             }
         },
         {
@@ -1737,6 +2091,13 @@
                     "type": "link",
                     "text": "> LIFE SUPPORT",
                     "target": "floor-2-life-support"
+                },
+                "",
+                "======",
+                {
+                    "type": "link",
+                    "text": "< SHUT DOWN",
+                    "target": "starting-screen"
                 }
             ]
         },
@@ -1750,6 +2111,22 @@
                 },
                 "",
                 "Speak, King of Eden\\!",
+                "",
+                {
+                    "type": "prompt",
+                    "prompt": "speak> ",
+                    "allowFreeInput": true,
+                    "inputAction": {
+                        "type": "action",
+                        "action": "monarchSpeak"
+                    }
+                },
+                "",
+                {
+                    "type": "text",
+                    "text": "",
+                    "scriptId": "monarchEcho"
+                },
                 "",
                 "======",
                 {
@@ -1778,6 +2155,7 @@
                     "text": "> DOOR CONTROLS",
                     "target": "floor-2-door-controls"
                 },
+                "",
                 "======",
                 {
                     "type": "link",
@@ -1805,6 +2183,7 @@
                     "text": "> GRAVITY",
                     "target": "floor-2-gravity"
                 },
+                "",
                 "======",
                 {
                     "type": "link",
@@ -2022,19 +2401,88 @@
                     "type": "list",
                     "states": [
                         {
-                            "text": "ATMOSPHERE REPLENISHMENT    [> ON]"
+                            "text": "ATMOSPHERE REPLENISHMENT    [> ON]",
+                            "active": true,
+                            "action": "setAtmosphereReplenishment",
+                            "target": "floor-2-atmosphere:on"
                         },
                         {
-                            "text": "ATMOSPHERE REPLENISHMENT    [> OFF]"
+                            "text": "ATMOSPHERE REPLENISHMENT    [> OFF]",
+                            "action": "setAtmosphereReplenishment",
+                            "target": "floor-2-atmosphere:off"
                         }
-                    ]
+                    ],
+                    "scriptId": "atmosphereReplenishment"
                 },
                 "",
                 "GAS MIXTURE",
-                "NITROGEN       \\[\\> 78%\\]",
-                "OXYGEN         \\[\\> 22%\\]",
+                {
+                    "type": "link",
+                    "text": "NITROGEN                    [> 78%]",
+                    "target": [
+                        {
+                            "type": "action",
+                            "action": "adjustAtmosphere",
+                            "target": "floor-2-atmosphere",
+                            "field": "nitrogen",
+                            "delta": 1
+                        },
+                        {
+                            "type": "action",
+                            "action": "adjustAtmosphere",
+                            "target": "floor-2-atmosphere",
+                            "field": "nitrogen",
+                            "delta": -1,
+                            "shiftKey": true
+                        }
+                    ],
+                    "scriptId": "atmosphereNitrogen"
+                },
+                {
+                    "type": "link",
+                    "text": "OXYGEN                      [> 22%]",
+                    "target": [
+                        {
+                            "type": "action",
+                            "action": "adjustAtmosphere",
+                            "target": "floor-2-atmosphere",
+                            "field": "oxygen",
+                            "delta": 1
+                        },
+                        {
+                            "type": "action",
+                            "action": "adjustAtmosphere",
+                            "target": "floor-2-atmosphere",
+                            "field": "oxygen",
+                            "delta": -1,
+                            "shiftKey": true
+                        }
+                    ],
+                    "scriptId": "atmosphereOxygen"
+                },
                 "",
-                "TEMPERATURE    \\[\\> 22°C\\]",
+                {
+                    "type": "link",
+                    "text": "TEMPERATURE                 [> 22°C]",
+                    "target": [
+                        {
+                            "type": "action",
+                            "action": "adjustAtmosphere",
+                            "target": "floor-2-atmosphere",
+                            "field": "temperature",
+                            "delta": 1
+                        },
+                        {
+                            "type": "action",
+                            "action": "adjustAtmosphere",
+                            "target": "floor-2-atmosphere",
+                            "field": "temperature",
+                            "delta": -1,
+                            "shiftKey": true
+                        }
+                    ],
+                    "scriptId": "atmosphereTemperature"
+                },
                 "",
                 "======",
                 {
@@ -2082,29 +2530,98 @@
             "content": [
                 {
                     "type": "text",
-                    "text": "# TRAC PC\\-9800 Series System Terminal"
+                    "text": "# TRAC PC\\-9800 Series System Terminal",
+                    "speed": 6
                 },
-                "",
-                "Reythorne OS Version 6\\.20",
-                "Copyright \\(C\\) 2981, 2987 Reythorne Corp\\. / TRAC Corporation",
-                "",
-                "EEEE I3000000032940xf100110303B77500EEEE I400000004294\\_M8\\_BL1\\_10221D113B323EEEE5",
-                "no sdio debug board detected",
-                "TE : 102609",
-                "BT : 11:30:18 Mar 14 2314",
-                "",
-                "Boot From SPI",
-                "ucl decompress\\.\\.\\.pass",
-                "0x12345678",
-                "Boot from internal device 1st SPI",
-                "",
-                "TE : 512897",
-                "",
-                "System Started"
+                {
+                    "type": "text",
+                    "text": "",
+                    "speed": 6
+                },
+                {
+                    "type": "text",
+                    "text": "Reythorne OS Version 6\\.20",
+                    "speed": 6
+                },
+                {
+                    "type": "text",
+                    "text": "Copyright \\(C\\) 2981, 2987 Reythorne Corp\\. / TRAC Corporation",
+                    "speed": 6
+                },
+                {
+                    "type": "text",
+                    "text": "",
+                    "speed": 6
+                },
+                {
+                    "type": "text",
+                    "text": "EEEE I3000000032940xf100110303B77500EEEE I400000004294\\_M8\\_BL1\\_10221D113B323EEEE5",
+                    "speed": 6
+                },
+                {
+                    "type": "text",
+                    "text": "no sdio debug board detected",
+                    "speed": 6
+                },
+                {
+                    "type": "text",
+                    "text": "TE : 102609",
+                    "speed": 6
+                },
+                {
+                    "type": "text",
+                    "text": "BT : 11:30:18 Mar 14 2314",
+                    "speed": 6
+                },
+                {
+                    "type": "text",
+                    "text": "",
+                    "speed": 6
+                },
+                {
+                    "type": "text",
+                    "text": "Boot From SPI",
+                    "speed": 6
+                },
+                {
+                    "type": "text",
+                    "text": "ucl decompress\\.\\.\\.pass",
+                    "speed": 6
+                },
+                {
+                    "type": "text",
+                    "text": "0x12345678",
+                    "speed": 6
+                },
+                {
+                    "type": "text",
+                    "text": "Boot from internal device 1st SPI",
+                    "speed": 6
+                },
+                {
+                    "type": "text",
+                    "text": "",
+                    "speed": 6
+                },
+                {
+                    "type": "text",
+                    "text": "TE : 512897",
+                    "speed": 6
+                },
+                {
+                    "type": "text",
+                    "text": "",
+                    "speed": 6
+                },
+                {
+                    "type": "text",
+                    "text": "System Started",
+                    "speed": 6
+                }
             ],
             "onDone": {
                 "target": "mind-zoo",
-                "delayMs": 2600
+                "delayMs": 1200
             }
         },
         {
@@ -2113,29 +2630,98 @@
             "content": [
                 {
                     "type": "text",
-                    "text": "# TRAC PC\\-9800 Series System Terminal"
+                    "text": "# TRAC PC\\-9800 Series System Terminal",
+                    "speed": 6
                 },
-                "",
-                "Reythorne OS Version 6\\.20",
-                "Copyright \\(C\\) 2981, 2987 Reythorne Corp\\. / TRAC Corporation",
-                "",
-                "EEEE I3000000032940xf100110303B77500EEEE I400000004294\\_M8\\_BL1\\_10221D113B323EEEE5",
-                "no sdio debug board detected",
-                "TE : 102609",
-                "BT : 11:30:18 Mar 14 2314",
-                "",
-                "Boot From SPI",
-                "ucl decompress\\.\\.\\.pass",
-                "0x12345678",
-                "Boot from internal device 1st SPI",
-                "",
-                "TE : 512897",
-                "",
-                "System Started"
+                {
+                    "type": "text",
+                    "text": "",
+                    "speed": 6
+                },
+                {
+                    "type": "text",
+                    "text": "Reythorne OS Version 6\\.20",
+                    "speed": 6
+                },
+                {
+                    "type": "text",
+                    "text": "Copyright \\(C\\) 2981, 2987 Reythorne Corp\\. / TRAC Corporation",
+                    "speed": 6
+                },
+                {
+                    "type": "text",
+                    "text": "",
+                    "speed": 6
+                },
+                {
+                    "type": "text",
+                    "text": "EEEE I3000000032940xf100110303B77500EEEE I400000004294\\_M8\\_BL1\\_10221D113B323EEEE5",
+                    "speed": 6
+                },
+                {
+                    "type": "text",
+                    "text": "no sdio debug board detected",
+                    "speed": 6
+                },
+                {
+                    "type": "text",
+                    "text": "TE : 102609",
+                    "speed": 6
+                },
+                {
+                    "type": "text",
+                    "text": "BT : 11:30:18 Mar 14 2314",
+                    "speed": 6
+                },
+                {
+                    "type": "text",
+                    "text": "",
+                    "speed": 6
+                },
+                {
+                    "type": "text",
+                    "text": "Boot From SPI",
+                    "speed": 6
+                },
+                {
+                    "type": "text",
+                    "text": "ucl decompress\\.\\.\\.pass",
+                    "speed": 6
+                },
+                {
+                    "type": "text",
+                    "text": "0x12345678",
+                    "speed": 6
+                },
+                {
+                    "type": "text",
+                    "text": "Boot from internal device 1st SPI",
+                    "speed": 6
+                },
+                {
+                    "type": "text",
+                    "text": "",
+                    "speed": 6
+                },
+                {
+                    "type": "text",
+                    "text": "TE : 512897",
+                    "speed": 6
+                },
+                {
+                    "type": "text",
+                    "text": "",
+                    "speed": 6
+                },
+                {
+                    "type": "text",
+                    "text": "System Started",
+                    "speed": 6
+                }
             ],
             "onDone": {
                 "target": "data-inspection",
-                "delayMs": 2600
+                "delayMs": 1200
             }
         },
         {
@@ -2297,6 +2883,7 @@
                     "text": "> Mathematical Circle Subject #20",
                     "target": "mind-bank-3"
                 },
+                "",
                 "======",
                 {
                     "type": "link",
@@ -2599,33 +3186,113 @@
             "content": [
                 {
                     "type": "text",
-                    "text": "# TRAC PC\\-9800 Series System Terminal"
+                    "text": "# TRAC PC\\-9800 Series System Terminal",
+                    "speed": 6
                 },
-                "",
-                "Hxjt\\_'\\]WTE7^XpaS?\\*: to \"AJ\\>Hxjt\\_'\\]WTE7^XpaS?\\*:\"\\>\\>",
-                "JTGu^k$\\!y&,7\\(z to \"pt9BW2\\.\\>JTGu^k$\\!y&,7\\(z\"\\>\\>",
-                "<\\>",
-                "",
-                "Reythorne OS Version 6\\.20",
-                "Copyright \\(C\\) 2981, 2987 Reythorne Corp\\. / TRAC Corporation",
-                "",
-                "EEEE I3000000032940xf100110303B77500EEEE I400000004294\\_M8\\_BL1\\_10221D113B323EEEE5",
-                "no sdio debug board detected",
-                "TE : 102609",
-                "BT : 11:30:18 Mar 14 2314",
-                "",
-                "Boot From SPI",
-                "ucl decompress\\.\\.\\.pass",
-                "0x12345678",
-                "Boot from internal device 1st SPI",
-                "",
-                "TE : 512897",
-                "",
-                "System Started"
+                {
+                    "type": "text",
+                    "text": "",
+                    "speed": 6
+                },
+                {
+                    "type": "text",
+                    "text": "Hxjt\\_'\\]WTE7^XpaS?\\*: to \"AJ\\>Hxjt\\_'\\]WTE7^XpaS?\\*:\"\\>\\>",
+                    "speed": 6
+                },
+                {
+                    "type": "text",
+                    "text": "JTGu^k$\\!y&,7\\(z to \"pt9BW2\\.\\>JTGu^k$\\!y&,7\\(z\"\\>\\>",
+                    "speed": 6
+                },
+                {
+                    "type": "text",
+                    "text": "",
+                    "speed": 6
+                },
+                {
+                    "type": "text",
+                    "text": "Reythorne OS Version 6\\.20",
+                    "speed": 6
+                },
+                {
+                    "type": "text",
+                    "text": "Copyright \\(C\\) 2981, 2987 Reythorne Corp\\. / TRAC Corporation",
+                    "speed": 6
+                },
+                {
+                    "type": "text",
+                    "text": "",
+                    "speed": 6
+                },
+                {
+                    "type": "text",
+                    "text": "EEEE I3000000032940xf100110303B77500EEEE I400000004294\\_M8\\_BL1\\_10221D113B323EEEE5",
+                    "speed": 6
+                },
+                {
+                    "type": "text",
+                    "text": "no sdio debug board detected",
+                    "speed": 6
+                },
+                {
+                    "type": "text",
+                    "text": "TE : 102609",
+                    "speed": 6
+                },
+                {
+                    "type": "text",
+                    "text": "BT : 11:30:18 Mar 14 2314",
+                    "speed": 6
+                },
+                {
+                    "type": "text",
+                    "text": "",
+                    "speed": 6
+                },
+                {
+                    "type": "text",
+                    "text": "Boot From SPI",
+                    "speed": 6
+                },
+                {
+                    "type": "text",
+                    "text": "ucl decompress\\.\\.\\.pass",
+                    "speed": 6
+                },
+                {
+                    "type": "text",
+                    "text": "0x12345678",
+                    "speed": 6
+                },
+                {
+                    "type": "text",
+                    "text": "Boot from internal device 1st SPI",
+                    "speed": 6
+                },
+                {
+                    "type": "text",
+                    "text": "",
+                    "speed": 6
+                },
+                {
+                    "type": "text",
+                    "text": "TE : 512897",
+                    "speed": 6
+                },
+                {
+                    "type": "text",
+                    "text": "",
+                    "speed": 6
+                },
+                {
+                    "type": "text",
+                    "text": "System Started",
+                    "speed": 6
+                }
             ],
             "onDone": {
                 "target": "hel-terminal-password",
-                "delayMs": 2600
+                "delayMs": 1200
             }
         },
         {
@@ -2663,14 +3330,8 @@
                 "======",
                 {
                     "type": "link",
-                    "text": "< BACK",
-                    "target": [
-                        {
-                            "type": "action",
-                            "action": "back",
-                            "target": "hel-terminal"
-                        }
-                    ]
+                    "text": "< SHUT DOWN",
+                    "target": "starting-screen"
                 }
             ]
         },
@@ -2729,18 +3390,37 @@
                     "text": "# CIRCLE CONTROLS"
                 },
                 "",
-                "CYCLE:",
-                "TIME UNTIL RESET:",
+                {
+                    "type": "text",
+                    "text": "CYCLE: 3631205",
+                    "scriptId": "circleCycle"
+                },
+                {
+                    "type": "text",
+                    "text": "TIME UNTIL RESET: 00:52",
+                    "scriptId": "circleReset"
+                },
                 "",
-                "LOGICAL CIRCLE: \\>ALL CONNECTIONS FUNCTIONAL",
-                "",
-                "TECHNICAL CIRCLE: \\>ALL CONNECTIONS FUNCTIONAL",
-                "",
-                "MATHEMATICAL CIRCLE: \\>ALL CONNECTIONS FUNCTIONAL",
-                "",
-                "EMOTIONAL CIRCLE: \\>ALL CONNECTIONS FUNCTIONAL",
+                "LOGICAL CIRCLE: > ALL CONNECTIONS FUNCTIONAL",
+                "TECHNICAL CIRCLE: > ALL CONNECTIONS FUNCTIONAL",
+                "MATHEMATICAL CIRCLE: > ALL CONNECTIONS FUNCTIONAL",
+                "EMOTIONAL CIRCLE: > ALL CONNECTIONS FUNCTIONAL",
                 "",
                 "RELEASE SUBJECT\\#:",
+                {
+                    "type": "prompt",
+                    "prompt": "subject> ",
+                    "allowFreeInput": true,
+                    "inputAction": {
+                        "type": "action",
+                        "action": "circleReleaseSubject"
+                    }
+                },
+                {
+                    "type": "text",
+                    "text": "",
+                    "scriptId": "circleReleaseSubject"
+                },
                 "",
                 "======",
                 {
@@ -2756,29 +3436,98 @@
             "content": [
                 {
                     "type": "text",
-                    "text": "# TRAC PC\\-9800 Series System Terminal"
+                    "text": "# TRAC PC\\-9800 Series System Terminal",
+                    "speed": 6
                 },
-                "",
-                "Reythorne OS Version 6\\.20",
-                "Copyright \\(C\\) 2981, 2987 Reythorne Corp\\. / TRAC Corporation",
-                "",
-                "EEEE I3000000032940xf100110303B77500EEEE I400000004294\\_M8\\_BL1\\_10221D113B323EEEE5",
-                "no sdio debug board detected",
-                "TE : 102609",
-                "BT : 11:30:18 Mar 14 2314",
-                "",
-                "Boot From SPI",
-                "ucl decompress\\.\\.\\.pass",
-                "0x12345678",
-                "Boot from internal device 1st SPI",
-                "",
-                "TE : 512897",
-                "",
-                "System Started"
+                {
+                    "type": "text",
+                    "text": "",
+                    "speed": 6
+                },
+                {
+                    "type": "text",
+                    "text": "Reythorne OS Version 6\\.20",
+                    "speed": 6
+                },
+                {
+                    "type": "text",
+                    "text": "Copyright \\(C\\) 2981, 2987 Reythorne Corp\\. / TRAC Corporation",
+                    "speed": 6
+                },
+                {
+                    "type": "text",
+                    "text": "",
+                    "speed": 6
+                },
+                {
+                    "type": "text",
+                    "text": "EEEE I3000000032940xf100110303B77500EEEE I400000004294\\_M8\\_BL1\\_10221D113B323EEEE5",
+                    "speed": 6
+                },
+                {
+                    "type": "text",
+                    "text": "no sdio debug board detected",
+                    "speed": 6
+                },
+                {
+                    "type": "text",
+                    "text": "TE : 102609",
+                    "speed": 6
+                },
+                {
+                    "type": "text",
+                    "text": "BT : 11:30:18 Mar 14 2314",
+                    "speed": 6
+                },
+                {
+                    "type": "text",
+                    "text": "",
+                    "speed": 6
+                },
+                {
+                    "type": "text",
+                    "text": "Boot From SPI",
+                    "speed": 6
+                },
+                {
+                    "type": "text",
+                    "text": "ucl decompress\\.\\.\\.pass",
+                    "speed": 6
+                },
+                {
+                    "type": "text",
+                    "text": "0x12345678",
+                    "speed": 6
+                },
+                {
+                    "type": "text",
+                    "text": "Boot from internal device 1st SPI",
+                    "speed": 6
+                },
+                {
+                    "type": "text",
+                    "text": "",
+                    "speed": 6
+                },
+                {
+                    "type": "text",
+                    "text": "TE : 512897",
+                    "speed": 6
+                },
+                {
+                    "type": "text",
+                    "text": "",
+                    "speed": 6
+                },
+                {
+                    "type": "text",
+                    "text": "System Started",
+                    "speed": 6
+                }
             ],
             "onDone": {
                 "target": "o2-flow-control-password",
-                "delayMs": 2600
+                "delayMs": 1200
             }
         },
         {
@@ -2787,29 +3536,98 @@
             "content": [
                 {
                     "type": "text",
-                    "text": "# TRAC PC\\-9800 Series System Terminal"
+                    "text": "# TRAC PC\\-9800 Series System Terminal",
+                    "speed": 6
                 },
-                "",
-                "Reythorne OS Version 6\\.20",
-                "Copyright \\(C\\) 2981, 2987 Reythorne Corp\\. / TRAC Corporation",
-                "",
-                "EEEE I3000000032940xf100110303B77500EEEE I400000004294\\_M8\\_BL1\\_10221D113B323EEEE5",
-                "no sdio debug board detected",
-                "TE : 102609",
-                "BT : 11:30:18 Mar 14 2314",
-                "",
-                "Boot From SPI",
-                "ucl decompress\\.\\.\\.pass",
-                "0x12345678",
-                "Boot from internal device 1st SPI",
-                "",
-                "TE : 512897",
-                "",
-                "System Started"
+                {
+                    "type": "text",
+                    "text": "",
+                    "speed": 6
+                },
+                {
+                    "type": "text",
+                    "text": "Reythorne OS Version 6\\.20",
+                    "speed": 6
+                },
+                {
+                    "type": "text",
+                    "text": "Copyright \\(C\\) 2981, 2987 Reythorne Corp\\. / TRAC Corporation",
+                    "speed": 6
+                },
+                {
+                    "type": "text",
+                    "text": "",
+                    "speed": 6
+                },
+                {
+                    "type": "text",
+                    "text": "EEEE I3000000032940xf100110303B77500EEEE I400000004294\\_M8\\_BL1\\_10221D113B323EEEE5",
+                    "speed": 6
+                },
+                {
+                    "type": "text",
+                    "text": "no sdio debug board detected",
+                    "speed": 6
+                },
+                {
+                    "type": "text",
+                    "text": "TE : 102609",
+                    "speed": 6
+                },
+                {
+                    "type": "text",
+                    "text": "BT : 11:30:18 Mar 14 2314",
+                    "speed": 6
+                },
+                {
+                    "type": "text",
+                    "text": "",
+                    "speed": 6
+                },
+                {
+                    "type": "text",
+                    "text": "Boot From SPI",
+                    "speed": 6
+                },
+                {
+                    "type": "text",
+                    "text": "ucl decompress\\.\\.\\.pass",
+                    "speed": 6
+                },
+                {
+                    "type": "text",
+                    "text": "0x12345678",
+                    "speed": 6
+                },
+                {
+                    "type": "text",
+                    "text": "Boot from internal device 1st SPI",
+                    "speed": 6
+                },
+                {
+                    "type": "text",
+                    "text": "",
+                    "speed": 6
+                },
+                {
+                    "type": "text",
+                    "text": "TE : 512897",
+                    "speed": 6
+                },
+                {
+                    "type": "text",
+                    "text": "",
+                    "speed": 6
+                },
+                {
+                    "type": "text",
+                    "text": "System Started",
+                    "speed": 6
+                }
             ],
             "onDone": {
                 "target": "o2-flow-backup-password",
-                "delayMs": 2600
+                "delayMs": 1200
             }
         },
         {
@@ -2876,19 +3694,88 @@
                     "type": "list",
                     "states": [
                         {
-                            "text": "ATMOSPHERE REPLENISHMENT    [> ON]"
+                            "text": "ATMOSPHERE REPLENISHMENT    [> ON]",
+                            "active": true,
+                            "action": "setAtmosphereReplenishment",
+                            "target": "floor-6-atmosphere-flow:on"
                         },
                         {
-                            "text": "ATMOSPHERE REPLENISHMENT    [> OFF]"
+                            "text": "ATMOSPHERE REPLENISHMENT    [> OFF]",
+                            "action": "setAtmosphereReplenishment",
+                            "target": "floor-6-atmosphere-flow:off"
                         }
-                    ]
+                    ],
+                    "scriptId": "atmosphereReplenishment"
                 },
                 "",
                 "GAS MIXTURE",
-                "NITROGEN       \\[\\> 78%\\]",
-                "OXYGEN         \\[\\> 22%\\]",
+                {
+                    "type": "link",
+                    "text": "NITROGEN                    [> 78%]",
+                    "target": [
+                        {
+                            "type": "action",
+                            "action": "adjustAtmosphere",
+                            "target": "floor-6-atmosphere-flow",
+                            "field": "nitrogen",
+                            "delta": 1
+                        },
+                        {
+                            "type": "action",
+                            "action": "adjustAtmosphere",
+                            "target": "floor-6-atmosphere-flow",
+                            "field": "nitrogen",
+                            "delta": -1,
+                            "shiftKey": true
+                        }
+                    ],
+                    "scriptId": "atmosphereNitrogen"
+                },
+                {
+                    "type": "link",
+                    "text": "OXYGEN                      [> 22%]",
+                    "target": [
+                        {
+                            "type": "action",
+                            "action": "adjustAtmosphere",
+                            "target": "floor-6-atmosphere-flow",
+                            "field": "oxygen",
+                            "delta": 1
+                        },
+                        {
+                            "type": "action",
+                            "action": "adjustAtmosphere",
+                            "target": "floor-6-atmosphere-flow",
+                            "field": "oxygen",
+                            "delta": -1,
+                            "shiftKey": true
+                        }
+                    ],
+                    "scriptId": "atmosphereOxygen"
+                },
                 "",
-                "TEMPERATURE    \\[\\> 22°C\\]",
+                {
+                    "type": "link",
+                    "text": "TEMPERATURE                 [> 22°C]",
+                    "target": [
+                        {
+                            "type": "action",
+                            "action": "adjustAtmosphere",
+                            "target": "floor-6-atmosphere-flow",
+                            "field": "temperature",
+                            "delta": 1
+                        },
+                        {
+                            "type": "action",
+                            "action": "adjustAtmosphere",
+                            "target": "floor-6-atmosphere-flow",
+                            "field": "temperature",
+                            "delta": -1,
+                            "shiftKey": true
+                        }
+                    ],
+                    "scriptId": "atmosphereTemperature"
+                },
                 "",
                 "======",
                 {
@@ -2965,14 +3852,8 @@
                 "======",
                 {
                     "type": "link",
-                    "text": "< BACK",
-                    "target": [
-                        {
-                            "type": "action",
-                            "action": "back",
-                            "target": "o2-flow-control"
-                        }
-                    ]
+                    "text": "< SHUT DOWN",
+                    "target": "starting-screen"
                 }
             ]
         },
@@ -2989,19 +3870,88 @@
                     "type": "list",
                     "states": [
                         {
-                            "text": "ATMOSPHERE REPLENISHMENT    [> ON]"
+                            "text": "ATMOSPHERE REPLENISHMENT    [> ON]",
+                            "active": true,
+                            "action": "setAtmosphereReplenishment",
+                            "target": "floor-1-atmosphere-flow:on"
                         },
                         {
-                            "text": "ATMOSPHERE REPLENISHMENT    [> OFF]"
+                            "text": "ATMOSPHERE REPLENISHMENT    [> OFF]",
+                            "action": "setAtmosphereReplenishment",
+                            "target": "floor-1-atmosphere-flow:off"
                         }
-                    ]
+                    ],
+                    "scriptId": "atmosphereReplenishment"
                 },
                 "",
                 "GAS MIXTURE",
-                "NITROGEN       \\[\\> 78%\\]",
-                "OXYGEN         \\[\\> 22%\\]",
+                {
+                    "type": "link",
+                    "text": "NITROGEN                    [> 78%]",
+                    "target": [
+                        {
+                            "type": "action",
+                            "action": "adjustAtmosphere",
+                            "target": "floor-1-atmosphere-flow",
+                            "field": "nitrogen",
+                            "delta": 1
+                        },
+                        {
+                            "type": "action",
+                            "action": "adjustAtmosphere",
+                            "target": "floor-1-atmosphere-flow",
+                            "field": "nitrogen",
+                            "delta": -1,
+                            "shiftKey": true
+                        }
+                    ],
+                    "scriptId": "atmosphereNitrogen"
+                },
+                {
+                    "type": "link",
+                    "text": "OXYGEN                      [> 22%]",
+                    "target": [
+                        {
+                            "type": "action",
+                            "action": "adjustAtmosphere",
+                            "target": "floor-1-atmosphere-flow",
+                            "field": "oxygen",
+                            "delta": 1
+                        },
+                        {
+                            "type": "action",
+                            "action": "adjustAtmosphere",
+                            "target": "floor-1-atmosphere-flow",
+                            "field": "oxygen",
+                            "delta": -1,
+                            "shiftKey": true
+                        }
+                    ],
+                    "scriptId": "atmosphereOxygen"
+                },
                 "",
-                "TEMPERATURE    \\[\\> 22°C\\]",
+                {
+                    "type": "link",
+                    "text": "TEMPERATURE                 [> 22°C]",
+                    "target": [
+                        {
+                            "type": "action",
+                            "action": "adjustAtmosphere",
+                            "target": "floor-1-atmosphere-flow",
+                            "field": "temperature",
+                            "delta": 1
+                        },
+                        {
+                            "type": "action",
+                            "action": "adjustAtmosphere",
+                            "target": "floor-1-atmosphere-flow",
+                            "field": "temperature",
+                            "delta": -1,
+                            "shiftKey": true
+                        }
+                    ],
+                    "scriptId": "atmosphereTemperature"
+                },
                 "",
                 "======",
                 {
@@ -3024,19 +3974,88 @@
                     "type": "list",
                     "states": [
                         {
-                            "text": "ATMOSPHERE REPLENISHMENT    [> ON]"
+                            "text": "ATMOSPHERE REPLENISHMENT    [> ON]",
+                            "active": true,
+                            "action": "setAtmosphereReplenishment",
+                            "target": "floor-2-atmosphere-flow:on"
                         },
                         {
-                            "text": "ATMOSPHERE REPLENISHMENT    [> OFF]"
+                            "text": "ATMOSPHERE REPLENISHMENT    [> OFF]",
+                            "action": "setAtmosphereReplenishment",
+                            "target": "floor-2-atmosphere-flow:off"
                         }
-                    ]
+                    ],
+                    "scriptId": "atmosphereReplenishment"
                 },
                 "",
                 "GAS MIXTURE",
-                "NITROGEN       \\[\\> 78%\\]",
-                "OXYGEN         \\[\\> 22%\\]",
+                {
+                    "type": "link",
+                    "text": "NITROGEN                    [> 78%]",
+                    "target": [
+                        {
+                            "type": "action",
+                            "action": "adjustAtmosphere",
+                            "target": "floor-2-atmosphere-flow",
+                            "field": "nitrogen",
+                            "delta": 1
+                        },
+                        {
+                            "type": "action",
+                            "action": "adjustAtmosphere",
+                            "target": "floor-2-atmosphere-flow",
+                            "field": "nitrogen",
+                            "delta": -1,
+                            "shiftKey": true
+                        }
+                    ],
+                    "scriptId": "atmosphereNitrogen"
+                },
+                {
+                    "type": "link",
+                    "text": "OXYGEN                      [> 22%]",
+                    "target": [
+                        {
+                            "type": "action",
+                            "action": "adjustAtmosphere",
+                            "target": "floor-2-atmosphere-flow",
+                            "field": "oxygen",
+                            "delta": 1
+                        },
+                        {
+                            "type": "action",
+                            "action": "adjustAtmosphere",
+                            "target": "floor-2-atmosphere-flow",
+                            "field": "oxygen",
+                            "delta": -1,
+                            "shiftKey": true
+                        }
+                    ],
+                    "scriptId": "atmosphereOxygen"
+                },
                 "",
-                "TEMPERATURE    \\[\\> 22°C\\]",
+                {
+                    "type": "link",
+                    "text": "TEMPERATURE                 [> 22°C]",
+                    "target": [
+                        {
+                            "type": "action",
+                            "action": "adjustAtmosphere",
+                            "target": "floor-2-atmosphere-flow",
+                            "field": "temperature",
+                            "delta": 1
+                        },
+                        {
+                            "type": "action",
+                            "action": "adjustAtmosphere",
+                            "target": "floor-2-atmosphere-flow",
+                            "field": "temperature",
+                            "delta": -1,
+                            "shiftKey": true
+                        }
+                    ],
+                    "scriptId": "atmosphereTemperature"
+                },
                 "",
                 "======",
                 {
@@ -3059,19 +4078,88 @@
                     "type": "list",
                     "states": [
                         {
-                            "text": "ATMOSPHERE REPLENISHMENT    [> ON]"
+                            "text": "ATMOSPHERE REPLENISHMENT    [> ON]",
+                            "active": true,
+                            "action": "setAtmosphereReplenishment",
+                            "target": "floor-3-atmosphere-flow:on"
                         },
                         {
-                            "text": "ATMOSPHERE REPLENISHMENT    [> OFF]"
+                            "text": "ATMOSPHERE REPLENISHMENT    [> OFF]",
+                            "action": "setAtmosphereReplenishment",
+                            "target": "floor-3-atmosphere-flow:off"
                         }
-                    ]
+                    ],
+                    "scriptId": "atmosphereReplenishment"
                 },
                 "",
                 "GAS MIXTURE",
-                "NITROGEN       \\[\\> 78%\\]",
-                "OXYGEN         \\[\\> 22%\\]",
+                {
+                    "type": "link",
+                    "text": "NITROGEN                    [> 78%]",
+                    "target": [
+                        {
+                            "type": "action",
+                            "action": "adjustAtmosphere",
+                            "target": "floor-3-atmosphere-flow",
+                            "field": "nitrogen",
+                            "delta": 1
+                        },
+                        {
+                            "type": "action",
+                            "action": "adjustAtmosphere",
+                            "target": "floor-3-atmosphere-flow",
+                            "field": "nitrogen",
+                            "delta": -1,
+                            "shiftKey": true
+                        }
+                    ],
+                    "scriptId": "atmosphereNitrogen"
+                },
+                {
+                    "type": "link",
+                    "text": "OXYGEN                      [> 22%]",
+                    "target": [
+                        {
+                            "type": "action",
+                            "action": "adjustAtmosphere",
+                            "target": "floor-3-atmosphere-flow",
+                            "field": "oxygen",
+                            "delta": 1
+                        },
+                        {
+                            "type": "action",
+                            "action": "adjustAtmosphere",
+                            "target": "floor-3-atmosphere-flow",
+                            "field": "oxygen",
+                            "delta": -1,
+                            "shiftKey": true
+                        }
+                    ],
+                    "scriptId": "atmosphereOxygen"
+                },
                 "",
-                "TEMPERATURE    \\[\\> 22°C\\]",
+                {
+                    "type": "link",
+                    "text": "TEMPERATURE                 [> 22°C]",
+                    "target": [
+                        {
+                            "type": "action",
+                            "action": "adjustAtmosphere",
+                            "target": "floor-3-atmosphere-flow",
+                            "field": "temperature",
+                            "delta": 1
+                        },
+                        {
+                            "type": "action",
+                            "action": "adjustAtmosphere",
+                            "target": "floor-3-atmosphere-flow",
+                            "field": "temperature",
+                            "delta": -1,
+                            "shiftKey": true
+                        }
+                    ],
+                    "scriptId": "atmosphereTemperature"
+                },
                 "",
                 "======",
                 {
@@ -3094,19 +4182,88 @@
                     "type": "list",
                     "states": [
                         {
-                            "text": "ATMOSPHERE REPLENISHMENT    [> ON]"
+                            "text": "ATMOSPHERE REPLENISHMENT    [> ON]",
+                            "active": true,
+                            "action": "setAtmosphereReplenishment",
+                            "target": "floor-4-atmosphere-flow:on"
                         },
                         {
-                            "text": "ATMOSPHERE REPLENISHMENT    [> OFF]"
+                            "text": "ATMOSPHERE REPLENISHMENT    [> OFF]",
+                            "action": "setAtmosphereReplenishment",
+                            "target": "floor-4-atmosphere-flow:off"
                         }
-                    ]
+                    ],
+                    "scriptId": "atmosphereReplenishment"
                 },
                 "",
                 "GAS MIXTURE",
-                "NITROGEN       \\[\\> 78%\\]",
-                "OXYGEN         \\[\\> 22%\\]",
+                {
+                    "type": "link",
+                    "text": "NITROGEN                    [> 78%]",
+                    "target": [
+                        {
+                            "type": "action",
+                            "action": "adjustAtmosphere",
+                            "target": "floor-4-atmosphere-flow",
+                            "field": "nitrogen",
+                            "delta": 1
+                        },
+                        {
+                            "type": "action",
+                            "action": "adjustAtmosphere",
+                            "target": "floor-4-atmosphere-flow",
+                            "field": "nitrogen",
+                            "delta": -1,
+                            "shiftKey": true
+                        }
+                    ],
+                    "scriptId": "atmosphereNitrogen"
+                },
+                {
+                    "type": "link",
+                    "text": "OXYGEN                      [> 22%]",
+                    "target": [
+                        {
+                            "type": "action",
+                            "action": "adjustAtmosphere",
+                            "target": "floor-4-atmosphere-flow",
+                            "field": "oxygen",
+                            "delta": 1
+                        },
+                        {
+                            "type": "action",
+                            "action": "adjustAtmosphere",
+                            "target": "floor-4-atmosphere-flow",
+                            "field": "oxygen",
+                            "delta": -1,
+                            "shiftKey": true
+                        }
+                    ],
+                    "scriptId": "atmosphereOxygen"
+                },
                 "",
-                "TEMPERATURE    \\[\\> 22°C\\]",
+                {
+                    "type": "link",
+                    "text": "TEMPERATURE                 [> 22°C]",
+                    "target": [
+                        {
+                            "type": "action",
+                            "action": "adjustAtmosphere",
+                            "target": "floor-4-atmosphere-flow",
+                            "field": "temperature",
+                            "delta": 1
+                        },
+                        {
+                            "type": "action",
+                            "action": "adjustAtmosphere",
+                            "target": "floor-4-atmosphere-flow",
+                            "field": "temperature",
+                            "delta": -1,
+                            "shiftKey": true
+                        }
+                    ],
+                    "scriptId": "atmosphereTemperature"
+                },
                 "",
                 "======",
                 {
@@ -3129,19 +4286,88 @@
                     "type": "list",
                     "states": [
                         {
-                            "text": "ATMOSPHERE REPLENISHMENT    [> ON]"
+                            "text": "ATMOSPHERE REPLENISHMENT    [> ON]",
+                            "active": true,
+                            "action": "setAtmosphereReplenishment",
+                            "target": "floor-5-atmosphere-flow:on"
                         },
                         {
-                            "text": "ATMOSPHERE REPLENISHMENT    [> OFF]"
+                            "text": "ATMOSPHERE REPLENISHMENT    [> OFF]",
+                            "action": "setAtmosphereReplenishment",
+                            "target": "floor-5-atmosphere-flow:off"
                         }
-                    ]
+                    ],
+                    "scriptId": "atmosphereReplenishment"
                 },
                 "",
                 "GAS MIXTURE",
-                "NITROGEN       \\[\\> 0%\\]",
-                "OXYGEN         \\[\\> 100%\\]",
+                {
+                    "type": "link",
+                    "text": "NITROGEN                    [> 78%]",
+                    "target": [
+                        {
+                            "type": "action",
+                            "action": "adjustAtmosphere",
+                            "target": "floor-5-atmosphere-flow",
+                            "field": "nitrogen",
+                            "delta": 1
+                        },
+                        {
+                            "type": "action",
+                            "action": "adjustAtmosphere",
+                            "target": "floor-5-atmosphere-flow",
+                            "field": "nitrogen",
+                            "delta": -1,
+                            "shiftKey": true
+                        }
+                    ],
+                    "scriptId": "atmosphereNitrogen"
+                },
+                {
+                    "type": "link",
+                    "text": "OXYGEN                      [> 22%]",
+                    "target": [
+                        {
+                            "type": "action",
+                            "action": "adjustAtmosphere",
+                            "target": "floor-5-atmosphere-flow",
+                            "field": "oxygen",
+                            "delta": 1
+                        },
+                        {
+                            "type": "action",
+                            "action": "adjustAtmosphere",
+                            "target": "floor-5-atmosphere-flow",
+                            "field": "oxygen",
+                            "delta": -1,
+                            "shiftKey": true
+                        }
+                    ],
+                    "scriptId": "atmosphereOxygen"
+                },
                 "",
-                "TEMPERATURE    \\[\\> \\-269°C\\]",
+                {
+                    "type": "link",
+                    "text": "TEMPERATURE                 [> 22°C]",
+                    "target": [
+                        {
+                            "type": "action",
+                            "action": "adjustAtmosphere",
+                            "target": "floor-5-atmosphere-flow",
+                            "field": "temperature",
+                            "delta": 1
+                        },
+                        {
+                            "type": "action",
+                            "action": "adjustAtmosphere",
+                            "target": "floor-5-atmosphere-flow",
+                            "field": "temperature",
+                            "delta": -1,
+                            "shiftKey": true
+                        }
+                    ],
+                    "scriptId": "atmosphereTemperature"
+                },
                 "",
                 "======",
                 {
@@ -3186,14 +4412,8 @@
                 "======",
                 {
                     "type": "link",
-                    "text": "< BACK",
-                    "target": [
-                        {
-                            "type": "action",
-                            "action": "back",
-                            "target": "o2-flow-backup"
-                        }
-                    ]
+                    "text": "< SHUT DOWN",
+                    "target": "starting-screen"
                 }
             ]
         },
@@ -3203,7 +4423,7 @@
             "content": [
                 {
                     "type": "text",
-                    "text": "# O2 FLOW BACKUP PASSWORD"
+                    "text": "# O2 FLOW BACKUP"
                 },
                 "",
                 {
@@ -3217,7 +4437,6 @@
                         }
                     ]
                 },
-                "",
                 {
                     "type": "list",
                     "states": [
@@ -3229,7 +4448,6 @@
                         }
                     ]
                 },
-                "",
                 {
                     "type": "list",
                     "states": [
@@ -3241,7 +4459,6 @@
                         }
                     ]
                 },
-                "",
                 {
                     "type": "list",
                     "states": [
@@ -3253,7 +4470,6 @@
                         }
                     ]
                 },
-                "",
                 {
                     "type": "list",
                     "states": [
@@ -3265,7 +4481,6 @@
                         }
                     ]
                 },
-                "",
                 {
                     "type": "list",
                     "states": [
@@ -3277,7 +4492,6 @@
                         }
                     ]
                 },
-                "",
                 {
                     "type": "list",
                     "states": [
@@ -3289,7 +4503,6 @@
                         }
                     ]
                 },
-                "",
                 {
                     "type": "list",
                     "states": [
@@ -3301,7 +4514,6 @@
                         }
                     ]
                 },
-                "",
                 {
                     "type": "list",
                     "states": [
@@ -3313,7 +4525,6 @@
                         }
                     ]
                 },
-                "",
                 {
                     "type": "list",
                     "states": [
@@ -3325,7 +4536,6 @@
                         }
                     ]
                 },
-                "",
                 {
                     "type": "list",
                     "states": [
@@ -3337,7 +4547,6 @@
                         }
                     ]
                 },
-                "",
                 {
                     "type": "list",
                     "states": [
@@ -3349,7 +4558,6 @@
                         }
                     ]
                 },
-                "",
                 {
                     "type": "list",
                     "states": [
@@ -3361,7 +4569,6 @@
                         }
                     ]
                 },
-                "",
                 {
                     "type": "list",
                     "states": [
@@ -3373,7 +4580,6 @@
                         }
                     ]
                 },
-                "",
                 {
                     "type": "list",
                     "states": [
@@ -3385,7 +4591,6 @@
                         }
                     ]
                 },
-                "",
                 {
                     "type": "list",
                     "states": [
@@ -3397,7 +4602,6 @@
                         }
                     ]
                 },
-                "",
                 {
                     "type": "list",
                     "states": [
@@ -3409,7 +4613,6 @@
                         }
                     ]
                 },
-                "",
                 {
                     "type": "list",
                     "states": [
@@ -3421,7 +4624,6 @@
                         }
                     ]
                 },
-                "",
                 {
                     "type": "list",
                     "states": [
@@ -3433,7 +4635,6 @@
                         }
                     ]
                 },
-                "",
                 {
                     "type": "list",
                     "states": [
@@ -3445,7 +4646,6 @@
                         }
                     ]
                 },
-                "",
                 {
                     "type": "list",
                     "states": [
@@ -3457,7 +4657,6 @@
                         }
                     ]
                 },
-                "",
                 {
                     "type": "list",
                     "states": [
@@ -3469,7 +4668,6 @@
                         }
                     ]
                 },
-                "",
                 {
                     "type": "list",
                     "states": [
@@ -3481,7 +4679,6 @@
                         }
                     ]
                 },
-                "",
                 {
                     "type": "list",
                     "states": [
@@ -3493,7 +4690,6 @@
                         }
                     ]
                 },
-                "",
                 {
                     "type": "list",
                     "states": [
@@ -3505,7 +4701,6 @@
                         }
                     ]
                 },
-                "",
                 {
                     "type": "list",
                     "states": [
@@ -3517,7 +4712,6 @@
                         }
                     ]
                 },
-                "",
                 {
                     "type": "list",
                     "states": [
@@ -3529,7 +4723,6 @@
                         }
                     ]
                 },
-                "",
                 {
                     "type": "list",
                     "states": [
@@ -3541,7 +4734,6 @@
                         }
                     ]
                 },
-                "",
                 {
                     "type": "list",
                     "states": [
@@ -3553,7 +4745,6 @@
                         }
                     ]
                 },
-                "",
                 {
                     "type": "list",
                     "states": [
@@ -3565,7 +4756,6 @@
                         }
                     ]
                 },
-                "",
                 {
                     "type": "list",
                     "states": [
@@ -3577,7 +4767,6 @@
                         }
                     ]
                 },
-                "",
                 {
                     "type": "list",
                     "states": [
@@ -3589,7 +4778,6 @@
                         }
                     ]
                 },
-                "",
                 {
                     "type": "list",
                     "states": [
@@ -3601,7 +4789,6 @@
                         }
                     ]
                 },
-                "",
                 {
                     "type": "list",
                     "states": [
@@ -3613,7 +4800,6 @@
                         }
                     ]
                 },
-                "",
                 {
                     "type": "list",
                     "states": [
@@ -3625,7 +4811,6 @@
                         }
                     ]
                 },
-                "",
                 {
                     "type": "list",
                     "states": [
@@ -3637,7 +4822,6 @@
                         }
                     ]
                 },
-                "",
                 {
                     "type": "list",
                     "states": [
@@ -3649,7 +4833,6 @@
                         }
                     ]
                 },
-                "",
                 {
                     "type": "list",
                     "states": [
@@ -3661,7 +4844,6 @@
                         }
                     ]
                 },
-                "",
                 {
                     "type": "list",
                     "states": [
@@ -3673,7 +4855,6 @@
                         }
                     ]
                 },
-                "",
                 {
                     "type": "list",
                     "states": [
@@ -3685,7 +4866,6 @@
                         }
                     ]
                 },
-                "",
                 {
                     "type": "list",
                     "states": [
@@ -3697,7 +4877,6 @@
                         }
                     ]
                 },
-                "",
                 {
                     "type": "list",
                     "states": [
@@ -3709,7 +4888,6 @@
                         }
                     ]
                 },
-                "",
                 {
                     "type": "list",
                     "states": [
@@ -3721,7 +4899,6 @@
                         }
                     ]
                 },
-                "",
                 {
                     "type": "list",
                     "states": [
@@ -3733,7 +4910,6 @@
                         }
                     ]
                 },
-                "",
                 {
                     "type": "list",
                     "states": [
@@ -3745,7 +4921,6 @@
                         }
                     ]
                 },
-                "",
                 {
                     "type": "list",
                     "states": [
@@ -3757,7 +4932,6 @@
                         }
                     ]
                 },
-                "",
                 {
                     "type": "list",
                     "states": [
@@ -3769,7 +4943,6 @@
                         }
                     ]
                 },
-                "",
                 {
                     "type": "list",
                     "states": [
@@ -3781,7 +4954,6 @@
                         }
                     ]
                 },
-                "",
                 {
                     "type": "list",
                     "states": [
@@ -3793,7 +4965,6 @@
                         }
                     ]
                 },
-                "",
                 {
                     "type": "list",
                     "states": [
@@ -3805,7 +4976,6 @@
                         }
                     ]
                 },
-                "",
                 {
                     "type": "list",
                     "states": [
@@ -3817,7 +4987,6 @@
                         }
                     ]
                 },
-                "",
                 {
                     "type": "list",
                     "states": [
@@ -3829,7 +4998,6 @@
                         }
                     ]
                 },
-                "",
                 {
                     "type": "list",
                     "states": [
@@ -3841,7 +5009,6 @@
                         }
                     ]
                 },
-                "",
                 {
                     "type": "list",
                     "states": [
@@ -3853,7 +5020,6 @@
                         }
                     ]
                 },
-                "",
                 {
                     "type": "list",
                     "states": [
@@ -3865,7 +5031,6 @@
                         }
                     ]
                 },
-                "",
                 {
                     "type": "list",
                     "states": [
@@ -3877,7 +5042,6 @@
                         }
                     ]
                 },
-                "",
                 {
                     "type": "list",
                     "states": [
@@ -3889,7 +5053,6 @@
                         }
                     ]
                 },
-                "",
                 {
                     "type": "list",
                     "states": [
@@ -3901,7 +5064,6 @@
                         }
                     ]
                 },
-                "",
                 {
                     "type": "list",
                     "states": [
@@ -3913,7 +5075,6 @@
                         }
                     ]
                 },
-                "",
                 {
                     "type": "list",
                     "states": [
@@ -3925,7 +5086,6 @@
                         }
                     ]
                 },
-                "",
                 {
                     "type": "list",
                     "states": [
@@ -3937,7 +5097,6 @@
                         }
                     ]
                 },
-                "",
                 {
                     "type": "list",
                     "states": [
@@ -3949,7 +5108,6 @@
                         }
                     ]
                 },
-                "",
                 {
                     "type": "list",
                     "states": [
@@ -3961,7 +5119,6 @@
                         }
                     ]
                 },
-                "",
                 {
                     "type": "list",
                     "states": [
@@ -3973,7 +5130,6 @@
                         }
                     ]
                 },
-                "",
                 {
                     "type": "list",
                     "states": [
@@ -3985,7 +5141,6 @@
                         }
                     ]
                 },
-                "",
                 {
                     "type": "list",
                     "states": [
@@ -3997,7 +5152,6 @@
                         }
                     ]
                 },
-                "",
                 {
                     "type": "list",
                     "states": [
@@ -4009,7 +5163,6 @@
                         }
                     ]
                 },
-                "",
                 {
                     "type": "list",
                     "states": [
@@ -4021,7 +5174,6 @@
                         }
                     ]
                 },
-                "",
                 {
                     "type": "list",
                     "states": [
@@ -4033,7 +5185,6 @@
                         }
                     ]
                 },
-                "",
                 {
                     "type": "list",
                     "states": [
@@ -4045,7 +5196,6 @@
                         }
                     ]
                 },
-                "",
                 {
                     "type": "list",
                     "states": [
@@ -4057,7 +5207,6 @@
                         }
                     ]
                 },
-                "",
                 {
                     "type": "list",
                     "states": [
@@ -4069,7 +5218,6 @@
                         }
                     ]
                 },
-                "",
                 {
                     "type": "list",
                     "states": [
@@ -4081,7 +5229,6 @@
                         }
                     ]
                 },
-                "",
                 {
                     "type": "list",
                     "states": [
@@ -4093,7 +5240,6 @@
                         }
                     ]
                 },
-                "",
                 {
                     "type": "list",
                     "states": [
@@ -4105,7 +5251,6 @@
                         }
                     ]
                 },
-                "",
                 {
                     "type": "list",
                     "states": [
@@ -4117,7 +5262,6 @@
                         }
                     ]
                 },
-                "",
                 {
                     "type": "list",
                     "states": [
@@ -4129,7 +5273,6 @@
                         }
                     ]
                 },
-                "",
                 {
                     "type": "list",
                     "states": [
@@ -4141,7 +5284,6 @@
                         }
                     ]
                 },
-                "",
                 {
                     "type": "list",
                     "states": [
@@ -4153,7 +5295,6 @@
                         }
                     ]
                 },
-                "",
                 {
                     "type": "list",
                     "states": [
@@ -4165,7 +5306,6 @@
                         }
                     ]
                 },
-                "",
                 {
                     "type": "list",
                     "states": [
@@ -4177,7 +5317,6 @@
                         }
                     ]
                 },
-                "",
                 {
                     "type": "list",
                     "states": [
@@ -4189,7 +5328,6 @@
                         }
                     ]
                 },
-                "",
                 {
                     "type": "list",
                     "states": [
@@ -4201,7 +5339,6 @@
                         }
                     ]
                 },
-                "",
                 {
                     "type": "list",
                     "states": [
@@ -4213,7 +5350,6 @@
                         }
                     ]
                 },
-                "",
                 {
                     "type": "list",
                     "states": [
@@ -4225,7 +5361,6 @@
                         }
                     ]
                 },
-                "",
                 {
                     "type": "list",
                     "states": [
@@ -4237,7 +5372,6 @@
                         }
                     ]
                 },
-                "",
                 {
                     "type": "list",
                     "states": [
@@ -4249,7 +5383,6 @@
                         }
                     ]
                 },
-                "",
                 {
                     "type": "list",
                     "states": [
@@ -4261,7 +5394,6 @@
                         }
                     ]
                 },
-                "",
                 {
                     "type": "list",
                     "states": [
@@ -4273,7 +5405,6 @@
                         }
                     ]
                 },
-                "",
                 {
                     "type": "list",
                     "states": [
@@ -4285,7 +5416,6 @@
                         }
                     ]
                 },
-                "",
                 {
                     "type": "list",
                     "states": [
@@ -4297,7 +5427,6 @@
                         }
                     ]
                 },
-                "",
                 {
                     "type": "list",
                     "states": [
@@ -4309,7 +5438,6 @@
                         }
                     ]
                 },
-                "",
                 {
                     "type": "list",
                     "states": [
@@ -4321,7 +5449,6 @@
                         }
                     ]
                 },
-                "",
                 {
                     "type": "list",
                     "states": [
@@ -4333,7 +5460,6 @@
                         }
                     ]
                 },
-                "",
                 {
                     "type": "list",
                     "states": [
@@ -4345,7 +5471,6 @@
                         }
                     ]
                 },
-                "",
                 {
                     "type": "list",
                     "states": [
@@ -4357,7 +5482,6 @@
                         }
                     ]
                 },
-                "",
                 {
                     "type": "list",
                     "states": [
@@ -4369,7 +5493,6 @@
                         }
                     ]
                 },
-                "",
                 {
                     "type": "list",
                     "states": [
@@ -4381,7 +5504,6 @@
                         }
                     ]
                 },
-                "",
                 {
                     "type": "list",
                     "states": [
@@ -4393,7 +5515,6 @@
                         }
                     ]
                 },
-                "",
                 {
                     "type": "list",
                     "states": [
@@ -4405,7 +5526,6 @@
                         }
                     ]
                 },
-                "",
                 {
                     "type": "list",
                     "states": [
@@ -4417,7 +5537,6 @@
                         }
                     ]
                 },
-                "",
                 {
                     "type": "list",
                     "states": [
@@ -4429,7 +5548,6 @@
                         }
                     ]
                 },
-                "",
                 {
                     "type": "list",
                     "states": [
@@ -4441,7 +5559,6 @@
                         }
                     ]
                 },
-                "",
                 {
                     "type": "list",
                     "states": [
@@ -4453,7 +5570,6 @@
                         }
                     ]
                 },
-                "",
                 {
                     "type": "list",
                     "states": [
@@ -4465,7 +5581,6 @@
                         }
                     ]
                 },
-                "",
                 {
                     "type": "list",
                     "states": [
@@ -4477,7 +5592,6 @@
                         }
                     ]
                 },
-                "",
                 {
                     "type": "list",
                     "states": [
@@ -4489,7 +5603,6 @@
                         }
                     ]
                 },
-                "",
                 {
                     "type": "list",
                     "states": [
@@ -4501,7 +5614,6 @@
                         }
                     ]
                 },
-                "",
                 {
                     "type": "list",
                     "states": [
@@ -4513,7 +5625,6 @@
                         }
                     ]
                 },
-                "",
                 {
                     "type": "list",
                     "states": [
@@ -4525,7 +5636,6 @@
                         }
                     ]
                 },
-                "",
                 {
                     "type": "list",
                     "states": [
@@ -4537,7 +5647,6 @@
                         }
                     ]
                 },
-                "",
                 {
                     "type": "list",
                     "states": [
@@ -4549,7 +5658,6 @@
                         }
                     ]
                 },
-                "",
                 {
                     "type": "list",
                     "states": [
@@ -4561,7 +5669,6 @@
                         }
                     ]
                 },
-                "",
                 {
                     "type": "list",
                     "states": [
@@ -4573,7 +5680,6 @@
                         }
                     ]
                 },
-                "",
                 {
                     "type": "list",
                     "states": [
@@ -4585,7 +5691,6 @@
                         }
                     ]
                 },
-                "",
                 {
                     "type": "list",
                     "states": [
@@ -4597,7 +5702,6 @@
                         }
                     ]
                 },
-                "",
                 {
                     "type": "list",
                     "states": [
@@ -4609,7 +5713,6 @@
                         }
                     ]
                 },
-                "",
                 {
                     "type": "list",
                     "states": [
@@ -4621,7 +5724,6 @@
                         }
                     ]
                 },
-                "",
                 {
                     "type": "list",
                     "states": [
@@ -4633,7 +5735,6 @@
                         }
                     ]
                 },
-                "",
                 {
                     "type": "list",
                     "states": [
@@ -4645,7 +5746,6 @@
                         }
                     ]
                 },
-                "",
                 {
                     "type": "list",
                     "states": [
@@ -4657,7 +5757,6 @@
                         }
                     ]
                 },
-                "",
                 {
                     "type": "list",
                     "states": [
@@ -4669,7 +5768,6 @@
                         }
                     ]
                 },
-                "",
                 {
                     "type": "list",
                     "states": [
@@ -4681,7 +5779,6 @@
                         }
                     ]
                 },
-                "",
                 {
                     "type": "list",
                     "states": [
@@ -4693,7 +5790,6 @@
                         }
                     ]
                 },
-                "",
                 {
                     "type": "list",
                     "states": [
@@ -4705,7 +5801,6 @@
                         }
                     ]
                 },
-                "",
                 {
                     "type": "list",
                     "states": [
@@ -4717,7 +5812,6 @@
                         }
                     ]
                 },
-                "",
                 {
                     "type": "list",
                     "states": [
@@ -4729,7 +5823,6 @@
                         }
                     ]
                 },
-                "",
                 {
                     "type": "list",
                     "states": [
@@ -4741,7 +5834,6 @@
                         }
                     ]
                 },
-                "",
                 {
                     "type": "list",
                     "states": [
@@ -4753,7 +5845,6 @@
                         }
                     ]
                 },
-                "",
                 {
                     "type": "list",
                     "states": [
@@ -4765,7 +5856,6 @@
                         }
                     ]
                 },
-                "",
                 {
                     "type": "list",
                     "states": [
@@ -4777,7 +5867,6 @@
                         }
                     ]
                 },
-                "",
                 {
                     "type": "list",
                     "states": [
@@ -4789,7 +5878,6 @@
                         }
                     ]
                 },
-                "",
                 {
                     "type": "list",
                     "states": [
@@ -4801,7 +5889,6 @@
                         }
                     ]
                 },
-                "",
                 {
                     "type": "list",
                     "states": [
@@ -4813,7 +5900,6 @@
                         }
                     ]
                 },
-                "",
                 {
                     "type": "list",
                     "states": [
@@ -4825,7 +5911,6 @@
                         }
                     ]
                 },
-                "",
                 {
                     "type": "list",
                     "states": [
@@ -4837,7 +5922,6 @@
                         }
                     ]
                 },
-                "",
                 {
                     "type": "list",
                     "states": [
@@ -4849,7 +5933,6 @@
                         }
                     ]
                 },
-                "",
                 {
                     "type": "list",
                     "states": [
@@ -4861,7 +5944,6 @@
                         }
                     ]
                 },
-                "",
                 {
                     "type": "list",
                     "states": [
@@ -4873,7 +5955,6 @@
                         }
                     ]
                 },
-                "",
                 {
                     "type": "list",
                     "states": [
@@ -4885,7 +5966,6 @@
                         }
                     ]
                 },
-                "",
                 {
                     "type": "list",
                     "states": [
@@ -4897,7 +5977,6 @@
                         }
                     ]
                 },
-                "",
                 {
                     "type": "list",
                     "states": [
@@ -4909,7 +5988,6 @@
                         }
                     ]
                 },
-                "",
                 {
                     "type": "list",
                     "states": [
@@ -4921,7 +5999,6 @@
                         }
                     ]
                 },
-                "",
                 {
                     "type": "list",
                     "states": [
@@ -4933,7 +6010,6 @@
                         }
                     ]
                 },
-                "",
                 {
                     "type": "list",
                     "states": [
@@ -4945,7 +6021,6 @@
                         }
                     ]
                 },
-                "",
                 {
                     "type": "list",
                     "states": [
@@ -4957,7 +6032,6 @@
                         }
                     ]
                 },
-                "",
                 {
                     "type": "list",
                     "states": [
@@ -4969,7 +6043,6 @@
                         }
                     ]
                 },
-                "",
                 {
                     "type": "list",
                     "states": [
@@ -4981,7 +6054,6 @@
                         }
                     ]
                 },
-                "",
                 {
                     "type": "list",
                     "states": [
@@ -4993,7 +6065,6 @@
                         }
                     ]
                 },
-                "",
                 {
                     "type": "list",
                     "states": [
@@ -5005,7 +6076,6 @@
                         }
                     ]
                 },
-                "",
                 {
                     "type": "list",
                     "states": [
@@ -5020,7 +6090,6 @@
                         }
                     ]
                 },
-                "",
                 {
                     "type": "list",
                     "states": [
@@ -5032,7 +6101,6 @@
                         }
                     ]
                 },
-                "",
                 {
                     "type": "list",
                     "states": [
@@ -5044,7 +6112,6 @@
                         }
                     ]
                 },
-                "",
                 {
                     "type": "list",
                     "states": [
@@ -5056,7 +6123,6 @@
                         }
                     ]
                 },
-                "",
                 {
                     "type": "list",
                     "states": [
@@ -5068,7 +6134,6 @@
                         }
                     ]
                 },
-                "",
                 {
                     "type": "list",
                     "states": [
@@ -5080,7 +6145,6 @@
                         }
                     ]
                 },
-                "",
                 {
                     "type": "list",
                     "states": [
@@ -5092,7 +6156,6 @@
                         }
                     ]
                 },
-                "",
                 {
                     "type": "list",
                     "states": [
@@ -5104,7 +6167,6 @@
                         }
                     ]
                 },
-                "",
                 {
                     "type": "list",
                     "states": [
@@ -5116,7 +6178,6 @@
                         }
                     ]
                 },
-                "",
                 {
                     "type": "list",
                     "states": [
@@ -5128,7 +6189,6 @@
                         }
                     ]
                 },
-                "",
                 {
                     "type": "list",
                     "states": [
@@ -5140,7 +6200,6 @@
                         }
                     ]
                 },
-                "",
                 {
                     "type": "list",
                     "states": [
@@ -5152,7 +6211,6 @@
                         }
                     ]
                 },
-                "",
                 {
                     "type": "list",
                     "states": [
@@ -5164,7 +6222,6 @@
                         }
                     ]
                 },
-                "",
                 {
                     "type": "list",
                     "states": [
@@ -5176,7 +6233,18 @@
                         }
                     ]
                 },
-                "",
+                {
+                    "type": "list",
+                    "states": [
+                        {
+                            "text": "SECURITY CHECKPOINT BRAVO   [> OFF]",
+                            "active": true
+                        },
+                        {
+                            "text": "SECURITY CHECKPOINT BRAVO   [> ON]"
+                        }
+                    ]
+                },
                 {
                     "type": "list",
                     "states": [
@@ -5188,7 +6256,6 @@
                         }
                     ]
                 },
-                "",
                 {
                     "type": "list",
                     "states": [
@@ -5200,7 +6267,6 @@
                         }
                     ]
                 },
-                "",
                 {
                     "type": "list",
                     "states": [
@@ -5212,7 +6278,6 @@
                         }
                     ]
                 },
-                "",
                 {
                     "type": "list",
                     "states": [
@@ -5224,7 +6289,6 @@
                         }
                     ]
                 },
-                "",
                 {
                     "type": "list",
                     "states": [
@@ -5236,7 +6300,6 @@
                         }
                     ]
                 },
-                "",
                 {
                     "type": "list",
                     "states": [
@@ -5248,7 +6311,6 @@
                         }
                     ]
                 },
-                "",
                 {
                     "type": "list",
                     "states": [
@@ -5260,7 +6322,6 @@
                         }
                     ]
                 },
-                "",
                 {
                     "type": "list",
                     "states": [
@@ -5272,7 +6333,6 @@
                         }
                     ]
                 },
-                "",
                 {
                     "type": "list",
                     "states": [
@@ -5284,7 +6344,6 @@
                         }
                     ]
                 },
-                "",
                 {
                     "type": "list",
                     "states": [
@@ -5296,7 +6355,6 @@
                         }
                     ]
                 },
-                "",
                 {
                     "type": "list",
                     "states": [
@@ -5308,7 +6366,6 @@
                         }
                     ]
                 },
-                "",
                 {
                     "type": "list",
                     "states": [
@@ -5320,7 +6377,6 @@
                         }
                     ]
                 },
-                "",
                 {
                     "type": "list",
                     "states": [
@@ -5332,7 +6388,6 @@
                         }
                     ]
                 },
-                "",
                 {
                     "type": "list",
                     "states": [
@@ -5344,7 +6399,6 @@
                         }
                     ]
                 },
-                "",
                 {
                     "type": "list",
                     "states": [
@@ -5356,7 +6410,6 @@
                         }
                     ]
                 },
-                "",
                 {
                     "type": "list",
                     "states": [
@@ -5368,7 +6421,6 @@
                         }
                     ]
                 },
-                "",
                 {
                     "type": "list",
                     "states": [
@@ -5380,7 +6432,6 @@
                         }
                     ]
                 },
-                "",
                 {
                     "type": "list",
                     "states": [
@@ -5392,7 +6443,6 @@
                         }
                     ]
                 },
-                "",
                 {
                     "type": "list",
                     "states": [
@@ -5404,7 +6454,6 @@
                         }
                     ]
                 },
-                "",
                 {
                     "type": "list",
                     "states": [
@@ -5416,7 +6465,6 @@
                         }
                     ]
                 },
-                "",
                 {
                     "type": "list",
                     "states": [
@@ -5428,7 +6476,6 @@
                         }
                     ]
                 },
-                "",
                 {
                     "type": "list",
                     "states": [
@@ -5440,7 +6487,6 @@
                         }
                     ]
                 },
-                "",
                 {
                     "type": "list",
                     "states": [
@@ -5452,7 +6498,6 @@
                         }
                     ]
                 },
-                "",
                 {
                     "type": "list",
                     "states": [
@@ -5464,7 +6509,6 @@
                         }
                     ]
                 },
-                "",
                 {
                     "type": "list",
                     "states": [
@@ -5476,7 +6520,6 @@
                         }
                     ]
                 },
-                "",
                 {
                     "type": "list",
                     "states": [
@@ -5488,7 +6531,6 @@
                         }
                     ]
                 },
-                "",
                 {
                     "type": "list",
                     "states": [
@@ -5500,7 +6542,6 @@
                         }
                     ]
                 },
-                "",
                 {
                     "type": "list",
                     "states": [
@@ -5512,7 +6553,6 @@
                         }
                     ]
                 },
-                "",
                 {
                     "type": "list",
                     "states": [
@@ -5524,7 +6564,6 @@
                         }
                     ]
                 },
-                "",
                 {
                     "type": "list",
                     "states": [
@@ -5536,7 +6575,6 @@
                         }
                     ]
                 },
-                "",
                 {
                     "type": "list",
                     "states": [
@@ -5548,7 +6586,6 @@
                         }
                     ]
                 },
-                "",
                 {
                     "type": "list",
                     "states": [
@@ -5560,7 +6597,6 @@
                         }
                     ]
                 },
-                "",
                 {
                     "type": "list",
                     "states": [
@@ -5572,7 +6608,6 @@
                         }
                     ]
                 },
-                "",
                 {
                     "type": "list",
                     "states": [
@@ -5584,7 +6619,6 @@
                         }
                     ]
                 },
-                "",
                 {
                     "type": "list",
                     "states": [
@@ -5596,7 +6630,6 @@
                         }
                     ]
                 },
-                "",
                 {
                     "type": "list",
                     "states": [
@@ -5608,7 +6641,6 @@
                         }
                     ]
                 },
-                "",
                 {
                     "type": "list",
                     "states": [
@@ -5620,7 +6652,6 @@
                         }
                     ]
                 },
-                "",
                 {
                     "type": "list",
                     "states": [
@@ -5632,8 +6663,6 @@
                         }
                     ]
                 },
-                "",
-                "\\> SECURITY CHECKPOINT BRAVO",
                 "",
                 {
                     "type": "link",
@@ -5648,29 +6677,98 @@
             "content": [
                 {
                     "type": "text",
-                    "text": "# TRAC PC\\-9800 Series System Terminal"
+                    "text": "# TRAC PC\\-9800 Series System Terminal",
+                    "speed": 6
                 },
-                "",
-                "Reythorne OS Version 6\\.20",
-                "Copyright \\(C\\) 2981, 2987 Reythorne Corp\\. / TRAC Corporation",
-                "",
-                "EEEE I3000000032940xf100110303B77500EEEE I400000004294\\_M8\\_BL1\\_10221D113B323EEEE5",
-                "no sdio debug board detected",
-                "TE : 102609",
-                "BT : 11:30:18 Mar 14 2314",
-                "",
-                "Boot From SPI",
-                "ucl decompress\\.\\.\\.pass",
-                "0x12345678",
-                "Boot from internal device 1st SPI",
-                "",
-                "TE : 512897",
-                "",
-                "System Started"
+                {
+                    "type": "text",
+                    "text": "",
+                    "speed": 6
+                },
+                {
+                    "type": "text",
+                    "text": "Reythorne OS Version 6\\.20",
+                    "speed": 6
+                },
+                {
+                    "type": "text",
+                    "text": "Copyright \\(C\\) 2981, 2987 Reythorne Corp\\. / TRAC Corporation",
+                    "speed": 6
+                },
+                {
+                    "type": "text",
+                    "text": "",
+                    "speed": 6
+                },
+                {
+                    "type": "text",
+                    "text": "EEEE I3000000032940xf100110303B77500EEEE I400000004294\\_M8\\_BL1\\_10221D113B323EEEE5",
+                    "speed": 6
+                },
+                {
+                    "type": "text",
+                    "text": "no sdio debug board detected",
+                    "speed": 6
+                },
+                {
+                    "type": "text",
+                    "text": "TE : 102609",
+                    "speed": 6
+                },
+                {
+                    "type": "text",
+                    "text": "BT : 11:30:18 Mar 14 2314",
+                    "speed": 6
+                },
+                {
+                    "type": "text",
+                    "text": "",
+                    "speed": 6
+                },
+                {
+                    "type": "text",
+                    "text": "Boot From SPI",
+                    "speed": 6
+                },
+                {
+                    "type": "text",
+                    "text": "ucl decompress\\.\\.\\.pass",
+                    "speed": 6
+                },
+                {
+                    "type": "text",
+                    "text": "0x12345678",
+                    "speed": 6
+                },
+                {
+                    "type": "text",
+                    "text": "Boot from internal device 1st SPI",
+                    "speed": 6
+                },
+                {
+                    "type": "text",
+                    "text": "",
+                    "speed": 6
+                },
+                {
+                    "type": "text",
+                    "text": "TE : 512897",
+                    "speed": 6
+                },
+                {
+                    "type": "text",
+                    "text": "",
+                    "speed": 6
+                },
+                {
+                    "type": "text",
+                    "text": "System Started",
+                    "speed": 6
+                }
             ],
             "onDone": {
                 "target": "maintenance",
-                "delayMs": 2600
+                "delayMs": 1200
             }
         },
         {
@@ -5679,29 +6777,98 @@
             "content": [
                 {
                     "type": "text",
-                    "text": "# TRAC PC\\-9800 Series System Terminal"
+                    "text": "# TRAC PC\\-9800 Series System Terminal",
+                    "speed": 6
                 },
-                "",
-                "Reythorne OS Version 6\\.20",
-                "Copyright \\(C\\) 2981, 2987 Reythorne Corp\\. / TRAC Corporation",
-                "",
-                "EEEE I3000000032940xf100110303B77500EEEE I400000004294\\_M8\\_BL1\\_10221D113B323EEEE5",
-                "no sdio debug board detected",
-                "TE : 102609",
-                "BT : 11:30:18 Mar 14 2314",
-                "",
-                "Boot From SPI",
-                "ucl decompress\\.\\.\\.pass",
-                "0x12345678",
-                "Boot from internal device 1st SPI",
-                "",
-                "TE : 512897",
-                "",
-                "System Started"
+                {
+                    "type": "text",
+                    "text": "",
+                    "speed": 6
+                },
+                {
+                    "type": "text",
+                    "text": "Reythorne OS Version 6\\.20",
+                    "speed": 6
+                },
+                {
+                    "type": "text",
+                    "text": "Copyright \\(C\\) 2981, 2987 Reythorne Corp\\. / TRAC Corporation",
+                    "speed": 6
+                },
+                {
+                    "type": "text",
+                    "text": "",
+                    "speed": 6
+                },
+                {
+                    "type": "text",
+                    "text": "EEEE I3000000032940xf100110303B77500EEEE I400000004294\\_M8\\_BL1\\_10221D113B323EEEE5",
+                    "speed": 6
+                },
+                {
+                    "type": "text",
+                    "text": "no sdio debug board detected",
+                    "speed": 6
+                },
+                {
+                    "type": "text",
+                    "text": "TE : 102609",
+                    "speed": 6
+                },
+                {
+                    "type": "text",
+                    "text": "BT : 11:30:18 Mar 14 2314",
+                    "speed": 6
+                },
+                {
+                    "type": "text",
+                    "text": "",
+                    "speed": 6
+                },
+                {
+                    "type": "text",
+                    "text": "Boot From SPI",
+                    "speed": 6
+                },
+                {
+                    "type": "text",
+                    "text": "ucl decompress\\.\\.\\.pass",
+                    "speed": 6
+                },
+                {
+                    "type": "text",
+                    "text": "0x12345678",
+                    "speed": 6
+                },
+                {
+                    "type": "text",
+                    "text": "Boot from internal device 1st SPI",
+                    "speed": 6
+                },
+                {
+                    "type": "text",
+                    "text": "",
+                    "speed": 6
+                },
+                {
+                    "type": "text",
+                    "text": "TE : 512897",
+                    "speed": 6
+                },
+                {
+                    "type": "text",
+                    "text": "",
+                    "speed": 6
+                },
+                {
+                    "type": "text",
+                    "text": "System Started",
+                    "speed": 6
+                }
             ],
             "onDone": {
                 "target": "floor-3-life-support-password",
-                "delayMs": 2600
+                "delayMs": 1200
             }
         },
         {
@@ -5710,29 +6877,98 @@
             "content": [
                 {
                     "type": "text",
-                    "text": "# TRAC PC\\-9800 Series System Terminal"
+                    "text": "# TRAC PC\\-9800 Series System Terminal",
+                    "speed": 6
                 },
-                "",
-                "Reythorne OS Version 6\\.20",
-                "Copyright \\(C\\) 2981, 2987 Reythorne Corp\\. / TRAC Corporation",
-                "",
-                "EEEE I3000000032940xf100110303B77500EEEE I400000004294\\_M8\\_BL1\\_10221D113B323EEEE5",
-                "no sdio debug board detected",
-                "TE : 102609",
-                "BT : 11:30:18 Mar 14 2314",
-                "",
-                "Boot From SPI",
-                "ucl decompress\\.\\.\\.pass",
-                "0x12345678",
-                "Boot from internal device 1st SPI",
-                "",
-                "TE : 512897",
-                "",
-                "System Started"
+                {
+                    "type": "text",
+                    "text": "",
+                    "speed": 6
+                },
+                {
+                    "type": "text",
+                    "text": "Reythorne OS Version 6\\.20",
+                    "speed": 6
+                },
+                {
+                    "type": "text",
+                    "text": "Copyright \\(C\\) 2981, 2987 Reythorne Corp\\. / TRAC Corporation",
+                    "speed": 6
+                },
+                {
+                    "type": "text",
+                    "text": "",
+                    "speed": 6
+                },
+                {
+                    "type": "text",
+                    "text": "EEEE I3000000032940xf100110303B77500EEEE I400000004294\\_M8\\_BL1\\_10221D113B323EEEE5",
+                    "speed": 6
+                },
+                {
+                    "type": "text",
+                    "text": "no sdio debug board detected",
+                    "speed": 6
+                },
+                {
+                    "type": "text",
+                    "text": "TE : 102609",
+                    "speed": 6
+                },
+                {
+                    "type": "text",
+                    "text": "BT : 11:30:18 Mar 14 2314",
+                    "speed": 6
+                },
+                {
+                    "type": "text",
+                    "text": "",
+                    "speed": 6
+                },
+                {
+                    "type": "text",
+                    "text": "Boot From SPI",
+                    "speed": 6
+                },
+                {
+                    "type": "text",
+                    "text": "ucl decompress\\.\\.\\.pass",
+                    "speed": 6
+                },
+                {
+                    "type": "text",
+                    "text": "0x12345678",
+                    "speed": 6
+                },
+                {
+                    "type": "text",
+                    "text": "Boot from internal device 1st SPI",
+                    "speed": 6
+                },
+                {
+                    "type": "text",
+                    "text": "",
+                    "speed": 6
+                },
+                {
+                    "type": "text",
+                    "text": "TE : 512897",
+                    "speed": 6
+                },
+                {
+                    "type": "text",
+                    "text": "",
+                    "speed": 6
+                },
+                {
+                    "type": "text",
+                    "text": "System Started",
+                    "speed": 6
+                }
             ],
             "onDone": {
                 "target": "cryopod-controls",
-                "delayMs": 2600
+                "delayMs": 1200
             }
         },
         {
@@ -5741,29 +6977,98 @@
             "content": [
                 {
                     "type": "text",
-                    "text": "# TRAC PC\\-9800 Series System Terminal"
+                    "text": "# TRAC PC\\-9800 Series System Terminal",
+                    "speed": 6
                 },
-                "",
-                "Reythorne OS Version 6\\.20",
-                "Copyright \\(C\\) 2981, 2987 Reythorne Corp\\. / TRAC Corporation",
-                "",
-                "EEEE I3000000032940xf100110303B77500EEEE I400000004294\\_M8\\_BL1\\_10221D113B323EEEE5",
-                "no sdio debug board detected",
-                "TE : 102609",
-                "BT : 11:30:18 Mar 14 2314",
-                "",
-                "Boot From SPI",
-                "ucl decompress\\.\\.\\.pass",
-                "0x12345678",
-                "Boot from internal device 1st SPI",
-                "",
-                "TE : 512897",
-                "",
-                "System Started"
+                {
+                    "type": "text",
+                    "text": "",
+                    "speed": 6
+                },
+                {
+                    "type": "text",
+                    "text": "Reythorne OS Version 6\\.20",
+                    "speed": 6
+                },
+                {
+                    "type": "text",
+                    "text": "Copyright \\(C\\) 2981, 2987 Reythorne Corp\\. / TRAC Corporation",
+                    "speed": 6
+                },
+                {
+                    "type": "text",
+                    "text": "",
+                    "speed": 6
+                },
+                {
+                    "type": "text",
+                    "text": "EEEE I3000000032940xf100110303B77500EEEE I400000004294\\_M8\\_BL1\\_10221D113B323EEEE5",
+                    "speed": 6
+                },
+                {
+                    "type": "text",
+                    "text": "no sdio debug board detected",
+                    "speed": 6
+                },
+                {
+                    "type": "text",
+                    "text": "TE : 102609",
+                    "speed": 6
+                },
+                {
+                    "type": "text",
+                    "text": "BT : 11:30:18 Mar 14 2314",
+                    "speed": 6
+                },
+                {
+                    "type": "text",
+                    "text": "",
+                    "speed": 6
+                },
+                {
+                    "type": "text",
+                    "text": "Boot From SPI",
+                    "speed": 6
+                },
+                {
+                    "type": "text",
+                    "text": "ucl decompress\\.\\.\\.pass",
+                    "speed": 6
+                },
+                {
+                    "type": "text",
+                    "text": "0x12345678",
+                    "speed": 6
+                },
+                {
+                    "type": "text",
+                    "text": "Boot from internal device 1st SPI",
+                    "speed": 6
+                },
+                {
+                    "type": "text",
+                    "text": "",
+                    "speed": 6
+                },
+                {
+                    "type": "text",
+                    "text": "TE : 512897",
+                    "speed": 6
+                },
+                {
+                    "type": "text",
+                    "text": "",
+                    "speed": 6
+                },
+                {
+                    "type": "text",
+                    "text": "System Started",
+                    "speed": 6
+                }
             ],
             "onDone": {
                 "target": "qa-inspection",
-                "delayMs": 2600
+                "delayMs": 1200
             }
         },
         {
@@ -5772,29 +7077,98 @@
             "content": [
                 {
                     "type": "text",
-                    "text": "# TRAC PC\\-9800 Series System Terminal"
+                    "text": "# TRAC PC\\-9800 Series System Terminal",
+                    "speed": 6
                 },
-                "",
-                "Reythorne OS Version 6\\.20",
-                "Copyright \\(C\\) 2981, 2987 Reythorne Corp\\. / TRAC Corporation",
-                "",
-                "EEEE I3000000032940xf100110303B77500EEEE I400000004294\\_M8\\_BL1\\_10221D113B323EEEE5",
-                "no sdio debug board detected",
-                "TE : 102609",
-                "BT : 11:30:18 Mar 14 2314",
-                "",
-                "Boot From SPI",
-                "ucl decompress\\.\\.\\.pass",
-                "0x12345678",
-                "Boot from internal device 1st SPI",
-                "",
-                "TE : 512897",
-                "",
-                "System Started"
+                {
+                    "type": "text",
+                    "text": "",
+                    "speed": 6
+                },
+                {
+                    "type": "text",
+                    "text": "Reythorne OS Version 6\\.20",
+                    "speed": 6
+                },
+                {
+                    "type": "text",
+                    "text": "Copyright \\(C\\) 2981, 2987 Reythorne Corp\\. / TRAC Corporation",
+                    "speed": 6
+                },
+                {
+                    "type": "text",
+                    "text": "",
+                    "speed": 6
+                },
+                {
+                    "type": "text",
+                    "text": "EEEE I3000000032940xf100110303B77500EEEE I400000004294\\_M8\\_BL1\\_10221D113B323EEEE5",
+                    "speed": 6
+                },
+                {
+                    "type": "text",
+                    "text": "no sdio debug board detected",
+                    "speed": 6
+                },
+                {
+                    "type": "text",
+                    "text": "TE : 102609",
+                    "speed": 6
+                },
+                {
+                    "type": "text",
+                    "text": "BT : 11:30:18 Mar 14 2314",
+                    "speed": 6
+                },
+                {
+                    "type": "text",
+                    "text": "",
+                    "speed": 6
+                },
+                {
+                    "type": "text",
+                    "text": "Boot From SPI",
+                    "speed": 6
+                },
+                {
+                    "type": "text",
+                    "text": "ucl decompress\\.\\.\\.pass",
+                    "speed": 6
+                },
+                {
+                    "type": "text",
+                    "text": "0x12345678",
+                    "speed": 6
+                },
+                {
+                    "type": "text",
+                    "text": "Boot from internal device 1st SPI",
+                    "speed": 6
+                },
+                {
+                    "type": "text",
+                    "text": "",
+                    "speed": 6
+                },
+                {
+                    "type": "text",
+                    "text": "TE : 512897",
+                    "speed": 6
+                },
+                {
+                    "type": "text",
+                    "text": "",
+                    "speed": 6
+                },
+                {
+                    "type": "text",
+                    "text": "System Started",
+                    "speed": 6
+                }
             ],
             "onDone": {
                 "target": "room-controls",
-                "delayMs": 2600
+                "delayMs": 1200
             }
         },
         {
@@ -5803,29 +7177,98 @@
             "content": [
                 {
                     "type": "text",
-                    "text": "# TRAC PC\\-9800 Series System Terminal"
+                    "text": "# TRAC PC\\-9800 Series System Terminal",
+                    "speed": 6
                 },
-                "",
-                "Reythorne OS Version 6\\.20",
-                "Copyright \\(C\\) 2981, 2987 Reythorne Corp\\. / TRAC Corporation",
-                "",
-                "EEEE I3000000032940xf100110303B77500EEEE I400000004294\\_M8\\_BL1\\_10221D113B323EEEE5",
-                "no sdio debug board detected",
-                "TE : 102609",
-                "BT : 11:30:18 Mar 14 2314",
-                "",
-                "Boot From SPI",
-                "ucl decompress\\.\\.\\.pass",
-                "0x12345678",
-                "Boot from internal device 1st SPI",
-                "",
-                "TE : 512897",
-                "",
-                "System Started"
+                {
+                    "type": "text",
+                    "text": "",
+                    "speed": 6
+                },
+                {
+                    "type": "text",
+                    "text": "Reythorne OS Version 6\\.20",
+                    "speed": 6
+                },
+                {
+                    "type": "text",
+                    "text": "Copyright \\(C\\) 2981, 2987 Reythorne Corp\\. / TRAC Corporation",
+                    "speed": 6
+                },
+                {
+                    "type": "text",
+                    "text": "",
+                    "speed": 6
+                },
+                {
+                    "type": "text",
+                    "text": "EEEE I3000000032940xf100110303B77500EEEE I400000004294\\_M8\\_BL1\\_10221D113B323EEEE5",
+                    "speed": 6
+                },
+                {
+                    "type": "text",
+                    "text": "no sdio debug board detected",
+                    "speed": 6
+                },
+                {
+                    "type": "text",
+                    "text": "TE : 102609",
+                    "speed": 6
+                },
+                {
+                    "type": "text",
+                    "text": "BT : 11:30:18 Mar 14 2314",
+                    "speed": 6
+                },
+                {
+                    "type": "text",
+                    "text": "",
+                    "speed": 6
+                },
+                {
+                    "type": "text",
+                    "text": "Boot From SPI",
+                    "speed": 6
+                },
+                {
+                    "type": "text",
+                    "text": "ucl decompress\\.\\.\\.pass",
+                    "speed": 6
+                },
+                {
+                    "type": "text",
+                    "text": "0x12345678",
+                    "speed": 6
+                },
+                {
+                    "type": "text",
+                    "text": "Boot from internal device 1st SPI",
+                    "speed": 6
+                },
+                {
+                    "type": "text",
+                    "text": "",
+                    "speed": 6
+                },
+                {
+                    "type": "text",
+                    "text": "TE : 512897",
+                    "speed": 6
+                },
+                {
+                    "type": "text",
+                    "text": "",
+                    "speed": 6
+                },
+                {
+                    "type": "text",
+                    "text": "System Started",
+                    "speed": 6
+                }
             ],
             "onDone": {
                 "target": "navigation-password",
-                "delayMs": 2600
+                "delayMs": 1200
             }
         },
         {
@@ -5867,19 +7310,88 @@
                     "type": "list",
                     "states": [
                         {
-                            "text": "ATMOSPHERE REPLENISHMENT    [> ON]"
+                            "text": "ATMOSPHERE REPLENISHMENT    [> ON]",
+                            "active": true,
+                            "action": "setAtmosphereReplenishment",
+                            "target": "floor-3-atmosphere:on"
                         },
                         {
-                            "text": "ATMOSPHERE REPLENISHMENT    [> OFF]"
+                            "text": "ATMOSPHERE REPLENISHMENT    [> OFF]",
+                            "action": "setAtmosphereReplenishment",
+                            "target": "floor-3-atmosphere:off"
                         }
-                    ]
+                    ],
+                    "scriptId": "atmosphereReplenishment"
                 },
                 "",
                 "GAS MIXTURE",
-                "NITROGEN       \\[\\> 78%\\]",
-                "OXYGEN         \\[\\> 22%\\]",
+                {
+                    "type": "link",
+                    "text": "NITROGEN                    [> 78%]",
+                    "target": [
+                        {
+                            "type": "action",
+                            "action": "adjustAtmosphere",
+                            "target": "floor-3-atmosphere",
+                            "field": "nitrogen",
+                            "delta": 1
+                        },
+                        {
+                            "type": "action",
+                            "action": "adjustAtmosphere",
+                            "target": "floor-3-atmosphere",
+                            "field": "nitrogen",
+                            "delta": -1,
+                            "shiftKey": true
+                        }
+                    ],
+                    "scriptId": "atmosphereNitrogen"
+                },
+                {
+                    "type": "link",
+                    "text": "OXYGEN                      [> 22%]",
+                    "target": [
+                        {
+                            "type": "action",
+                            "action": "adjustAtmosphere",
+                            "target": "floor-3-atmosphere",
+                            "field": "oxygen",
+                            "delta": 1
+                        },
+                        {
+                            "type": "action",
+                            "action": "adjustAtmosphere",
+                            "target": "floor-3-atmosphere",
+                            "field": "oxygen",
+                            "delta": -1,
+                            "shiftKey": true
+                        }
+                    ],
+                    "scriptId": "atmosphereOxygen"
+                },
                 "",
-                "TEMPERATURE    \\[\\> 22°C\\]",
+                {
+                    "type": "link",
+                    "text": "TEMPERATURE                 [> 22°C]",
+                    "target": [
+                        {
+                            "type": "action",
+                            "action": "adjustAtmosphere",
+                            "target": "floor-3-atmosphere",
+                            "field": "temperature",
+                            "delta": 1
+                        },
+                        {
+                            "type": "action",
+                            "action": "adjustAtmosphere",
+                            "target": "floor-3-atmosphere",
+                            "field": "temperature",
+                            "delta": -1,
+                            "shiftKey": true
+                        }
+                    ],
+                    "scriptId": "atmosphereTemperature"
+                },
                 "",
                 "======",
                 {
@@ -5956,14 +7468,8 @@
                 "======",
                 {
                     "type": "link",
-                    "text": "< BACK",
-                    "target": [
-                        {
-                            "type": "action",
-                            "action": "back",
-                            "target": "floor-3-life-support"
-                        }
-                    ]
+                    "text": "< SHUT DOWN",
+                    "target": "starting-screen"
                 }
             ]
         },
@@ -6094,6 +7600,13 @@
                             "text": "CONTROL CRYOPOD 10    [> INACTIVE]"
                         }
                     ]
+                },
+                "",
+                "======",
+                {
+                    "type": "link",
+                    "text": "< SHUT DOWN",
+                    "target": "starting-screen"
                 }
             ]
         },
@@ -6151,6 +7664,7 @@
                     "text": "> REPORT4855",
                     "target": "mreport9"
                 },
+                "",
                 "======",
                 {
                     "type": "link",
@@ -6177,6 +7691,13 @@
                     "type": "link",
                     "text": "> NETWORK",
                     "target": "maintenance-router-password"
+                },
+                "",
+                "======",
+                {
+                    "type": "link",
+                    "text": "< SHUT DOWN",
+                    "target": "starting-screen"
                 }
             ]
         },
@@ -6559,6 +8080,7 @@
                     "text": "> MAINTENANCE LAYOUT",
                     "target": "maintenance-layout"
                 },
+                "",
                 "======",
                 {
                     "type": "link",
@@ -6575,8 +8097,6 @@
                     "type": "text",
                     "text": "# DIAGNOSTICS"
                 },
-                "",
-                "<\\>",
                 "",
                 "Thank you for submitting your brainscan to the Brainscan Bank\\.",
                 "",
@@ -6688,45 +8208,43 @@
                     "text": "# MENU"
                 },
                 "",
-                "\\[\\> CORRUPTED\\]",
-                "",
-                "\\[\\> CORRUPTED\\]",
-                "",
-                "\\[\\> CORRUPTED\\]",
-                "",
-                "\\[\\> CORRUPTED\\]",
-                "",
-                "\\[\\> CORRUPTED\\]",
-                "",
-                "\\[\\> CORRUPTED\\]",
-                "",
-                "\\[\\> CORRUPTED\\]",
-                "",
-                "\\[\\> CORRUPTED\\]",
-                "",
-                "\\[\\> CORRUPTED\\]",
-                "",
-                "\\[\\> CORRUPTED\\]",
-                "",
                 {
                     "type": "link",
-                    "text": "[> HUNTER-7X",
+                    "text": "> HUNTER-7X",
                     "target": "hunter-7x"
                 },
                 {
                     "type": "link",
-                    "text": "[> FELIDAE-9C",
+                    "text": "> FELIDAE-9C",
                     "target": "felidae-9c"
                 },
                 {
                     "type": "link",
-                    "text": "[> KRAKEN-11Q",
+                    "text": "> KRAKEN-11Q",
                     "target": "kraken-11q"
                 },
                 {
                     "type": "link",
-                    "text": "[> VERMIS-12S",
+                    "text": "> VERMIS-12S",
                     "target": "vermis-12s"
+                },
+                "",
+                "\\[\\> CORRUPTED\\]",
+                "\\[\\> CORRUPTED\\]",
+                "\\[\\> CORRUPTED\\]",
+                "\\[\\> CORRUPTED\\]",
+                "\\[\\> CORRUPTED\\]",
+                "\\[\\> CORRUPTED\\]",
+                "\\[\\> CORRUPTED\\]",
+                "\\[\\> CORRUPTED\\]",
+                "\\[\\> CORRUPTED\\]",
+                "\\[\\> CORRUPTED\\]",
+                "",
+                "======",
+                {
+                    "type": "link",
+                    "text": "< SHUT DOWN",
+                    "target": "starting-screen"
                 }
             ]
         },
@@ -7016,6 +8534,13 @@
                     "type": "link",
                     "text": "> 32JH8K4",
                     "target": "personality6"
+                },
+                "",
+                "======",
+                {
+                    "type": "link",
+                    "text": "< SHUT DOWN",
+                    "target": "starting-screen"
                 }
             ]
         },
@@ -7333,30 +8858,68 @@
                     "text": "# QA INSPECTION"
                 },
                 "",
+                "RELEASE SUBJECT\\#:",
+                {
+                    "type": "prompt",
+                    "prompt": "subject> ",
+                    "allowFreeInput": true,
+                    "inputAction": {
+                        "type": "action",
+                        "action": "qaReleaseSubject"
+                    }
+                },
+                {
+                    "type": "text",
+                    "text": "",
+                    "scriptId": "qaReleaseSubject"
+                },
+                "",
                 {
                     "type": "list",
                     "states": [
                         {
-                            "text": "QUARANTINE ACCESS    [> LOCKED]"
+                            "text": "QUARANTINE ACCESS           [> LOCKED]",
+                            "active": true,
+                            "action": "setQaQuarantineAccess",
+                            "target": "locked"
                         },
                         {
-                            "text": "QUARANTINE ACCESS    [> OPEN]"
+                            "text": "QUARANTINE ACCESS           [> OPEN]",
+                            "action": "setQaQuarantineAccess",
+                            "target": "open"
                         }
-                    ]
+                    ],
+                    "scriptId": "qaQuarantineAccess"
                 },
-                "",
-                "RELEASE SUBJECT\\#:",
-                "",
-                "\\> PURGE QUARANTINE",
-                "",
-                "\\[\\> PURGE ACTIVATED\\]",
-                "",
-                "<\\>",
+                {
+                    "type": "list",
+                    "states": [
+                        {
+                            "text": "PURGE QUARANTINE            [> READY]",
+                            "active": true,
+                            "action": "setQaPurgeState",
+                            "target": "ready"
+                        },
+                        {
+                            "text": "PURGE QUARANTINE            [> PURGE ACTIVATED]",
+                            "action": "setQaPurgeState",
+                            "target": "purged"
+                        }
+                    ],
+                    "scriptId": "qaPurgeQuarantine"
+                },
                 "",
                 {
                     "type": "link",
                     "text": "> LOG OFF",
                     "target": "qa-inspection-password"
+                },
+                "",
+                "======",
+                {
+                    "type": "link",
+                    "text": "< SHUT DOWN",
+                    "target": "starting-screen"
                 }
             ]
         },
@@ -7412,29 +8975,98 @@
             "content": [
                 {
                     "type": "text",
-                    "text": "# TRAC PC\\-9800 Series System Terminal"
+                    "text": "# TRAC PC\\-9800 Series System Terminal",
+                    "speed": 6
                 },
-                "",
-                "Reythorne OS Version 6\\.20",
-                "Copyright \\(C\\) 2981, 2987 Reythorne Corp\\. / TRAC Corporation",
-                "",
-                "EEEE I3000000032940xf100110303B77500EEEE I400000004294\\_M8\\_BL1\\_10221D113B323EEEE5",
-                "no sdio debug board detected",
-                "TE : 102609",
-                "BT : 11:30:18 Mar 14 2314",
-                "",
-                "Boot From SPI",
-                "ucl decompress\\.\\.\\.pass",
-                "0x12345678",
-                "Boot from internal device 1st SPI",
-                "",
-                "TE : 512897",
-                "",
-                "System Started"
+                {
+                    "type": "text",
+                    "text": "",
+                    "speed": 6
+                },
+                {
+                    "type": "text",
+                    "text": "Reythorne OS Version 6\\.20",
+                    "speed": 6
+                },
+                {
+                    "type": "text",
+                    "text": "Copyright \\(C\\) 2981, 2987 Reythorne Corp\\. / TRAC Corporation",
+                    "speed": 6
+                },
+                {
+                    "type": "text",
+                    "text": "",
+                    "speed": 6
+                },
+                {
+                    "type": "text",
+                    "text": "EEEE I3000000032940xf100110303B77500EEEE I400000004294\\_M8\\_BL1\\_10221D113B323EEEE5",
+                    "speed": 6
+                },
+                {
+                    "type": "text",
+                    "text": "no sdio debug board detected",
+                    "speed": 6
+                },
+                {
+                    "type": "text",
+                    "text": "TE : 102609",
+                    "speed": 6
+                },
+                {
+                    "type": "text",
+                    "text": "BT : 11:30:18 Mar 14 2314",
+                    "speed": 6
+                },
+                {
+                    "type": "text",
+                    "text": "",
+                    "speed": 6
+                },
+                {
+                    "type": "text",
+                    "text": "Boot From SPI",
+                    "speed": 6
+                },
+                {
+                    "type": "text",
+                    "text": "ucl decompress\\.\\.\\.pass",
+                    "speed": 6
+                },
+                {
+                    "type": "text",
+                    "text": "0x12345678",
+                    "speed": 6
+                },
+                {
+                    "type": "text",
+                    "text": "Boot from internal device 1st SPI",
+                    "speed": 6
+                },
+                {
+                    "type": "text",
+                    "text": "",
+                    "speed": 6
+                },
+                {
+                    "type": "text",
+                    "text": "TE : 512897",
+                    "speed": 6
+                },
+                {
+                    "type": "text",
+                    "text": "",
+                    "speed": 6
+                },
+                {
+                    "type": "text",
+                    "text": "System Started",
+                    "speed": 6
+                }
             ],
             "onDone": {
                 "target": "control-room",
-                "delayMs": 2600
+                "delayMs": 1200
             }
         },
         {
@@ -7450,50 +9082,98 @@
                     "type": "list",
                     "states": [
                         {
-                            "text": "FURNITURE    [> MINIMAL]"
+                            "text": "FURNITURE                   [> MINIMAL]",
+                            "active": true
                         },
                         {
-                            "text": "FURNITURE    [> COMFORTABLE]"
+                            "text": "FURNITURE                   [> COMFORTABLE]"
                         },
                         {
-                            "text": "FURNITURE    [> LUXURY]"
+                            "text": "FURNITURE                   [> LUXURY]"
                         }
                     ]
                 },
-                "",
                 {
                     "type": "list",
                     "states": [
                         {
-                            "text": "SMELL        [> UNPLEASANT]"
+                            "text": "SMELL                       [> UNPLEASANT]",
+                            "active": true
                         },
                         {
-                            "text": "SMELL        [> NEUTRAL]"
+                            "text": "SMELL                       [> NEUTRAL]"
                         },
                         {
-                            "text": "SMELL        [> PLEASANT]"
+                            "text": "SMELL                       [> PLEASANT]"
                         },
                         {
-                            "text": "SMELL        [> PHEROMONE]"
+                            "text": "SMELL                       [> PHEROMONE]"
                         }
                     ]
                 },
-                "",
                 {
                     "type": "list",
                     "states": [
                         {
-                            "text": "LIGHT        [> ON]"
+                            "text": "LIGHT                       [> ON]",
+                            "active": true
                         },
                         {
-                            "text": "LIGHT        [> OFF]"
+                            "text": "LIGHT                       [> OFF]"
                         }
                     ]
                 },
+                {
+                    "type": "link",
+                    "text": "LIGHTING                    [> 50%]",
+                    "target": [
+                        {
+                            "type": "action",
+                            "action": "adjustRoomControl",
+                            "target": "room-controls",
+                            "field": "lighting",
+                            "delta": 5
+                        },
+                        {
+                            "type": "action",
+                            "action": "adjustRoomControl",
+                            "target": "room-controls",
+                            "field": "lighting",
+                            "delta": -5,
+                            "shiftKey": true
+                        }
+                    ],
+                    "scriptId": "roomControlsLighting"
+                },
+                {
+                    "type": "link",
+                    "text": "ROOM SIZE                   [> 50%]",
+                    "target": [
+                        {
+                            "type": "action",
+                            "action": "adjustRoomControl",
+                            "target": "room-controls",
+                            "field": "size",
+                            "delta": 5
+                        },
+                        {
+                            "type": "action",
+                            "action": "adjustRoomControl",
+                            "target": "room-controls",
+                            "field": "size",
+                            "delta": -5,
+                            "shiftKey": true
+                        }
+                    ],
+                    "scriptId": "roomControlsSize"
+                },
                 "",
-                "SIZE        \\[\\> 50%\\]",
-                "",
-                "LIGHTING    \\[\\> 50%\\]"
+                "======",
+                {
+                    "type": "link",
+                    "text": "< SHUT DOWN",
+                    "target": "starting-screen"
+                }
             ]
         },
         {
@@ -7531,14 +9211,8 @@
                 "======",
                 {
                     "type": "link",
-                    "text": "< BACK",
-                    "target": [
-                        {
-                            "type": "action",
-                            "action": "back",
-                            "target": "navigation"
-                        }
-                    ]
+                    "text": "< SHUT DOWN",
+                    "target": "starting-screen"
                 }
             ]
         },
@@ -7838,6 +9512,13 @@
                     "type": "link",
                     "text": "> CAMERAS",
                     "target": "camera"
+                },
+                "",
+                "======",
+                {
+                    "type": "link",
+                    "text": "< SHUT DOWN",
+                    "target": "starting-screen"
                 }
             ]
         },

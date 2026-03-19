@@ -1,7 +1,9 @@
 import incrSsArkScript from "./incr-ss-ark";
+import gradientDescentTerminalScript from "./gradient-descent-terminal";
 import { TerminalScript } from "./types";
 
 const TERMINAL_SCRIPTS: Record<string, TerminalScript> = {
+    "gradient-descent-terminal": gradientDescentTerminalScript,
     "incr-ss-ark": incrSsArkScript,
 };
 

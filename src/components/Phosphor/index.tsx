@@ -111,6 +111,7 @@ interface Screen {
     type: ScreenType;
     content: ScreenData[];
     onDone?: ScreenOnDone;
+    defaultTextSpeed?: number;
 }
 
 enum AppStatus {
@@ -504,12 +505,21 @@ class Phosphor extends Component<PhosphorProps, AppState> {
         }
     }
 
-    private _getResolvedTextSpeed(element: any): number | undefined {
+    private _getResolvedTextSpeed(element: any, screen?: Screen): number | undefined {
         const elementSpeed = typeof element?.speed === "number" && Number.isFinite(element.speed) && element.speed > 0
             ? element.speed
             : undefined;
         if (elementSpeed !== undefined) {
             return elementSpeed;
+        }
+
+        const screenDefaultTextSpeed = typeof screen?.defaultTextSpeed === "number"
+            && Number.isFinite(screen.defaultTextSpeed)
+            && screen.defaultTextSpeed > 0
+            ? screen.defaultTextSpeed
+            : undefined;
+        if (screenDefaultTextSpeed !== undefined) {
+            return screenDefaultTextSpeed;
         }
 
         const defaultTextSpeed = this.props.defaultTextSpeed;
@@ -919,6 +929,11 @@ class Phosphor extends Component<PhosphorProps, AppState> {
                     : undefined,
             } as ScreenOnDone
             : undefined;
+        const defaultTextSpeed = typeof src?.defaultTextSpeed === "number"
+            && Number.isFinite(src.defaultTextSpeed)
+            && src.defaultTextSpeed > 0
+            ? src.defaultTextSpeed
+            : undefined;
 
         // if this screen is invalid for any reason, skip it
         if (!id || !type) {
@@ -930,6 +945,7 @@ class Phosphor extends Component<PhosphorProps, AppState> {
             type,
             content,
             onDone,
+            defaultTextSpeed,
         };
     }
 
@@ -966,7 +982,7 @@ class Phosphor extends Component<PhosphorProps, AppState> {
             if (element.state === ScreenDataState.Active) {
                 return (
                     <div className="active" key={index}>
-                        {this._renderActiveElement(element, index)}
+                        {this._renderActiveElement(element, index, screen)}
                     </div>
                 );
             }
@@ -1200,7 +1216,7 @@ class Phosphor extends Component<PhosphorProps, AppState> {
     }
 
     // based on the current active ScreenData, render the corresponding active element
-    private _renderActiveElement(element: any, key: number): ReactElement | null {
+    private _renderActiveElement(element: any, key: number, screen: Screen): ReactElement | null {
         const type = element.type;
 
         // if the element is text-based, like text or Link, render instead a
@@ -1214,7 +1230,7 @@ class Phosphor extends Component<PhosphorProps, AppState> {
             const headingLevel = type === ScreenDataType.Text
                 ? (parseMarkdownHeading(sourceText || "")?.level || undefined)
                 : undefined;
-            const speed = this._getResolvedTextSpeed(element);
+            const speed = this._getResolvedTextSpeed(element, screen);
             const handleRendered = () => this._activateNextScreenData();
             return (
                 <Teletype
@@ -1235,7 +1251,7 @@ class Phosphor extends Component<PhosphorProps, AppState> {
         if (type === ScreenDataType.Toggle) {
             const text = this._getCyclerText(element.states);
             const className = this._getCyclerClassName(element.className, element.states);
-            const speed = this._getResolvedTextSpeed(element);
+            const speed = this._getResolvedTextSpeed(element, screen);
             const handleRendered = () => this._activateNextScreenData();
             return (
                 <Teletype
@@ -1254,7 +1270,7 @@ class Phosphor extends Component<PhosphorProps, AppState> {
         if (type === ScreenDataType.List) {
             const text = this._getCyclerText(element.states);
             const className = this._getCyclerClassName(element.className, element.states);
-            const speed = this._getResolvedTextSpeed(element);
+            const speed = this._getResolvedTextSpeed(element, screen);
             const handleRendered = () => this._activateNextScreenData();
             return (
                 <Teletype

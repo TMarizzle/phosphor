@@ -48,6 +48,7 @@ JS_LINE_RE = re.compile(
     r")",
     re.I,
 )
+EMPTY_TAG_LINE_RE = re.compile(r"</?\s*>")
 
 KNOWN_TEXT_REPLACEMENTS: list[tuple[re.Pattern[str], str]] = [
     (re.compile(r"\bACCES\b"), "ACCESS"),
@@ -64,6 +65,11 @@ KNOWN_TEXT_REPLACEMENTS: list[tuple[re.Pattern[str], str]] = [
 SPECIAL_TEXT_REPLACEMENTS = {
     "Choose the access point of the player.": "Choose an access point.",
 }
+
+BOOT_SCREEN_HEADING = "TRAC PC-9800 SERIES SYSTEM TERMINAL"
+BOOT_SCREEN_TEXT_SPEED = 6
+BOOT_SCREEN_DELAY_MS = 1200
+BOOT_SHUTDOWN_TEXT = "< SHUT DOWN"
 
 
 @dataclass
@@ -284,7 +290,7 @@ def clean_body_text(text: str, values: dict[str, str]) -> list[str]:
     previous_blank = False
     for raw_line in value.split("\n"):
         line = WHITESPACE_RE.sub(" ", raw_line).strip()
-        if not line or line == "\\":
+        if not line or line == "\\" or EMPTY_TAG_LINE_RE.fullmatch(line):
             if not previous_blank:
                 lines.append("")
                 previous_blank = True
@@ -623,6 +629,147 @@ def build_control_panel_content(
     return collapse_blank_entries(content)
 
 
+def is_boot_sequence_screen(passage_name: str, heading: str) -> bool:
+    normalized_heading = clean_inline(heading).upper()
+    return passage_name.startswith("Boot Sequence") or normalized_heading == BOOT_SCREEN_HEADING
+
+
+def apply_boot_sequence_speed(content: list[Any]) -> list[Any]:
+    boosted: list[Any] = []
+    for entry in content:
+        if isinstance(entry, str):
+            boosted.append(
+                {
+                    "type": "text",
+                    "text": entry,
+                    "speed": BOOT_SCREEN_TEXT_SPEED,
+                }
+            )
+            continue
+
+        if isinstance(entry, dict) and entry.get("type") == "text":
+            boosted.append(
+                {
+                    **entry,
+                    "speed": BOOT_SCREEN_TEXT_SPEED,
+                }
+            )
+            continue
+
+        boosted.append(entry)
+
+    return boosted
+
+
+def format_back_links(content: list[Any]) -> list[Any]:
+    formatted: list[Any] = []
+
+    for entry in content:
+        if isinstance(entry, dict) and entry.get("type") == "link" and entry.get("text") == "> BACK":
+            if formatted and formatted[-1] != "":
+                formatted.append("")
+            formatted.append("======")
+            formatted.append({
+                **entry,
+                "text": "< BACK",
+            })
+            continue
+
+        formatted.append(entry)
+
+    return collapse_blank_entries(formatted)
+
+
+def link_targets_screen(entry: Any, target_id: str) -> bool:
+    if not isinstance(entry, dict) or entry.get("type") != "link":
+        return False
+
+    target = entry.get("target")
+    if isinstance(target, str):
+        return target == target_id
+
+    if isinstance(target, list):
+        for nested_target in target:
+            if isinstance(nested_target, dict) and nested_target.get("target") == target_id:
+                return True
+
+    return False
+
+
+def content_has_link_target(content: list[Any], target_id: str) -> bool:
+    return any(link_targets_screen(entry, target_id) for entry in content)
+
+
+def content_has_footer_links(content: list[Any]) -> bool:
+    try:
+        separator_index = max(index for index, entry in enumerate(content) if entry == "======")
+    except ValueError:
+        return False
+
+    footer_entries = content[separator_index + 1 :]
+    return all(
+        entry == "" or (isinstance(entry, dict) and entry.get("type") == "link")
+        for entry in footer_entries
+    )
+
+
+def is_history_back_link(entry: Any) -> bool:
+    if not isinstance(entry, dict) or entry.get("type") != "link":
+        return False
+
+    target = entry.get("target")
+    if not isinstance(target, list):
+        return False
+
+    return any(
+        isinstance(target_entry, dict) and target_entry.get("action") == "back"
+        for target_entry in target
+    )
+
+
+def remove_redundant_root_boot_back_links(
+    content: list[Any],
+    boot_sequence_ids: set[str],
+) -> list[Any]:
+    filtered = [
+        entry
+        for entry in content
+        if not (
+            isinstance(entry, dict)
+            and entry.get("type") == "link"
+            and entry.get("text") == "< BACK"
+            and (
+                is_history_back_link(entry)
+                or link_targets_screen(entry, "starting-screen") is False
+                and any(link_targets_screen(entry, boot_sequence_id) for boot_sequence_id in boot_sequence_ids)
+            )
+        )
+    ]
+    return collapse_blank_entries(filtered)
+
+
+def append_shutdown_link(content: list[Any]) -> list[Any]:
+    next_content = collapse_blank_entries(list(content))
+    if content_has_link_target(next_content, "starting-screen"):
+        return next_content
+
+    shutdown_link = {
+        "type": "link",
+        "text": BOOT_SHUTDOWN_TEXT,
+        "target": "starting-screen",
+    }
+
+    if content_has_footer_links(next_content):
+        next_content.append(shutdown_link)
+        return collapse_blank_entries(next_content)
+
+    if next_content and next_content[-1] != "":
+        next_content.append("")
+    next_content.append("======")
+    next_content.append(shutdown_link)
+    return collapse_blank_entries(next_content)
+
+
 def is_password_passage_name(name: str) -> bool:
     normalized = clean_inline(name)
     return "password" in normalized.lower()
@@ -717,14 +864,6 @@ def convert_password_screen(
             )
             seen_commands.add("HACK")
 
-    if "back" not in seen_commands:
-        commands.append(
-            {
-                "command": "back",
-                "action": dict(back_action),
-            }
-        )
-
     content: list[Any] = [
         make_header(heading),
         "",
@@ -752,6 +891,7 @@ def convert_password_screen(
             },
         ]
     )
+    content = format_back_links(content)
 
     return {
         "id": screen_id,
@@ -770,6 +910,7 @@ def convert_regular_screen(
     heading_match = H1_RE.search(raw)
     heading = clean_inline(heading_match.group(1)) if heading_match else passage.name
     screen_id = ids_by_name[passage.name]
+    boot_sequence_screen = is_boot_sequence_screen(passage.name, heading)
     subheadings = [clean_inline(item) for item in H2_RE.findall(raw) if clean_inline(item)]
     images = IMG_RE.findall(raw)
 
@@ -879,13 +1020,18 @@ def convert_regular_screen(
             link_objects,
         )
 
+    if boot_sequence_screen:
+        screen["content"] = apply_boot_sequence_speed(screen["content"])
+
+    screen["content"] = format_back_links(screen["content"])
+
     goto_match = GOTO_RE.search(raw)
     if passage.name.startswith("Boot Sequence") and goto_match:
         target_id = ids_by_name.get(clean_inline(goto_match.group(1)))
         if target_id:
             screen["onDone"] = {
                 "target": target_id,
-                "delayMs": 2600,
+                "delayMs": BOOT_SCREEN_DELAY_MS,
             }
 
     return screen
@@ -972,6 +1118,32 @@ def convert_story(
     ])
 
     screens.insert(0, starting_screen)
+
+    boot_sequence_ids = {
+        screen_id
+        for screen in screens
+        for screen_id in [screen.get("id")]
+        if isinstance(screen_id, str) and screen_id.startswith("boot-sequence-")
+    }
+    boot_target_ids = {
+        on_done_target
+        for screen in screens
+        if screen.get("id") in boot_sequence_ids
+        for on_done_target in [screen.get("onDone", {}).get("target")]
+        if isinstance(on_done_target, str)
+    }
+
+    for screen in screens:
+        screen_id = screen.get("id")
+        if screen_id not in boot_target_ids:
+            continue
+        content = screen.get("content")
+        if isinstance(content, list):
+            next_content = content
+            if isinstance(screen_id, str):
+                next_content = remove_redundant_root_boot_back_links(next_content, boot_sequence_ids)
+            screen["content"] = append_shutdown_link(next_content)
+
     if blocked_targets:
         for screen in screens:
             filtered_content: list[Any] = []

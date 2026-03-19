@@ -378,6 +378,11 @@ $creator-dark-control-bg: rgba($creator-dark-bg, 0.92);
         gap: 0.45rem;
     }
 
+    &__row--screen-header {
+        grid-template-columns: minmax(0, 1fr) auto 160px;
+        align-items: end;
+    }
+
     &__field {
         display: flex;
         flex-direction: column;
@@ -571,6 +576,19 @@ $creator-dark-control-bg: rgba($creator-dark-bg, 0.92);
     &__actions--screen-controls {
         margin-top: 0;
         gap: 0.11rem;
+    }
+
+    &__actions--screen-header {
+        align-items: flex-end;
+        flex-wrap: nowrap;
+    }
+
+    &__screen-controls-panel {
+        display: flex;
+        flex-direction: column;
+        gap: 0.35rem;
+        border: 1px solid var(--fg);
+        padding: 0.3rem;
     }
 
     &__actions--sidebar-switch {

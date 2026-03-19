@@ -815,12 +815,21 @@ const ensureScriptShape = (raw: any): any => {
 
     base.screens = base.screens
         .filter((screen: any) => screen && typeof screen === "object")
-        .map((screen: any, index: number) => ({
-            ...screen,
-            id: typeof screen.id === "string" && screen.id.trim() ? screen.id : `screen${index}`,
-            type: typeof screen.type === "string" ? screen.type : "screen",
-            content: Array.isArray(screen.content) ? screen.content : [],
-        }));
+        .map((screen: any, index: number) => {
+            const normalizedScreen = {
+                ...screen,
+                id: typeof screen.id === "string" && screen.id.trim() ? screen.id : `screen${index}`,
+                type: typeof screen.type === "string" ? screen.type : "screen",
+                content: Array.isArray(screen.content) ? screen.content : [],
+            };
+            const screenDefaultTextSpeed = parseOptionalPositiveNumber(screen.defaultTextSpeed);
+            if (screenDefaultTextSpeed === undefined) {
+                delete normalizedScreen.defaultTextSpeed;
+            } else {
+                normalizedScreen.defaultTextSpeed = screenDefaultTextSpeed;
+            }
+            return normalizedScreen;
+        });
 
     base.dialogs = base.dialogs
         .filter((dialog: any) => dialog && typeof dialog === "object")
@@ -1435,9 +1444,12 @@ const ScriptCreator: FC<ScriptCreatorProps> = ({ initialScript, onApply, onPrevi
     const initialSidebarListMode = getInitialSidebarListMode(initialScript);
     const [newElementType, setNewElementType] = useState<AddableElementType>("plainText");
     const [rawElementError, setRawElementError] = useState<string | null>(null);
+    const [rawElementDraft, setRawElementDraft] = useState<string>("");
+    const [rawDialogContentDraft, setRawDialogContentDraft] = useState<string>("");
     const [selectedDialogFocusId, setSelectedDialogFocusId] = useState<string>("");
     const [selectedDialogContentIndex, setSelectedDialogContentIndex] = useState<number>(0);
     const [sidebarListMode, setSidebarListMode] = useState<"screens" | "dialogs">(initialSidebarListMode);
+    const [screenControlsOpen, setScreenControlsOpen] = useState<boolean>(false);
     const [elementEditorMode, setElementEditorMode] = useState<"fields" | "raw">("fields");
     const [activeView, setActiveView] = useState<"editor" | "schema">("editor");
     const [creatorColorMode, setCreatorColorMode] = useState<CreatorColorMode>("theme");
@@ -1608,6 +1620,18 @@ const ScriptCreator: FC<ScriptCreatorProps> = ({ initialScript, onApply, onPrevi
     const canDeleteDialogContent = selectedDialogContent.length > 0
         && selectedDialogContentIndex >= 0
         && selectedDialogContentIndex < selectedDialogContent.length;
+    const selectedScreenOnDoneTarget = typeof selectedScreen?.onDone?.target === "string"
+        ? selectedScreen.onDone.target
+        : "";
+    const selectedScreenOnDoneDelayMs = typeof selectedScreen?.onDone?.delayMs === "number"
+        && Number.isFinite(selectedScreen.onDone.delayMs)
+        ? String(Math.max(0, Math.floor(selectedScreen.onDone.delayMs)))
+        : "";
+    const selectedScreenDefaultTextSpeed = typeof selectedScreen?.defaultTextSpeed === "number"
+        && Number.isFinite(selectedScreen.defaultTextSpeed)
+        && selectedScreen.defaultTextSpeed > 0
+        ? String(selectedScreen.defaultTextSpeed)
+        : "";
 
     const selectedElement = selectedScreen?.content?.[selectedElementIndex];
     const canMoveElementUp = selectedElementIndex > 0;
@@ -1676,6 +1700,12 @@ const ScriptCreator: FC<ScriptCreatorProps> = ({ initialScript, onApply, onPrevi
     }, []);
     const schemaRootSelectOptions = useMemo(() => {
         return schemaData.screenIds.map((id) => ({ value: id, label: id }));
+    }, [schemaData.screenIds]);
+    const screenOnDoneTargetSelectOptions = useMemo(() => {
+        return [
+            { value: "", label: "(none)" },
+            ...schemaData.screenIds.map((id) => ({ value: id, label: id })),
+        ];
     }, [schemaData.screenIds]);
     const dialogIdSelectOptions = useMemo(() => {
         return (script.dialogs || [])
@@ -1796,6 +1826,32 @@ const ScriptCreator: FC<ScriptCreatorProps> = ({ initialScript, onApply, onPrevi
     useEffect(() => {
         setScreenIdDraft(selectedScreen?.id || "");
     }, [selectedScreen?.id]);
+
+    useEffect(() => {
+        if (sidebarListMode !== "screens" || elementEditorMode !== "raw" || selectedElement === undefined) {
+            setRawElementDraft("");
+            return;
+        }
+
+        setRawElementDraft(JSON.stringify(selectedElement, null, 2));
+        setRawElementError(null);
+    }, [elementEditorMode, selectedElementIndex, selectedScreenId, sidebarListMode]);
+
+    useEffect(() => {
+        if (sidebarListMode !== "dialogs" || selectedDialogContentEntry === undefined || !selectedDialogContentEntryIsObject) {
+            setRawDialogContentDraft("");
+            return;
+        }
+
+        setRawDialogContentDraft(JSON.stringify(selectedDialogContentEntry, null, 2));
+        setRawElementError(null);
+    }, [selectedDialogContentIndex, selectedDialogContentEntryIsObject, selectedDialogFocusId, sidebarListMode]);
+
+    useEffect(() => {
+        if (sidebarListMode !== "screens" && screenControlsOpen) {
+            setScreenControlsOpen(false);
+        }
+    }, [screenControlsOpen, sidebarListMode]);
 
     const resetSearchNavigation = (): void => {
         pendingSearchSelectionModeRef.current = null;
@@ -2065,6 +2121,92 @@ const ScriptCreator: FC<ScriptCreatorProps> = ({ initialScript, onApply, onPrevi
                 };
             }),
         }));
+    };
+
+    const updateScreenOnDoneTarget = (nextTargetRaw: string) => {
+        if (!selectedScreen) {
+            return;
+        }
+
+        const nextTarget = nextTargetRaw.trim();
+        if (!nextTarget.length) {
+            updateScreen({ onDone: undefined });
+            return;
+        }
+
+        const existingOnDone = selectedScreen.onDone && typeof selectedScreen.onDone === "object"
+            ? selectedScreen.onDone
+            : {};
+        const nextOnDone: Record<string, any> = {
+            ...existingOnDone,
+            target: nextTarget,
+        };
+
+        const currentDelayMs = existingOnDone.delayMs;
+        if (typeof currentDelayMs === "number" && Number.isFinite(currentDelayMs)) {
+            nextOnDone.delayMs = Math.max(0, Math.floor(currentDelayMs));
+        } else {
+            delete nextOnDone.delayMs;
+        }
+
+        updateScreen({ onDone: nextOnDone });
+    };
+
+    const updateScreenOnDoneDelayMs = (nextDelayRaw: string) => {
+        if (!selectedScreen) {
+            return;
+        }
+
+        const existingOnDone = selectedScreen.onDone && typeof selectedScreen.onDone === "object"
+            ? selectedScreen.onDone
+            : {};
+        const target = typeof existingOnDone.target === "string" ? existingOnDone.target.trim() : "";
+        if (!target.length) {
+            return;
+        }
+
+        const trimmedDelay = nextDelayRaw.trim();
+        if (!trimmedDelay.length) {
+            const nextOnDone: Record<string, any> = {
+                ...existingOnDone,
+                target,
+            };
+            delete nextOnDone.delayMs;
+            updateScreen({ onDone: nextOnDone });
+            return;
+        }
+
+        const parsedDelay = Number(trimmedDelay);
+        if (!Number.isFinite(parsedDelay) || parsedDelay < 0) {
+            return;
+        }
+
+        updateScreen({
+            onDone: {
+                ...existingOnDone,
+                target,
+                delayMs: Math.floor(parsedDelay),
+            },
+        });
+    };
+
+    const updateScreenDefaultTextSpeed = (nextSpeedRaw: string) => {
+        if (!selectedScreen) {
+            return;
+        }
+
+        const trimmedSpeed = nextSpeedRaw.trim();
+        if (!trimmedSpeed.length) {
+            updateScreen({ defaultTextSpeed: undefined });
+            return;
+        }
+
+        const parsedSpeed = Number(trimmedSpeed);
+        if (!Number.isFinite(parsedSpeed) || parsedSpeed <= 0) {
+            return;
+        }
+
+        updateScreen({ defaultTextSpeed: parsedSpeed });
     };
 
     const updateDialog = (patch: Record<string, any>) => {
@@ -3412,7 +3554,7 @@ const ScriptCreator: FC<ScriptCreatorProps> = ({ initialScript, onApply, onPrevi
                     <main ref={editorRef} className="script-creator__editor">
                         {sidebarListMode === "screens" && selectedScreen && (
                             <div className="script-creator__editor-content">
-                                <div className="script-creator__row">
+                                <div className="script-creator__row script-creator__row--screen-header">
                                     <label className="script-creator__field">
                                         <span>Screen ID</span>
                                         <input
@@ -3421,6 +3563,16 @@ const ScriptCreator: FC<ScriptCreatorProps> = ({ initialScript, onApply, onPrevi
                                             onBlur={handleScreenIdDraftBlur}
                                         />
                                     </label>
+
+                                    <div className="script-creator__actions script-creator__actions--screen-header">
+                                        <button
+                                            className={"script-creator__btn" + (screenControlsOpen ? " script-creator__btn--active" : "")}
+                                            onClick={() => setScreenControlsOpen((prev) => !prev)}
+                                            disabled={!selectedScreen}
+                                        >
+                                            [CONTROLS]
+                                        </button>
+                                    </div>
 
                                     <label className="script-creator__field">
                                         <span>Type</span>
@@ -3432,6 +3584,46 @@ const ScriptCreator: FC<ScriptCreatorProps> = ({ initialScript, onApply, onPrevi
                                         />
                                     </label>
                                 </div>
+
+                                {screenControlsOpen && selectedScreen && (
+                                    <div className="script-creator__screen-controls-panel">
+                                        <label className="script-creator__field">
+                                            <span>On Done Target</span>
+                                            <CreatorSelect
+                                                value={selectedScreenOnDoneTarget}
+                                                options={screenOnDoneTargetSelectOptions}
+                                                fallbackLabel={selectedScreenOnDoneTarget || "(none)"}
+                                                searchable
+                                                onChange={updateScreenOnDoneTarget}
+                                            />
+                                        </label>
+
+                                        <label className="script-creator__field">
+                                            <span>On Done Delay (ms)</span>
+                                            <input
+                                                type="number"
+                                                min="0"
+                                                step="1"
+                                                value={selectedScreenOnDoneDelayMs}
+                                                disabled={!selectedScreenOnDoneTarget.length}
+                                                placeholder={selectedScreenOnDoneTarget.length ? "0" : "Set target first"}
+                                                onChange={(e) => updateScreenOnDoneDelayMs(e.target.value)}
+                                            />
+                                        </label>
+
+                                        <label className="script-creator__field">
+                                            <span>Default Text Speed</span>
+                                            <input
+                                                type="number"
+                                                min="0.01"
+                                                step="0.01"
+                                                value={selectedScreenDefaultTextSpeed}
+                                                placeholder="Use script default"
+                                                onChange={(e) => updateScreenDefaultTextSpeed(e.target.value)}
+                                            />
+                                        </label>
+                                    </div>
+                                )}
 
                                 <div className="script-creator__list-header">
                                     <span>Elements</span>
@@ -4196,10 +4388,21 @@ const ScriptCreator: FC<ScriptCreatorProps> = ({ initialScript, onApply, onPrevi
                                                 <span>Raw JSON</span>
                                                 <textarea
                                                     className="script-creator__textarea-fill"
-                                                    value={JSON.stringify(selectedElement, null, 2)}
+                                                    value={rawElementDraft}
                                                     onChange={(e) => {
+                                                        const nextRaw = e.target.value;
+                                                        setRawElementDraft(nextRaw);
                                                         try {
-                                                            const parsed = JSON.parse(e.target.value);
+                                                            const parsed = JSON.parse(nextRaw);
+                                                            updateElement(parsed);
+                                                            setRawElementError(null);
+                                                        } catch {
+                                                            setRawElementError(null);
+                                                        }
+                                                    }}
+                                                    onBlur={() => {
+                                                        try {
+                                                            const parsed = JSON.parse(rawElementDraft);
                                                             updateElement(parsed);
                                                             setRawElementError(null);
                                                         } catch {
@@ -4334,10 +4537,21 @@ const ScriptCreator: FC<ScriptCreatorProps> = ({ initialScript, onApply, onPrevi
                                                 <textarea
                                                     className="script-creator__textarea-fill"
                                                     data-search-exclude={selectedDialogContentEntryIsTextLike ? "true" : undefined}
-                                                    value={JSON.stringify(selectedDialogContentEntry, null, 2)}
+                                                    value={rawDialogContentDraft}
                                                     onChange={(e) => {
+                                                        const nextRaw = e.target.value;
+                                                        setRawDialogContentDraft(nextRaw);
                                                         try {
-                                                            const parsed = JSON.parse(e.target.value);
+                                                            const parsed = JSON.parse(nextRaw);
+                                                            updateDialogContentEntry(parsed);
+                                                            setRawElementError(null);
+                                                        } catch {
+                                                            setRawElementError(null);
+                                                        }
+                                                    }}
+                                                    onBlur={() => {
+                                                        try {
+                                                            const parsed = JSON.parse(rawDialogContentDraft);
                                                             updateDialogContentEntry(parsed);
                                                             setRawElementError(null);
                                                         } catch {
