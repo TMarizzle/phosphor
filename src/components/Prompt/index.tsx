@@ -10,6 +10,7 @@ export interface PromptProps {
     disabled?: boolean;
     allowFreeInput?: boolean;
     caseSensitive?: boolean;
+    cursor?: boolean;
     inputAction?: any;
 
     onCommand?: (command: string, action: any) => void;
@@ -28,6 +29,7 @@ const Prompt: FC<PromptProps> = (props) => {
         commands,
         allowFreeInput,
         caseSensitive,
+        cursor,
         inputAction,
         onCommand,
         onEnter,
@@ -38,6 +40,7 @@ const Prompt: FC<PromptProps> = (props) => {
         "__prompt__",
         disabled ? "disabled" : null,
         caseSensitive === false ? "case-insensitive" : null,
+        cursor ? "cursor" : null,
         className ? className : null,
     ].join(" ").trim();
 

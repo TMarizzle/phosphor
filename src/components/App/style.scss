@@ -225,6 +225,28 @@ $font-bump: 4pt;
         }
     }
 
+    &__profile-row {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 0.5em;
+        padding: 0.3em 0.6em;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+        line-height: 1.2;
+        letter-spacing: 0.06em;
+    }
+
+    &__profile-key {
+        opacity: 0.75;
+        white-space: nowrap;
+    }
+
+    &__profile-value {
+        text-align: right;
+        min-width: 0;
+        overflow-wrap: anywhere;
+    }
+
     // wrapper for the relative-positioned script button + dropdown
     &__script-wrapper,
     &__options-wrapper {

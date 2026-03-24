@@ -2,7 +2,8 @@
     "config": {
         "name": "Phosphor Sample Script",
         "author": "EthanDunning",
-        "script": null
+        "script": null,
+        "defaultTextSpeed": 1.2
     },
     "screens": [
         {
@@ -15,11 +16,11 @@
                     "text": "=== PHOSPHOR SAMPLE SCRIPT ==="
                 },
                 "",
-                "This guide reflects current app + creator behavior.",
+                "This guide covers modules, reload behavior, creator workflow, and flow testing.",
                 {
                     "type": "text",
                     "className": "notice",
-                    "text": "Use this as a starter template and reference script."
+                    "text": "Use this as a template and feature reference."
                 },
                 "",
                 "Sections:",
@@ -30,7 +31,12 @@
                 },
                 {
                     "type": "link",
-                    "text": "> USING THE SCRIPT CREATOR",
+                    "text": "> MODULES + LIBRARY WORKFLOW",
+                    "target": "modules-workflow"
+                },
+                {
+                    "type": "link",
+                    "text": "> SCRIPT CREATOR WORKFLOW",
                     "target": "creator-workflow"
                 },
                 {
@@ -40,22 +46,17 @@
                 },
                 {
                     "type": "link",
-                    "text": "> ELEMENT TYPES",
+                    "text": "> ELEMENT TYPES + LIVE EXAMPLES",
                     "target": "element-types"
                 },
                 {
                     "type": "link",
-                    "text": "> CLASSNAMES (TEXT/LINK/PROMPT)",
-                    "target": "classnames-text"
+                    "text": "> PROMPT BEHAVIOR",
+                    "target": "prompt-behavior"
                 },
                 {
                     "type": "link",
-                    "text": "> CLASSNAMES (BITMAP)",
-                    "target": "classnames-bitmap"
-                },
-                {
-                    "type": "link",
-                    "text": "> LINK TARGETS + DIALOGS",
+                    "text": "> LINK TARGETS + ACTIONS + DIALOGS",
                     "target": "links-dialogs"
                 },
                 {
@@ -67,76 +68,6 @@
                     "type": "link",
                     "text": "> FINAL CHECKLIST",
                     "target": "final-checklist"
-                },
-                "",
-                {
-                    "type": "prompt",
-                    "prompt": "jump> ",
-                    "commands": [
-                        {
-                            "command": "home",
-                            "action": {
-                                "type": "link",
-                                "target": "hub"
-                            }
-                        },
-                        {
-                            "command": "app",
-                            "action": {
-                                "type": "link",
-                                "target": "using-app"
-                            }
-                        },
-                        {
-                            "command": "creator",
-                            "action": {
-                                "type": "link",
-                                "target": "creator-workflow"
-                            }
-                        },
-                        {
-                            "command": "structure",
-                            "action": {
-                                "type": "link",
-                                "target": "script-structure"
-                            }
-                        },
-                        {
-                            "command": "types",
-                            "action": {
-                                "type": "link",
-                                "target": "element-types"
-                            }
-                        },
-                        {
-                            "command": "textclass",
-                            "action": {
-                                "type": "link",
-                                "target": "classnames-text"
-                            }
-                        },
-                        {
-                            "command": "bitmapclass",
-                            "action": {
-                                "type": "link",
-                                "target": "classnames-bitmap"
-                            }
-                        },
-                        {
-                            "command": "links",
-                            "action": {
-                                "type": "link",
-                                "target": "links-dialogs"
-                            }
-                        },
-                        {
-                            "command": "advanced",
-                            "action": {
-                                "type": "link",
-                                "target": "advanced-options"
-                            }
-                        }
-                    ]
                 }
             ]
         },
@@ -150,16 +81,57 @@
                     "text": "SECTION: USING THE APP"
                 },
                 "",
-                "Header controls:",
-                "- SCRIPT: switch bundled/custom scripts + upload JSON",
-                "- CREATOR: open Script Creator",
-                "- THEME: cycle theme",
-                "- RESET: clear local/session data",
-                "- DONATE/GITHUB: external links\n",
-                "Preview mode:",
+                "Core header controls:",
+                "- SCRIPT: switch bundled/custom/module scripts",
+                "- MODULES: manage your own and subscribed modules",
+                "- CREATOR: edit the active script or start a script",
+                "- RELOAD: restart the active script runtime from the beginning",
+                "- RESET: clear broader local app state (more aggressive)",
+                "- THEME + SOUND controls",
+                "",
+                "Preview mode details:",
                 "- Header shows [PREVIEW MODE] + [RETURN TO CREATOR]",
-                "- Script selector, creator, reset, and github buttons are hidden\n",
-                "Tip: SHIFT+SPACE skips active typing animation.\n",
+                "- Flow runs in the real terminal renderer",
+                "- Use it before publishing modules",
+                "",
+                "Tip: SHIFT+SPACE skips active typing animation.",
+                "",
+                {
+                    "type": "link",
+                    "text": "> NEXT: MODULES + LIBRARY WORKFLOW",
+                    "target": "modules-workflow"
+                },
+                {
+                    "type": "link",
+                    "text": "> TABLE OF CONTENTS",
+                    "target": "hub"
+                }
+            ]
+        },
+        {
+            "id": "modules-workflow",
+            "type": "screen",
+            "content": [
+                {
+                    "type": "text",
+                    "className": "alert",
+                    "text": "SECTION: MODULES + LIBRARY WORKFLOW"
+                },
+                "",
+                "Visibility modes:",
+                "- private: visible only to your account",
+                "- unlisted: available through direct link and hidden from library listings",
+                "- public: visible in the library and shareable",
+                "",
+                "Modules panel capabilities:",
+                "- My Modules: load, view in library, copy link (shareable only)",
+                "- Subscribed Modules: load, view in library, manage script dropdown visibility",
+                "- Show in SCRIPT checkboxes decide what appears in the SCRIPT dropdown",
+                "",
+                "Share links:",
+                "- Public and unlisted modules support link-based loading",
+                "- Unlisted is ideal for direct sharing without catalog exposure",
+                "",
                 {
                     "type": "link",
                     "text": "> NEXT: SCRIPT CREATOR WORKFLOW",
@@ -167,14 +139,8 @@
                 },
                 {
                     "type": "link",
-                    "text": "> BACK TO HUB",
-                    "target": "hub"
-                },
-                "",
-                {
-                    "type": "link",
-                    "text": "> NEXT SECTION",
-                    "target": "creator-workflow"
+                    "text": "> PREVIOUS: USING THE APP",
+                    "target": "using-app"
                 },
                 {
                     "type": "link",
@@ -193,11 +159,19 @@
                     "text": "SECTION: SCRIPT CREATOR WORKFLOW"
                 },
                 "",
-                "1) Open [CREATOR].\n2) Use [NEW SCRIPT] to start fresh, or edit current script.\n3) Add screens from the left side.\n4) Add elements using element dropdown + [ADD ELEMENT].\n5) Use [VIEW FIELDS] / [VIEW RAW JSON] as needed.\n6) Use [PREVIEW] to test in the actual terminal runtime.\n7) Use [APPLY TO APP] to save + activate.\n",
+                "1) Open CREATOR from header.",
+                "2) Use NEW SCRIPT to start clean, or edit the active script.",
+                "3) Build screens from the left list; dialogs are in a dedicated list mode.",
+                "4) Add elements from the Add Element menu.",
+                "5) Use [CONFIG: ON/OFF] to show or hide script config fields.",
+                "6) Use [SCHEMA] to inspect connection flow across screens/dialogs.",
+                "7) PREVIEW in runtime, then APPLY TO APP.",
+                "8) Save/update as a module from the Modules panel.",
+                "",
                 {
                     "type": "text",
                     "className": "notice",
-                    "text": "Uploaded and applied scripts are stored locally and appear in SCRIPT dropdown."
+                    "text": "Use Creator for quick iteration, flow debugging, and module publishing."
                 },
                 "",
                 {
@@ -207,19 +181,8 @@
                 },
                 {
                     "type": "link",
-                    "text": "> BACK TO HUB",
-                    "target": "hub"
-                },
-                "",
-                {
-                    "type": "link",
-                    "text": "> PREVIOUS SECTION",
-                    "target": "using-app"
-                },
-                {
-                    "type": "link",
-                    "text": "> NEXT SECTION",
-                    "target": "script-structure"
+                    "text": "> PREVIOUS: MODULES + LIBRARY",
+                    "target": "modules-workflow"
                 },
                 {
                     "type": "link",
@@ -240,16 +203,23 @@
                 "",
                 "Top-level shape:",
                 "{",
-                "  \"config\": { \"name\": \"My Script\" },\n  \"screens\": [ ... ],\n  \"dialogs\": [ ... ]",
-                "}\n",
+                "  \"config\": { \"name\": \"My Script\", \"author\": \"You\" },",
+                "  \"screens\": [ ... ],",
+                "  \"dialogs\": [ ... ]",
+                "}",
+                "",
                 "Screen shape:",
                 "{",
-                "  \"id\": \"unique-id\",\n  \"type\": \"screen\" | \"static\",\n  \"content\": [ ... ],\n  \"onDone\": { \"target\": \"next-id\", \"delayMs\": 1000 } // optional",
-                "}\n",
-                "screen = progressive render flow\nstatic = immediate render\n",
+                "  \"id\": \"unique-id\",",
+                "  \"type\": \"screen\" | \"static\",",
+                "  \"content\": [ ... ],",
+                "  \"onDone\": { \"target\": \"next-id\", \"delayMs\": 1200 }",
+                "}",
+                "",
+                "screen = progressive render, static = immediate render",
                 {
                     "type": "link",
-                    "text": "> VIEW STATIC EXAMPLE",
+                    "text": "> VIEW STATIC SCREEN EXAMPLE",
                     "target": "static-reference"
                 },
                 {
@@ -259,19 +229,8 @@
                 },
                 {
                     "type": "link",
-                    "text": "> BACK TO HUB",
-                    "target": "hub"
-                },
-                "",
-                {
-                    "type": "link",
-                    "text": "> PREVIOUS SECTION",
+                    "text": "> PREVIOUS: CREATOR WORKFLOW",
                     "target": "creator-workflow"
-                },
-                {
-                    "type": "link",
-                    "text": "> NEXT SECTION",
-                    "target": "element-types"
                 },
                 {
                     "type": "link",
@@ -289,16 +248,11 @@
                     "className": "notice",
                     "text": "This is a static screen."
                 },
-                "Everything here appears all at once.\n",
-                {
-                    "type": "link",
-                    "text": "> BACK TO SCRIPT STRUCTURE",
-                    "target": "script-structure"
-                },
+                "All content appears at once. Useful for status boards and dense menus.",
                 "",
                 {
                     "type": "link",
-                    "text": "> PREVIOUS SECTION",
+                    "text": "> BACK TO SCRIPT STRUCTURE",
                     "target": "script-structure"
                 },
                 {
@@ -318,16 +272,19 @@
                     "text": "SECTION: ELEMENT TYPES"
                 },
                 "",
-                "Supported content entry types:",
-                "- string (plain text line)",
-                "- text object",
-                "- link/href object",
-                "- bitmap/image object",
-                "- prompt object",
-                "- toggle object",
-                "- list object",
-                "- reportComposer object\n",
-                "Dialogs are in top-level dialogs[] and opened through link targets.\n",
+                "Element map (creator label -> JSON shape):",
+                "- Text Line -> \"plain string\"",
+                "- Text Block / Alert / Notice / Emphasis / System -> { \"type\": \"text\", \"text\": \"...\" }",
+                "- Link Button -> { \"type\": \"link\", \"text\": \"...\", \"target\": \"screenId\" | [targets] }",
+                "- Bitmap/Image -> { \"type\": \"bitmap\" | \"image\", \"src\": \"...\" }",
+                "- Prompt Input -> { \"type\": \"prompt\", \"prompt\": \"...\", \"caseSensitive\": true|false, \"cursor\": true|false, \"commands\": [...] }",
+                "- Login Prompt -> { \"type\": \"login\", \"usernameCaseSensitive\": true|false, \"hideUsername\": true|false, \"passwordCaseSensitive\": true|false, \"hidePassword\": true|false, \"credentials\": [...], \"noMatchAction\": {...} }",
+                "- Toggle -> { \"type\": \"toggle\", \"states\": [...] }",
+                "- List -> { \"type\": \"list\", \"states\": [...] }",
+                "- Report Composer -> { \"type\": \"reportComposer\", \"titleTemplate\": \"...\", \"template\": \"...\" }",
+                "- Report List -> { \"type\": \"reportList\", \"composerId\": \"...\" }",
+                "- Dialog Link (+ Dialog) -> link target entry { \"type\": \"dialog\", \"target\": \"dialogId\" } + dialogs[] row",
+                "",
                 {
                     "type": "link",
                     "text": "> LIVE ELEMENT EXAMPLES",
@@ -335,24 +292,13 @@
                 },
                 {
                     "type": "link",
-                    "text": "> NEXT: CLASSNAMES (TEXT/LINK/PROMPT)",
-                    "target": "classnames-text"
+                    "text": "> NEXT: PROMPT BEHAVIOR",
+                    "target": "prompt-behavior"
                 },
                 {
                     "type": "link",
-                    "text": "> BACK TO HUB",
-                    "target": "hub"
-                },
-                "",
-                {
-                    "type": "link",
-                    "text": "> PREVIOUS SECTION",
+                    "text": "> PREVIOUS: SCRIPT STRUCTURE",
                     "target": "script-structure"
-                },
-                {
-                    "type": "link",
-                    "text": "> NEXT SECTION",
-                    "target": "classnames-text"
                 },
                 {
                     "type": "link",
@@ -368,174 +314,194 @@
                 {
                     "type": "text",
                     "className": "notice",
-                    "text": "Live element examples:"
+                    "text": "LIVE ELEMENT EXAMPLES (ALL ELEMENT TYPES)"
                 },
                 "",
+                {
+                    "type": "text",
+                    "className": "system",
+                    "text": "[ELEMENT: STRING / TEXT LINE]"
+                },
+                "This line is a plain string entry in content[].",
+                "",
+                {
+                    "type": "text",
+                    "className": "system",
+                    "text": "[ELEMENT: TEXT OBJECT]"
+                },
+                {
+                    "type": "text",
+                    "className": "notice",
+                    "text": "This line is a { type: \"text\" } object."
+                },
+                "",
+                {
+                    "type": "text",
+                    "className": "system",
+                    "text": "[ELEMENT: LINK OBJECT]"
+                },
+                {
+                    "type": "link",
+                    "text": "> LINK EXAMPLE: GO TO ELEMENT TYPES",
+                    "target": "element-types"
+                },
+                {
+                    "type": "text",
+                    "className": "system",
+                    "text": "[ELEMENT: DIALOG LINK (+ DIALOG)]"
+                },
+                {
+                    "type": "link",
+                    "text": "> DIALOG LINK EXAMPLE: OPEN QUICK HELP",
+                    "target": [
+                        {
+                            "type": "dialog",
+                            "target": "quickHelpDialog"
+                        }
+                    ]
+                },
+                "",
+                {
+                    "type": "text",
+                    "className": "system",
+                    "text": "[ELEMENT: TOGGLE OBJECT]"
+                },
                 {
                     "type": "toggle",
                     "states": [
                         {
                             "active": true,
-                            "text": "> TOGGLE: STATE A"
+                            "text": "> TOGGLE EXAMPLE: STATE A"
                         },
                         {
                             "active": false,
-                            "text": "> TOGGLE: STATE B"
+                            "text": "> TOGGLE EXAMPLE: STATE B"
                         },
                         {
                             "active": false,
-                            "text": "> TOGGLE: STATE C"
+                            "text": "> TOGGLE EXAMPLE: STATE C"
                         }
                     ]
                 },
                 "",
                 {
-                    "type": "list",
-                    "states": [
-                        "LIST: OPTION ONE",
-                        "LIST: OPTION TWO",
-                        "LIST: OPTION THREE"
-                    ]
+                    "type": "text",
+                    "className": "system",
+                    "text": "[ELEMENT: BITMAP / IMAGE OBJECT]"
+                },
+                {
+                    "type": "bitmap",
+                    "src": "img/ypsilon-map.png",
+                    "className": "luminosity",
+                    "scale": 0.45
+                },
+                {
+                    "type": "image",
+                    "src": "img/ypsilon-map.png",
+                    "className": "monochrome",
+                    "scale": 0.25
                 },
                 "",
                 {
+                    "type": "text",
+                    "className": "system",
+                    "text": "[ELEMENT: PROMPT OBJECT]"
+                },
+                {
                     "type": "prompt",
                     "prompt": "demo> ",
+                    "cursor": true,
                     "commands": [
                         {
-                            "command": "home",
+                            "command": "help",
                             "action": {
-                                "type": "link",
-                                "target": "hub"
+                                "type": "dialog",
+                                "target": "quickHelpDialog"
                             }
                         },
                         {
                             "command": "next",
                             "action": {
                                 "type": "link",
-                                "target": "classnames-text"
+                                "target": "prompt-behavior"
                             }
                         }
                     ]
                 },
                 "",
                 {
-                    "type": "bitmap",
-                    "src": "https://i.imgur.com/rDjphNY.jpg",
-                    "className": "luminosity",
-                    "scale": 0.55
+                    "type": "text",
+                    "className": "system",
+                    "text": "[ELEMENT: LIST OBJECT]"
+                },
+                {
+                    "type": "list",
+                    "states": [
+                        "LIST EXAMPLE: OPTION ONE",
+                        "LIST EXAMPLE: OPTION TWO",
+                        "LIST EXAMPLE: OPTION THREE"
+                    ]
                 },
                 "",
                 {
-                    "type": "link",
-                    "text": "> NEXT: CLASSNAMES (TEXT/LINK/PROMPT)",
-                    "target": "classnames-text"
+                    "type": "text",
+                    "className": "system",
+                    "text": "[ELEMENT: LOGIN OBJECT]"
+                },
+                {
+                    "type": "login",
+                    "usernamePrompt": "user> ",
+                    "passwordPrompt": "pass> ",
+                    "usernameCaseSensitive": false,
+                    "hideUsername": false,
+                    "passwordCaseSensitive": true,
+                    "hidePassword": true,
+                    "credentials": [
+                        {
+                            "username": "demo",
+                            "password": "letmein",
+                            "target": "prompt-behavior"
+                        }
+                    ],
+                    "noMatchAction": {
+                        "type": "dialog",
+                        "target": "quickHelpDialog"
+                    }
                 },
                 "",
                 {
-                    "type": "link",
-                    "text": "> PREVIOUS SECTION",
-                    "target": "element-types"
+                    "type": "text",
+                    "className": "system",
+                    "text": "[ELEMENT: REPORT COMPOSER OBJECT]"
                 },
                 {
-                    "type": "link",
-                    "text": "> TABLE OF CONTENTS",
-                    "target": "hub"
-                }
-            ]
-        },
-        {
-            "id": "classnames-text",
-            "type": "screen",
-            "content": [
-                {
-                    "type": "text",
-                    "className": "alert",
-                    "text": "SECTION: CLASSNAMES (TEXT / LINK / PROMPT)"
-                },
-                "",
-                "Text-like classnames:\nalert, notice, emphasis, aphelion, small, center, title, underline, script-hidden\n",
-                {
-                    "type": "text",
-                    "className": "alert",
-                    "text": "ALERT SAMPLE"
-                },
-                {
-                    "type": "text",
-                    "className": "notice",
-                    "text": "NOTICE SAMPLE"
-                },
-                {
-                    "type": "text",
-                    "className": "emphasis",
-                    "text": "EMPHASIS SAMPLE"
+                    "type": "reportComposer",
+                    "composerId": "sampleComposer",
+                    "titleTemplate": "Sample Incident Report",
+                    "template": "Sample Report Title\\nDescribe your findings here.",
+                    "saveTarget": "report-composer-result",
+                    "cancelTarget": "element-types"
                 },
                 {
                     "type": "text",
                     "className": "system",
-                    "text": "SYSTEM SAMPLE"
+                    "text": "[ELEMENT: REPORT LIST OBJECT]"
                 },
                 {
-                    "type": "text",
-                    "className": "small",
-                    "text": "SMALL SAMPLE"
-                },
-                {
-                    "type": "text",
-                    "className": "underline",
-                    "text": "UNDERLINE SAMPLE"
-                },
-                "",
-                "Link extras: inline, alert",
-                {
-                    "type": "link",
-                    "className": "inline",
-                    "text": "> INLINE LINK A",
-                    "target": "classnames-text"
-                },
-                {
-                    "type": "link",
-                    "className": "inline",
-                    "text": "> INLINE LINK B",
-                    "target": "classnames-text"
-                },
-                "",
-                "Prompt extra: cursor",
-                {
-                    "type": "prompt",
-                    "className": "cursor",
-                    "prompt": "cursor> ",
-                    "commands": [
-                        {
-                            "command": "next",
-                            "action": {
-                                "type": "link",
-                                "target": "classnames-bitmap"
-                            }
-                        }
-                    ]
+                    "type": "reportList",
+                    "composerId": "sampleComposer",
+                    "emptyText": "[NO REPORTS SAVED FOR sampleComposer]"
                 },
                 "",
                 {
                     "type": "link",
-                    "text": "> NEXT: CLASSNAMES (BITMAP)",
-                    "target": "classnames-bitmap"
-                },
-                {
-                    "type": "link",
-                    "text": "> BACK TO HUB",
-                    "target": "hub"
-                },
-                "",
-                {
-                    "type": "link",
-                    "text": "> PREVIOUS SECTION",
+                    "text": "> RETURN TO ELEMENT TYPES",
                     "target": "element-types"
                 },
                 {
                     "type": "link",
-                    "text": "> NEXT SECTION",
-                    "target": "classnames-bitmap"
+                    "text": "> NEXT: PROMPT BEHAVIOR",
+                    "target": "prompt-behavior"
                 },
                 {
                     "type": "link",
@@ -545,57 +511,124 @@
             ]
         },
         {
-            "id": "classnames-bitmap",
+            "id": "report-composer-result",
+            "type": "screen",
+            "content": [
+                {
+                    "type": "text",
+                    "className": "notice",
+                    "text": "REPORT COMPOSER SAVE FLOW COMPLETE"
+                },
+                "",
+                "The Report Composer wrote data and navigated using saveTarget.",
+                "",
+                {
+                    "type": "link",
+                    "text": "> RETURN TO LIVE ELEMENT EXAMPLES",
+                    "target": "live-elements"
+                },
+                {
+                    "type": "link",
+                    "text": "> TABLE OF CONTENTS",
+                    "target": "hub"
+                }
+            ]
+        },
+        {
+            "id": "prompt-behavior",
             "type": "screen",
             "content": [
                 {
                     "type": "text",
                     "className": "alert",
-                    "text": "SECTION: CLASSNAMES (BITMAP)"
+                    "text": "SECTION: PROMPT BEHAVIOR"
                 },
                 "",
-                "Bitmap classnames:\nmonochrome, luminosity, lighten, multiply, screen, overlay, darken, color-dodge, color-burn, hard-light, soft-light, difference, exclusion, hue, saturation, color\n",
-                "original",
+                "Prompt #1 (case-sensitive, default):",
+                "- command must match exactly: ExactCase",
                 {
-                    "type": "bitmap",
-                    "src": "img/ypsilon-map.png",
-                    "scale": 0.45
+                    "type": "prompt",
+                    "prompt": "strict> ",
+                    "commands": [
+                        {
+                            "command": "ExactCase",
+                            "action": {
+                                "type": "link",
+                                "target": "links-dialogs"
+                            }
+                        }
+                    ]
                 },
-                "\nlighten",
+                "",
+                "Prompt #2 (case-insensitive + free input):",
+                "- command: LOGS (any letter case)",
+                "- any other non-empty input is logged to user logs",
                 {
-                    "type": "bitmap",
-                    "src": "img/ypsilon-map.png",
-                    "className": "lighten",
-                    "scale": 0.45
-                },
-                "\nmonochrome",
-                {
-                    "type": "bitmap",
-                    "src": "img/ypsilon-map.png",
-                    "className": "monochrome",
-                    "scale": 0.45
+                    "type": "prompt",
+                    "prompt": "log> ",
+                    "caseSensitive": false,
+                    "allowFreeInput": true,
+                    "inputAction": {
+                        "type": "logEntry",
+                        "target": "shipLogEntries"
+                    },
+                    "commands": [
+                        {
+                            "command": "logs",
+                            "action": {
+                                "type": "link",
+                                "target": "shipLogEntries"
+                            }
+                        },
+                        {
+                            "command": "next",
+                            "action": {
+                                "type": "link",
+                                "target": "links-dialogs"
+                            }
+                        }
+                    ]
                 },
                 "",
                 {
                     "type": "link",
-                    "text": "> NEXT: LINK TARGETS + DIALOGS",
+                    "text": "> VIEW USER LOG ENTRIES",
+                    "target": "shipLogEntries"
+                },
+                {
+                    "type": "link",
+                    "text": "> NEXT: LINK TARGETS + ACTIONS",
                     "target": "links-dialogs"
                 },
                 {
                     "type": "link",
-                    "text": "> BACK TO HUB",
+                    "text": "> PREVIOUS: ELEMENT TYPES",
+                    "target": "element-types"
+                },
+                {
+                    "type": "link",
+                    "text": "> TABLE OF CONTENTS",
                     "target": "hub"
+                }
+            ]
+        },
+        {
+            "id": "shipLogEntries",
+            "type": "screen",
+            "content": [
+                {
+                    "type": "text",
+                    "className": "notice",
+                    "text": "USER LOG ENTRIES"
                 },
+                "--- BEGIN USER LOGS ---",
+                "[NO USER LOG ENTRIES RECORDED]",
+                "--- END USER LOGS ---",
                 "",
                 {
                     "type": "link",
-                    "text": "> PREVIOUS SECTION",
-                    "target": "classnames-text"
-                },
-                {
-                    "type": "link",
-                    "text": "> NEXT SECTION",
-                    "target": "links-dialogs"
+                    "text": "> BACK TO PROMPT BEHAVIOR",
+                    "target": "prompt-behavior"
                 },
                 {
                     "type": "link",
@@ -611,20 +644,22 @@
                 {
                     "type": "text",
                     "className": "alert",
-                    "text": "SECTION: LINK TARGETS + DIALOGS"
+                    "text": "SECTION: LINK TARGETS + ACTIONS + DIALOGS"
                 },
                 "",
                 "Link target forms:",
                 "- \"target\": \"screenId\"",
-                "- \"target\": [ ... ] with typed entries + optional shiftKey\n",
-                "Typed entries:",
+                "- \"target\": [ typed entries ]",
+                "",
+                "Typed entry kinds:",
                 "- { type: \"link\", target: \"screenId\" }",
                 "- { type: \"dialog\", target: \"dialogId\" }",
                 "- { type: \"href\", target: \"https://...\" }",
-                "- { type: \"action\", action: \"back\"|\"reload\"|..., target? }\n",
+                "- { type: \"action\", action: \"back\"|\"dialog\"|\"resetState\", target?: \"screenId\" }",
+                "",
                 {
                     "type": "link",
-                    "text": "> OPEN DIALOG (SHIFT+CLICK TO GO HOME)",
+                    "text": "> OPEN QUICK HELP DIALOG (SHIFT+CLICK TO GO HOME)",
                     "target": [
                         {
                             "type": "dialog",
@@ -640,11 +675,33 @@
                 },
                 {
                     "type": "link",
-                    "text": "> OPEN EXTERNAL PHOSPHOR REPO",
+                    "text": "> OPEN EXTERNAL EXAMPLE SITE",
                     "target": [
                         {
                             "type": "href",
-                            "target": "https://github.com/EthanDunning/phosphor"
+                            "target": "https://example.com"
+                        }
+                    ]
+                },
+                {
+                    "type": "link",
+                    "text": "> ACTION: BACK TO PREVIOUS SCREEN",
+                    "target": [
+                        {
+                            "type": "action",
+                            "action": "back",
+                            "target": "hub"
+                        }
+                    ]
+                },
+                {
+                    "type": "link",
+                    "text": "> ACTION: RESET SCRIPT STATE + GO HOME",
+                    "target": [
+                        {
+                            "type": "action",
+                            "action": "resetState",
+                            "target": "hub"
                         }
                     ]
                 },
@@ -656,19 +713,8 @@
                 },
                 {
                     "type": "link",
-                    "text": "> BACK TO HUB",
-                    "target": "hub"
-                },
-                "",
-                {
-                    "type": "link",
-                    "text": "> PREVIOUS SECTION",
-                    "target": "classnames-bitmap"
-                },
-                {
-                    "type": "link",
-                    "text": "> NEXT SECTION",
-                    "target": "advanced-options"
+                    "text": "> PREVIOUS: PROMPT BEHAVIOR",
+                    "target": "prompt-behavior"
                 },
                 {
                     "type": "link",
@@ -688,11 +734,13 @@
                 },
                 "",
                 "Useful optional properties:",
-                "- speed (typing speed multiplier)",
-                "- loop (repeat an object element N times)",
-                "- onDone (auto-advance + optional delayMs)",
-                "- allowFreeInput + inputAction (prompt behavior)",
-                "- fillWidth / scale / animated for bitmaps\n",
+                "- speed (per-element typing speed)",
+                "- defaultTextSpeed (screen or config level)",
+                "- loop (repeat object elements N times)",
+                "- onDone (auto-advance with optional delayMs)",
+                "- allowFreeInput + inputAction + caseSensitive on prompts",
+                "- fillWidth / scale / animated for bitmap/image",
+                "",
                 "Slow line:",
                 {
                     "type": "text",
@@ -714,7 +762,7 @@
                 "",
                 {
                     "type": "link",
-                    "text": "> WATCH ONDONE AUTO-ADVANCE",
+                    "text": "> WATCH onDone AUTO-ADVANCE",
                     "target": "auto-advance-demo"
                 },
                 {
@@ -722,16 +770,10 @@
                     "text": "> NEXT: FINAL CHECKLIST",
                     "target": "final-checklist"
                 },
-                "",
                 {
                     "type": "link",
-                    "text": "> PREVIOUS SECTION",
+                    "text": "> PREVIOUS: LINKS + ACTIONS",
                     "target": "links-dialogs"
-                },
-                {
-                    "type": "link",
-                    "text": "> NEXT SECTION",
-                    "target": "final-checklist"
                 },
                 {
                     "type": "link",
@@ -782,12 +824,6 @@
                     "text": "> GO TO FINAL CHECKLIST",
                     "target": "final-checklist"
                 },
-                "",
-                {
-                    "type": "link",
-                    "text": "> PREVIOUS SECTION",
-                    "target": "advanced-options"
-                },
                 {
                     "type": "link",
                     "text": "> TABLE OF CONTENTS",
@@ -805,16 +841,18 @@
                     "text": "SECTION: FINAL CHECKLIST"
                 },
                 "",
-                "Before shipping your script:",
+                "Before shipping your script/module:",
                 "- Verify all screen IDs are unique",
-                "- Verify all link targets resolve to existing screens/dialogs",
-                "- Use preview to test flow",
-                "- Use APPLY TO APP to save locally and activate",
-                "- Export JSON once satisfied\n",
+                "- Verify all link/dialog/action targets resolve",
+                "- Preview full flow, including prompts and dialogs",
+                "- Confirm Scripts dropdown visibility choices in Modules panel",
+                "- Validate module links from Modules and Library views",
+                "- Export JSON backup when stable",
+                "",
                 {
                     "type": "text",
                     "className": "emphasis",
-                    "text": "You can now use this as your baseline template."
+                    "text": "Use this sample to build and publish modules."
                 },
                 "",
                 {
@@ -822,16 +860,10 @@
                     "text": "> RESTART GUIDE",
                     "target": "hub"
                 },
-                "",
                 {
                     "type": "link",
-                    "text": "> PREVIOUS SECTION",
+                    "text": "> PREVIOUS: ADVANCED OPTIONS",
                     "target": "advanced-options"
-                },
-                {
-                    "type": "link",
-                    "text": "> TABLE OF CONTENTS",
-                    "target": "hub"
                 }
             ]
         }
@@ -841,7 +873,9 @@
             "id": "quickHelpDialog",
             "type": "alert",
             "content": [
-                "This is an alert dialog from dialogs[].\nOpen it using a link target with type='dialog'.\nPress ENTER, ESC, or click to close."
+                "This is an alert dialog from dialogs[].",
+                "Open it with a link target entry using type=dialog.",
+                "Press ENTER, ESC, or click to close."
             ]
         }
     ]

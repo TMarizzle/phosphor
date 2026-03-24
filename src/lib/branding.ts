@@ -1,1 +1,1 @@
-export const APP_TITLE = "PHOSPHOR v7.6";
+export const APP_TITLE = "PHOSPHOR v7.7";

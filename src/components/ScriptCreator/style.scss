@@ -506,6 +506,8 @@ $creator-dark-control-bg: rgba($creator-dark-bg, 0.92);
         flex: 1;
         min-height: 0;
         overflow: auto;
+        padding-right: 0.25rem;
+        scrollbar-gutter: stable;
         @include creator-scrollbar;
     }
 

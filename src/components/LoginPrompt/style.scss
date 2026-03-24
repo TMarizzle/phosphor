@@ -1,0 +1,34 @@
+@use "../../assets/sass/colors" as *;
+
+.__login__ {
+    .line {
+        display: block;
+    }
+
+    .input.active::after {
+        content: "|";
+        background-color: var(--fg);
+        color: var(--fg);
+        animation: blink 1s steps(5, start) infinite;
+    }
+
+    &.username-case-insensitive .line:first-child .input {
+        text-transform: uppercase;
+    }
+
+    &.case-insensitive .line:last-child .input {
+        text-transform: uppercase;
+    }
+}
+
+@keyframes blink {
+    to {
+        visibility: hidden;
+    }
+}
+
+@-webkit-keyframes blink-animation {
+    to {
+        visibility: hidden;
+    }
+}

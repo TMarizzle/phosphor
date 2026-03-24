@@ -20,6 +20,7 @@ import {
 } from "../../themes";
 import {
     ModuleRecord,
+    ProfileRole,
     ModuleVisibility,
     fetchAccessibleModuleById,
     getCurrentSession,
@@ -63,6 +64,7 @@ interface AppState {
     soundEnabled: boolean;
     scriptDropdownOpen: boolean;
     optionsDropdownOpen: boolean;
+    profileDropdownOpen: boolean;
     mobileMenuOpen: boolean;
     creatorOpen: boolean;
     creatorInitialScript: any | null;
@@ -70,6 +72,7 @@ interface AppState {
     previewMode: boolean;
     uploadError: string | null;
     authSession: Session | null;
+    profileRole: ProfileRole;
     authLoading: boolean;
     modulesBusy: boolean;
     modulesError: string | null;
@@ -114,6 +117,7 @@ class App extends Component<any, AppState> {
             soundEnabled,
             scriptDropdownOpen: false,
             optionsDropdownOpen: false,
+            profileDropdownOpen: false,
             mobileMenuOpen: false,
             creatorOpen: false,
             creatorInitialScript: null,
@@ -121,6 +125,7 @@ class App extends Component<any, AppState> {
             previewMode: false,
             uploadError: null,
             authSession: null,
+            profileRole: "user",
             authLoading: isSupabaseConfigured(),
             modulesBusy: false,
             modulesError: null,
@@ -139,6 +144,7 @@ class App extends Component<any, AppState> {
         this._handleFileChange      = this._handleFileChange.bind(this);
         this._handleDropdownToggle  = this._handleDropdownToggle.bind(this);
         this._handleOptionsDropdownToggle = this._handleOptionsDropdownToggle.bind(this);
+        this._handleProfileDropdownToggle = this._handleProfileDropdownToggle.bind(this);
         this._handleMobileMenuToggle = this._handleMobileMenuToggle.bind(this);
         this._handleWindowResize = this._handleWindowResize.bind(this);
         this._scheduleHeaderLayoutUpdate = this._scheduleHeaderLayoutUpdate.bind(this);
@@ -590,6 +596,8 @@ class App extends Component<any, AppState> {
                 this.setState({
                     myModules: [],
                     subscribedModules: [],
+                    profileRole: "user",
+                    profileDropdownOpen: false,
                 });
             });
 
@@ -778,12 +786,16 @@ class App extends Component<any, AppState> {
             mobileMenuOpen: false,
             scriptDropdownOpen: false,
             optionsDropdownOpen: false,
+            profileDropdownOpen: false,
             customThemeEditorOpen: false,
         });
     }
 
     private _handleClickOutside(e: MouseEvent): void {
-        if (!this.state.scriptDropdownOpen && !this.state.optionsDropdownOpen && !this.state.mobileMenuOpen) {
+        if (!this.state.scriptDropdownOpen
+            && !this.state.optionsDropdownOpen
+            && !this.state.profileDropdownOpen
+            && !this.state.mobileMenuOpen) {
             return;
         }
 
@@ -802,15 +814,26 @@ class App extends Component<any, AppState> {
             nextState.customThemeEditorOpen = false;
         }
 
+        if (this.state.profileDropdownOpen && !target.closest(".phosphor-header__profile-wrapper")) {
+            nextState.profileDropdownOpen = false;
+        }
+
         if (this.state.mobileMenuOpen && !target.closest(".phosphor-header")) {
             nextState.mobileMenuOpen = false;
             nextState.scriptDropdownOpen = false;
             nextState.optionsDropdownOpen = false;
+            nextState.profileDropdownOpen = false;
             nextState.customThemeEditorOpen = false;
         }
 
         if (Object.keys(nextState).length) {
-            this.setState(nextState as Pick<AppState, "scriptDropdownOpen" | "optionsDropdownOpen" | "mobileMenuOpen" | "customThemeEditorOpen">);
+            this.setState(nextState as Pick<AppState,
+                "scriptDropdownOpen"
+                | "optionsDropdownOpen"
+                | "profileDropdownOpen"
+                | "mobileMenuOpen"
+                | "customThemeEditorOpen"
+            >);
         }
     }
 
@@ -818,6 +841,7 @@ class App extends Component<any, AppState> {
         this.setState((prev) => ({
             scriptDropdownOpen: !prev.scriptDropdownOpen,
             optionsDropdownOpen: false,
+            profileDropdownOpen: false,
             customThemeEditorOpen: false,
         }));
     }
@@ -826,7 +850,17 @@ class App extends Component<any, AppState> {
         this.setState((prev) => ({
             optionsDropdownOpen: !prev.optionsDropdownOpen,
             scriptDropdownOpen: false,
+            profileDropdownOpen: false,
             customThemeEditorOpen: prev.optionsDropdownOpen ? false : prev.customThemeEditorOpen,
+        }));
+    }
+
+    private _handleProfileDropdownToggle(): void {
+        this.setState((prev) => ({
+            profileDropdownOpen: !prev.profileDropdownOpen,
+            scriptDropdownOpen: false,
+            optionsDropdownOpen: false,
+            customThemeEditorOpen: false,
         }));
     }
 
@@ -839,6 +873,7 @@ class App extends Component<any, AppState> {
             mobileMenuOpen: !prev.mobileMenuOpen,
             scriptDropdownOpen: false,
             optionsDropdownOpen: false,
+            profileDropdownOpen: false,
             customThemeEditorOpen: false,
         }));
     }
@@ -860,6 +895,7 @@ class App extends Component<any, AppState> {
             this.setState({
                 scriptDropdownOpen: false,
                 optionsDropdownOpen: false,
+                profileDropdownOpen: false,
                 customThemeEditorOpen: false,
                 mobileMenuOpen: false,
             });
@@ -877,6 +913,7 @@ class App extends Component<any, AppState> {
             | "customTheme"
             | "scriptDropdownOpen"
             | "optionsDropdownOpen"
+            | "profileDropdownOpen"
             | "customThemeEditorOpen"
             | "mobileMenuOpen"
             | "creatorInitialScript"
@@ -890,6 +927,7 @@ class App extends Component<any, AppState> {
             ...nextThemeState,
             scriptDropdownOpen: false,
             optionsDropdownOpen: false,
+            profileDropdownOpen: false,
             customThemeEditorOpen: false,
             mobileMenuOpen: false,
             creatorInitialScript: null,
@@ -1031,6 +1069,7 @@ class App extends Component<any, AppState> {
             ),
             scriptDropdownOpen: false,
             optionsDropdownOpen: false,
+            profileDropdownOpen: false,
             customThemeEditorOpen: false,
             mobileMenuOpen: false,
             previewMode: false,
@@ -1188,6 +1227,7 @@ class App extends Component<any, AppState> {
             ),
             scriptDropdownOpen: false,
             optionsDropdownOpen: false,
+            profileDropdownOpen: false,
             customThemeEditorOpen: false,
             mobileMenuOpen: false,
             previewMode: false,
@@ -1283,6 +1323,7 @@ class App extends Component<any, AppState> {
             modulesOpen: true,
             scriptDropdownOpen: false,
             optionsDropdownOpen: false,
+            profileDropdownOpen: false,
             customThemeEditorOpen: false,
             mobileMenuOpen: false,
         });
@@ -1310,6 +1351,7 @@ class App extends Component<any, AppState> {
             modulesBusy: true,
             modulesError: null,
             modulesNotice: null,
+            profileDropdownOpen: false,
         });
 
         try {
@@ -1336,6 +1378,8 @@ class App extends Component<any, AppState> {
                 modulesNotice: "Signed out.",
                 myModules: [],
                 subscribedModules: [],
+                profileRole: "user",
+                profileDropdownOpen: false,
             });
         } catch (error: any) {
             this.setState({
@@ -1359,9 +1403,10 @@ class App extends Component<any, AppState> {
         });
 
         try {
-            const [myModules, subscribedModules] = await Promise.all([
+            const [myModules, subscribedModules, profileRole] = await Promise.all([
                 listOwnModules(userId),
                 listSubscribedModules(userId),
+                getProfileRole(userId).catch(() => "user" as ProfileRole),
             ]);
             this.setState((prev) => {
                 const knownModules = [...myModules, ...subscribedModules];
@@ -1384,6 +1429,7 @@ class App extends Component<any, AppState> {
                     ownScriptsVisibilityById,
                     subscribedModules,
                     subscribedScriptsVisibilityById,
+                    profileRole,
                     activeModule: refreshedActiveModule,
                     modulesBusy: false,
                 };
@@ -1591,6 +1637,7 @@ class App extends Component<any, AppState> {
             soundEnabled,
             scriptDropdownOpen,
             optionsDropdownOpen,
+            profileDropdownOpen,
             mobileMenuOpen,
             creatorOpen,
             creatorInitialScript,
@@ -1598,6 +1645,7 @@ class App extends Component<any, AppState> {
             previewMode,
             uploadError,
             authSession,
+            profileRole,
             authLoading,
             modulesBusy,
             modulesError,
@@ -1620,6 +1668,7 @@ class App extends Component<any, AppState> {
         ).filter((script, index, scripts) => {
             return scripts.findIndex((candidate) => candidate.id === script.id) === index;
         });
+        const sessionEmail = authSession?.user?.email || null;
 
         return (
             <>
@@ -1669,6 +1718,19 @@ class App extends Component<any, AppState> {
 
                                 {scriptDropdownOpen && (
                                     <div className="phosphor-header__dropdown" role="listbox">
+                                        <button
+                                            className="phosphor-header__dropdown-item"
+                                            onClick={this._handleCreatorOpen}
+                                        >
+                                            [OPEN CREATOR]
+                                        </button>
+                                        <button
+                                            className="phosphor-header__dropdown-item"
+                                            onClick={this._handleModulesOpen}
+                                        >
+                                            [OPEN MODULES]
+                                        </button>
+                                        <div className="phosphor-header__dropdown-item phosphor-header__dropdown-item--separator" />
                                         {availableScripts.map((script) => (
                                             <button
                                                 key={script.id}
@@ -1733,15 +1795,6 @@ class App extends Component<any, AppState> {
                             </a>
                         )}
 
-                        {!previewMode && (
-                            <button
-                                className="phosphor-header__btn"
-                                onClick={this._handleModulesOpen}
-                                title="Open module management"
-                            >
-                                [MODULES]
-                            </button>
-                        )}
 
                         <div className="phosphor-header__options-wrapper">
                             <button
@@ -1907,6 +1960,56 @@ class App extends Component<any, AppState> {
                                 [GITHUB]
                             </a>
                         )}
+
+                        {!authLoading && !sessionEmail && (
+                            <button
+                                className="phosphor-header__btn"
+                                onClick={() => void this._handleGoogleSignIn()}
+                            >
+                                [SIGN IN]
+                            </button>
+                        )}
+
+                        {!authLoading && !!sessionEmail && (
+                            <div className="phosphor-header__options-wrapper phosphor-header__profile-wrapper">
+                                <button
+                                    className="phosphor-header__btn"
+                                    onClick={this._handleProfileDropdownToggle}
+                                    aria-haspopup="menu"
+                                    aria-expanded={profileDropdownOpen}
+                                >
+                                    [PROFILE {profileDropdownOpen ? "▲" : "▼"}]
+                                </button>
+
+                                {profileDropdownOpen && (
+                                    <div className="phosphor-header__dropdown phosphor-header__dropdown--options" role="menu">
+                                        <div className="phosphor-header__dropdown-label">[ACCOUNT]</div>
+                                        <div className="phosphor-header__profile-row">
+                                            <span className="phosphor-header__profile-key">[EMAIL]</span>
+                                            <span className="phosphor-header__profile-value">{sessionEmail}</span>
+                                        </div>
+                                        <div className="phosphor-header__profile-row">
+                                            <span className="phosphor-header__profile-key">[MODULES CREATED]</span>
+                                            <span className="phosphor-header__profile-value">{myModules.length}</span>
+                                        </div>
+                                        {profileRole === "admin" && (
+                                            <div className="phosphor-header__profile-row">
+                                                <span className="phosphor-header__profile-key">[ROLE]</span>
+                                                <span className="phosphor-header__profile-value">admin</span>
+                                            </div>
+                                        )}
+                                        <div className="phosphor-header__dropdown-item phosphor-header__dropdown-item--separator" />
+                                        <button
+                                            className="phosphor-header__dropdown-item"
+                                            role="menuitem"
+                                            onClick={() => void this._handleSignOut()}
+                                        >
+                                            [SIGN OUT]
+                                        </button>
+                                    </div>
+                                )}
+                            </div>
+                        )}
                     </div>
                 </header>
 
@@ -1930,10 +2033,8 @@ class App extends Component<any, AppState> {
                 <ModulesPanel
                     open={modulesOpen}
                     supabaseReady={isSupabaseConfigured()}
-                    authLoading={authLoading}
                     busy={modulesBusy}
                     sessionUserId={authSession?.user?.id || null}
-                    sessionEmail={authSession?.user?.email || null}
                     currentScript={activeScript.json}
                     currentScriptLabel={activeScript.label}
                     activeModule={activeModule}
@@ -1947,8 +2048,6 @@ class App extends Component<any, AppState> {
                     onClose={this._handleModulesClose}
                     onDismissError={this._handleModulesDismissError}
                     onDismissNotice={this._handleModulesDismissNotice}
-                    onSignIn={this._handleGoogleSignIn}
-                    onSignOut={this._handleSignOut}
                     onRefresh={this._handleRefreshModules}
                     onLoadModule={this._handleModuleLoad}
                     onToggleOwnScriptVisibility={this._handleToggleOwnScriptVisibility}

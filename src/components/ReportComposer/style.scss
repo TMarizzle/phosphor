@@ -4,10 +4,9 @@
 .__report_composer__ {
     margin-top: $lineheight;
 
+    input,
     textarea {
         width: 100%;
-        min-height: calc(#{$lineheight} * 16);
-        resize: vertical;
         padding: 8px;
         box-sizing: border-box;
         border: 1px solid var(--fg);
@@ -17,6 +16,15 @@
         font-size: $fontsize;
         line-height: $lineheight;
         text-shadow: var(--fg-glow);
+    }
+
+    input {
+        margin-bottom: 8px;
+    }
+
+    textarea {
+        min-height: calc(#{$lineheight} * 16);
+        resize: vertical;
         white-space: pre-wrap;
     }
 

@@ -12,6 +12,7 @@ import Link from "../Link";
 import Text from "../Text";
 import Bitmap from "../Bitmap";
 import Prompt, { PROMPT_DEFAULT } from "../Prompt";
+import LoginPrompt from "../LoginPrompt";
 import Toggle from "../Toggle";
 import List from "../List";
 import ReportComposer from "../ReportComposer";
@@ -80,9 +81,11 @@ enum ScreenDataType {
     Link,
     Bitmap,
     Prompt,
+    Login,
     Toggle,
     List,
     ReportComposer,
+    ReportList,
     Href,
 }
 
@@ -138,9 +141,11 @@ interface UserReport {
     title: string;
     lines: string[];
     createdAt: string;
+    composerId: string;
 }
 
 const USER_REPORT_SCREEN_PREFIX = "userReport:";
+const DEFAULT_REPORT_COMPOSER_ID = "default";
 
 interface PhosphorProps {
     json: any;
@@ -201,6 +206,7 @@ class Phosphor extends Component<PhosphorProps, AppState> {
         this._changeScreen = this._changeScreen.bind(this);
         this._setElementState = this._setElementState.bind(this);
         this._handlePromptCommand = this._handlePromptCommand.bind(this);
+        this._handleLoginSubmit = this._handleLoginSubmit.bind(this);
         this._handleTeletypeNewLine = this._handleTeletypeNewLine.bind(this);
         this._handleTeletypeCharDrawn = this._handleTeletypeCharDrawn.bind(this);
         this._handlePromptEnter = this._handlePromptEnter.bind(this);
@@ -1118,7 +1124,57 @@ class Phosphor extends Component<PhosphorProps, AppState> {
                     commands: element.commands,
                     allowFreeInput: !!element.allowFreeInput,
                     caseSensitive: element.caseSensitive !== false,
+                    cursor: element.cursor === true,
                     inputAction: element.inputAction,
+                    state,
+                    speed: element.speed,
+                    onLoad,
+                };
+
+            case "login":
+                return {
+                    id,
+                    type: ScreenDataType.Login,
+                    scriptId: element.scriptId,
+                    usernamePrompt: typeof element.usernamePrompt === "string" ? element.usernamePrompt : "username> ",
+                    passwordPrompt: typeof element.passwordPrompt === "string" ? element.passwordPrompt : "password> ",
+                    usernameCaseSensitive: element.usernameCaseSensitive !== false,
+                    hideUsername: element.hideUsername === true,
+                    passwordCaseSensitive: element.passwordCaseSensitive !== false,
+                    hidePassword: element.hidePassword !== false,
+                    credentials: Array.isArray(element.credentials)
+                        ? element.credentials
+                            .filter((entry: any) => {
+                                return entry
+                                    && typeof entry === "object"
+                                    && typeof entry.username === "string"
+                                    && typeof entry.password === "string";
+                            })
+                            .map((entry: any) => {
+                                const normalized: any = {
+                                    username: entry.username,
+                                    password: entry.password,
+                                };
+                                if (entry.action && typeof entry.action === "object") {
+                                    normalized.action = entry.action;
+                                }
+                                if (typeof entry.target === "string") {
+                                    normalized.target = entry.target;
+                                }
+                                return normalized;
+                            })
+                        : [],
+                    noMatchAction: element.noMatchAction && typeof element.noMatchAction === "object"
+                        ? element.noMatchAction
+                        : (
+                            typeof element.noMatchTarget === "string" && element.noMatchTarget.trim().length
+                                ? {
+                                    type: "link",
+                                    target: element.noMatchTarget,
+                                }
+                                : undefined
+                        ),
+                    className: element.className,
                     state,
                     speed: element.speed,
                     onLoad,
@@ -1149,10 +1205,25 @@ class Phosphor extends Component<PhosphorProps, AppState> {
                     id,
                     type: ScreenDataType.ReportComposer,
                     scriptId: element.scriptId,
+                    titleTemplate: element.titleTemplate,
                     template: element.template,
+                    composerId: this._normalizeReportComposerId(element.composerId),
                     saveTarget: element.saveTarget,
                     cancelTarget: element.cancelTarget,
                     state,
+                };
+
+            case "reportlist":
+                return {
+                    id,
+                    type: ScreenDataType.ReportList,
+                    scriptId: element.scriptId,
+                    composerId: this._normalizeReportComposerId(element.composerId),
+                    emptyText: typeof element.emptyText === "string" ? element.emptyText : undefined,
+                    className: element.className,
+                    state,
+                    speed: element.speed,
+                    onLoad,
                 };
 
             default:
@@ -1221,9 +1292,11 @@ class Phosphor extends Component<PhosphorProps, AppState> {
 
         // if the element is text-based, like text or Link, render instead a
         // teletype component
-        if (type === ScreenDataType.Text || type === ScreenDataType.Link || type === ScreenDataType.Prompt
+        if (type === ScreenDataType.Text || type === ScreenDataType.Link || type === ScreenDataType.Prompt || type === ScreenDataType.Login
         ) {
-            const sourceText = type === ScreenDataType.Prompt ? element.prompt : element.text;
+            const sourceText = type === ScreenDataType.Prompt
+                ? element.prompt
+                : (type === ScreenDataType.Login ? element.usernamePrompt : element.text);
             const text = (type === ScreenDataType.Text)
                 ? markdownToPlainText(sourceText || "")
                 : (sourceText || "");
@@ -1374,8 +1447,31 @@ class Phosphor extends Component<PhosphorProps, AppState> {
                     commands={element.commands}
                     allowFreeInput={element.allowFreeInput}
                     caseSensitive={element.caseSensitive}
+                    cursor={element.cursor}
                     inputAction={element.inputAction}
                     onCommand={this._handlePromptCommand}
+                    onEnter={this._handlePromptEnter}
+                />
+            );
+        }
+
+        if (element.type === ScreenDataType.Login) {
+            const handleSubmit = (username: string, password: string) => {
+                this._handleLoginSubmit(username, password, element);
+            };
+
+            return (
+                <LoginPrompt
+                    key={key}
+                    className={className}
+                    disabled={!!this.state.activeDialogId}
+                    usernamePrompt={element.usernamePrompt}
+                    passwordPrompt={element.passwordPrompt}
+                    usernameCaseSensitive={element.usernameCaseSensitive}
+                    hideUsername={element.hideUsername}
+                    passwordCaseSensitive={element.passwordCaseSensitive}
+                    hidePassword={element.hidePassword}
+                    onSubmit={handleSubmit}
                     onEnter={this._handlePromptEnter}
                 />
             );
@@ -1404,9 +1500,37 @@ class Phosphor extends Component<PhosphorProps, AppState> {
             );
         }
 
+        if (element.type === ScreenDataType.ReportList) {
+            const reports = this._getReportsForComposer(element.composerId).slice().reverse();
+            const emptyText = typeof element.emptyText === "string" && element.emptyText.trim().length
+                ? element.emptyText
+                : "[NO REPORTS SAVED]";
+            return (
+                <div key={key} className={["__report_list__", className].filter(Boolean).join(" ").trim()}>
+                    {!reports.length && (
+                        <Text
+                            text={emptyText}
+                            className={className}
+                            onRendered={handleRendered}
+                        />
+                    )}
+                    {reports.map((report, index) => (
+                        <Link
+                            key={report.id}
+                            text={`> ${report.title}`}
+                            target={`${USER_REPORT_SCREEN_PREFIX}${report.id}`}
+                            className={className}
+                            onClick={this._handleLinkClick}
+                            onRendered={index === 0 ? handleRendered : undefined}
+                        />
+                    ))}
+                </div>
+            );
+        }
+
         if (element.type === ScreenDataType.ReportComposer) {
-            const handleSave = (value: string) => {
-                this._handleReportSave(value, element.saveTarget);
+            const handleSave = (value: string, title: string) => {
+                this._handleReportSave(value, element.saveTarget, element.composerId, title);
             };
             const handleCancel = () => {
                 element.cancelTarget && this._changeScreen(element.cancelTarget);
@@ -1416,6 +1540,7 @@ class Phosphor extends Component<PhosphorProps, AppState> {
                 <ReportComposer
                     key={key}
                     className={className}
+                    titleTemplate={element.titleTemplate}
                     template={element.template}
                     onSave={handleSave}
                     onCancel={handleCancel}
@@ -1664,6 +1789,20 @@ class Phosphor extends Component<PhosphorProps, AppState> {
         return `${iso.slice(0, 10)} ${iso.slice(11, 16)}Z`;
     }
 
+    private _normalizeReportComposerId(value: any): string {
+        if (typeof value !== "string") {
+            return DEFAULT_REPORT_COMPOSER_ID;
+        }
+
+        const normalized = value.trim();
+        return normalized.length ? normalized : DEFAULT_REPORT_COMPOSER_ID;
+    }
+
+    private _getReportsForComposer(composerIdRaw: any): UserReport[] {
+        const composerId = this._normalizeReportComposerId(composerIdRaw);
+        return this._userReports.filter((report) => this._normalizeReportComposerId(report.composerId) === composerId);
+    }
+
     private _buildShipLogLines(): string[] {
         if (!this._shipLogs.length) {
             return ["[NO USER LOG ENTRIES RECORDED]"];
@@ -1745,13 +1884,18 @@ class Phosphor extends Component<PhosphorProps, AppState> {
                 return [];
             }
 
-            return parsed.filter((report) => {
-                return report
+            return parsed
+                .filter((report) => {
+                    return report
                     && typeof report.id === "string"
                     && typeof report.title === "string"
                     && Array.isArray(report.lines)
                     && typeof report.createdAt === "string";
-            });
+                })
+                .map((report) => ({
+                    ...report,
+                    composerId: this._normalizeReportComposerId((report as any).composerId),
+                }));
         } catch (e) {
             void e;
             return [];
@@ -1840,7 +1984,12 @@ class Phosphor extends Component<PhosphorProps, AppState> {
             "",
             {
                 text: "< BACK",
-                target: "comms",
+                target: [
+                    {
+                        type: "action",
+                        action: "back",
+                    },
+                ],
                 type: "link",
             },
         ];
@@ -1924,7 +2073,9 @@ class Phosphor extends Component<PhosphorProps, AppState> {
         ];
     }
 
-    private _handleReportSave(value: string, target?: string): void {
+    private _handleReportSave(value: string, target?: string, composerIdRaw?: string, titleRaw?: string): void {
+        const composerId = this._normalizeReportComposerId(composerIdRaw);
+        const titleInput = typeof titleRaw === "string" ? titleRaw.trim() : "";
         const lines = value
             .split(/\r?\n/)
             .map((line) => line.replace(/\s+$/g, ""));
@@ -1936,19 +2087,22 @@ class Phosphor extends Component<PhosphorProps, AppState> {
             lines.pop();
         }
 
-        if (!lines.length) {
+        if (!lines.length && !titleInput.length) {
             return;
         }
 
-        const title = lines[0].trim().length
-            ? lines[0].trim()
-            : `USER REPORT ${String(this._userReports.length + 1).padStart(3, "0")}`;
+        const title = titleInput.length
+            ? titleInput
+            : (lines[0]?.trim().length
+                ? lines[0].trim()
+                : `USER REPORT ${String(this._userReports.length + 1).padStart(3, "0")}`);
 
         const report: UserReport = {
             id: nanoid(),
             title,
             lines,
             createdAt: this._formatShipLogTimestamp(),
+            composerId,
         };
 
         this._userReports = [...this._userReports, report];
@@ -1962,6 +2116,55 @@ class Phosphor extends Component<PhosphorProps, AppState> {
         }, () => {
             this._changeScreen(target || "comms");
         });
+    }
+
+    private _handleLoginSubmit(username: string, password: string, element: any): void {
+        const submittedUsername = typeof username === "string" ? username : "";
+        const submittedPassword = typeof password === "string" ? password : "";
+        const usernameCaseSensitive = element?.usernameCaseSensitive !== false;
+        const passwordCaseSensitive = element?.passwordCaseSensitive !== false;
+        const normalizeUsername = (value: string): string => {
+            return usernameCaseSensitive ? value : value.toLowerCase();
+        };
+        const normalizePassword = (value: string): string => {
+            return passwordCaseSensitive ? value : value.toLowerCase();
+        };
+        const normalizedSubmittedUsername = normalizeUsername(submittedUsername);
+        const normalizedSubmittedPassword = normalizePassword(submittedPassword);
+        const credentials = Array.isArray(element?.credentials) ? element.credentials : [];
+
+        const matchedCredential = credentials.find((entry: any) => {
+            if (!entry || typeof entry !== "object") {
+                return false;
+            }
+            if (typeof entry.username !== "string" || typeof entry.password !== "string") {
+                return false;
+            }
+
+            return normalizeUsername(entry.username) === normalizedSubmittedUsername
+                && normalizePassword(entry.password) === normalizedSubmittedPassword;
+        });
+
+        if (matchedCredential) {
+            if (matchedCredential.action && typeof matchedCredential.action === "object") {
+                this._handlePromptCommand(submittedUsername, matchedCredential.action);
+                return;
+            }
+
+            if (typeof matchedCredential.target === "string" && matchedCredential.target.length) {
+                this._changeScreen(matchedCredential.target);
+            }
+            return;
+        }
+
+        if (element?.noMatchAction && typeof element.noMatchAction === "object") {
+            this._handlePromptCommand(submittedUsername, element.noMatchAction);
+            return;
+        }
+
+        if (typeof element?.noMatchTarget === "string" && element.noMatchTarget.length) {
+            this._changeScreen(element.noMatchTarget);
+        }
     }
 
     private _handlePromptCommand(command: string, args?: any) {

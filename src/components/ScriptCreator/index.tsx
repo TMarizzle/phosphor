@@ -29,9 +29,11 @@ type AddableElementType =
     | "link"
     | "bitmap"
     | "prompt"
+    | "login"
     | "toggle"
     | "list"
     | "reportComposer"
+    | "reportList"
     | "dialogLink";
 
 interface AddableElementOption {
@@ -76,6 +78,12 @@ interface PromptActionEntry {
 interface PromptCommandEntry {
     command: string;
     action: PromptActionEntry;
+}
+
+interface LoginCredentialEntry {
+    username: string;
+    password: string;
+    target: string;
 }
 
 type ScriptSearchMatchKind = "screen" | "element" | "dialog" | "dialogContent";
@@ -422,6 +430,45 @@ const normalizePromptCommands = (rawCommands: any, fallbackTarget: string): Prom
         .filter((entry: PromptCommandEntry | null): entry is PromptCommandEntry => !!entry);
 };
 
+const normalizeLoginCredentials = (rawCredentials: any, fallbackTarget: string): LoginCredentialEntry[] => {
+    if (!Array.isArray(rawCredentials)) {
+        return [];
+    }
+
+    return rawCredentials
+        .map((entry: any, index: number): LoginCredentialEntry | null => {
+            if (!entry || typeof entry !== "object") {
+                return null;
+            }
+
+            const username = typeof entry.username === "string"
+                ? entry.username
+                : `user${index + 1}`;
+            const password = typeof entry.password === "string"
+                ? entry.password
+                : "";
+            let target = typeof entry.target === "string" ? entry.target : "";
+
+            if (!target.length && entry.action && typeof entry.action === "object") {
+                const actionType = asPromptActionType(entry.action.type, "link");
+                if (actionType === "link" && typeof entry.action.target === "string") {
+                    target = entry.action.target;
+                }
+            }
+
+            if (!target.length) {
+                target = fallbackTarget;
+            }
+
+            return {
+                username,
+                password,
+                target,
+            };
+        })
+        .filter((entry: LoginCredentialEntry | null): entry is LoginCredentialEntry => !!entry);
+};
+
 const removeDialogTargetsFromElement = (entry: any, dialogId: string): any => {
     if (!entry || typeof entry !== "object") {
         return entry;
@@ -604,9 +651,11 @@ const ADDABLE_ELEMENT_OPTIONS: AddableElementOption[] = [
     { value: "link", label: "Link Button" },
     { value: "bitmap", label: "Bitmap/Image" },
     { value: "prompt", label: "Prompt Input" },
+    { value: "login", label: "Login Prompt" },
     { value: "toggle", label: "Toggle" },
     { value: "list", label: "List" },
     { value: "reportComposer", label: "Report Composer" },
+    { value: "reportList", label: "Report List" },
     { value: "dialogLink", label: "Dialog Link (+ Dialog)" },
 ];
 
@@ -633,7 +682,6 @@ const LINK_CLASSNAME_OPTIONS = [
 
 const PROMPT_CLASSNAME_OPTIONS = [
     "",
-    "cursor",
     "alert",
     "notice",
     "emphasis",
@@ -886,12 +934,12 @@ const readScreenTargetsFromAction = (action: any): string[] => {
     }
 
     const actionType = typeof action.type === "string" ? action.type.toLowerCase() : "";
-    if (actionType !== "link" && actionType !== "href") {
+    if (actionType !== "link" && actionType !== "href" && actionType !== "dialog") {
         return [];
     }
 
     if (typeof action.target === "string") {
-        return [action.target];
+        return [actionType === "dialog" ? toDialogSchemaNodeId(action.target) : action.target];
     }
 
     if (!Array.isArray(action.target)) {
@@ -953,6 +1001,31 @@ const readScreenTargetsFromElement = (element: any): string[] => {
                 : []),
         ];
         return uniqueTargets(promptTargets);
+    }
+
+    if (elementType === "login") {
+        const credentialTargets = Array.isArray(element.credentials)
+            ? element.credentials.flatMap((entry: any) => {
+                if (!entry || typeof entry !== "object") {
+                    return [];
+                }
+
+                if (entry.action && typeof entry.action === "object") {
+                    return readScreenTargetsFromAction(entry.action);
+                }
+
+                return typeof entry.target === "string" ? [entry.target] : [];
+            })
+            : [];
+        const noMatchTargets = [
+            ...readScreenTargetsFromAction(element.noMatchAction),
+            ...(typeof element.noMatchTarget === "string" ? [element.noMatchTarget] : []),
+        ];
+
+        return uniqueTargets([
+            ...credentialTargets,
+            ...noMatchTargets,
+        ]);
     }
 
     if (elementType === "reportcomposer") {
@@ -1116,6 +1189,7 @@ const getClassNameOptionsForElementType = (elementType: string): string[] => {
             return LINK_CLASSNAME_OPTIONS;
 
         case "prompt":
+        case "login":
             return PROMPT_CLASSNAME_OPTIONS;
 
         case "toggle":
@@ -1125,6 +1199,10 @@ const getClassNameOptionsForElementType = (elementType: string): string[] => {
         case "bitmap":
         case "image":
             return BITMAP_CLASSNAME_OPTIONS;
+
+        case "reportComposer":
+        case "reportList":
+            return TEXT_CLASSNAME_OPTIONS;
 
         default:
             return [""];
@@ -1245,14 +1323,14 @@ const getElementListLabel = (entry: any): string => {
     }
 
     const type = (typeof entry.type === "string" ? entry.type : "object").toLowerCase();
-    const headline = (entry.text || entry.prompt || entry.src || entry.id || "").toString().slice(0, 24) || "(empty)";
+    const headline = (entry.text || entry.prompt || entry.usernamePrompt || entry.src || entry.id || "").toString().slice(0, 24) || "(empty)";
     const className = (typeof entry.className === "string" ? entry.className.trim() : "");
 
     if (type === "text" && className.length) {
         return `${className} text: ${headline}`;
     }
 
-    if ((type === "link" || type === "href" || type === "prompt" || type === "toggle" || type === "list" || type === "bitmap" || type === "image")
+    if ((type === "link" || type === "href" || type === "prompt" || type === "login" || type === "toggle" || type === "list" || type === "bitmap" || type === "image")
         && className.length) {
         return `${className} ${type}: ${headline}`;
     }
@@ -1661,6 +1739,43 @@ const ScriptCreator: FC<ScriptCreatorProps> = ({ initialScript, onApply, onPrevi
 
         return normalizePromptCommands((selectedElement as any).commands, selectedScreen?.id || "");
     }, [selectedElement, selectedElementIsPrompt, selectedScreen?.id]);
+    const selectedElementIsLogin = selectedElementType === "login";
+    const selectedLoginCredentials = useMemo(() => {
+        if (!selectedElementIsLogin || !selectedElement || typeof selectedElement !== "object") {
+            return [];
+        }
+
+        return normalizeLoginCredentials((selectedElement as any).credentials, selectedScreen?.id || "");
+    }, [selectedElement, selectedElementIsLogin, selectedScreen?.id]);
+    const selectedLoginNoMatchAction = useMemo((): PromptActionEntry => {
+        const fallback: PromptActionEntry = {
+            type: "dialog",
+            target: "",
+        };
+        if (!selectedElementIsLogin || !selectedElement || typeof selectedElement !== "object") {
+            return fallback;
+        }
+
+        const rawAction = (selectedElement as any).noMatchAction;
+        if (!rawAction || typeof rawAction !== "object") {
+            return fallback;
+        }
+
+        const type = asPromptActionType(rawAction.type, "dialog");
+        const next: PromptActionEntry = { type };
+
+        if (typeof rawAction.target === "string") {
+            next.target = rawAction.target;
+        }
+
+        if (typeof rawAction.action === "string") {
+            next.action = rawAction.action;
+        } else if (type === "action") {
+            next.action = "resetState";
+        }
+
+        return next;
+    }, [selectedElement, selectedElementIsLogin]);
     const selectedElementIsCycler = selectedElementType === "toggle" || selectedElementType === "list";
     const selectedCyclerStates = useMemo(() => {
         if (!selectedElementIsCycler) {
@@ -2571,6 +2686,7 @@ const ScriptCreator: FC<ScriptCreatorProps> = ({ initialScript, onApply, onPrevi
                     type: "prompt",
                     prompt: "> ",
                     caseSensitive: true,
+                    cursor: false,
                     commands: [
                         {
                             command: "back",
@@ -2580,6 +2696,29 @@ const ScriptCreator: FC<ScriptCreatorProps> = ({ initialScript, onApply, onPrevi
                             },
                         },
                     ],
+                };
+                break;
+
+            case "login":
+                element = {
+                    type: "login",
+                    usernamePrompt: "username> ",
+                    passwordPrompt: "password> ",
+                    usernameCaseSensitive: true,
+                    hideUsername: false,
+                    passwordCaseSensitive: true,
+                    hidePassword: true,
+                    credentials: [
+                        {
+                            username: "admin",
+                            password: "password",
+                            target: selectedScreen.id,
+                        },
+                    ],
+                    noMatchAction: {
+                        type: "dialog",
+                        target: "",
+                    },
                 };
                 break;
 
@@ -2606,9 +2745,19 @@ const ScriptCreator: FC<ScriptCreatorProps> = ({ initialScript, onApply, onPrevi
             case "reportComposer":
                 element = {
                     type: "reportComposer",
+                    composerId: "default",
+                    titleTemplate: "",
                     template: "",
                     saveTarget: selectedScreen.id,
                     cancelTarget: selectedScreen.id,
+                };
+                break;
+
+            case "reportList":
+                element = {
+                    type: "reportList",
+                    composerId: "default",
+                    emptyText: "[NO REPORTS SAVED]",
                 };
                 break;
 
@@ -2797,6 +2946,75 @@ const ScriptCreator: FC<ScriptCreatorProps> = ({ initialScript, onApply, onPrevi
             const nextCommands = [...prevCommands];
             [nextCommands[index], nextCommands[toIndex]] = [nextCommands[toIndex], nextCommands[index]];
             return nextCommands;
+        });
+    };
+
+    const updateLoginCredentials = (updater: (prevCredentials: LoginCredentialEntry[]) => LoginCredentialEntry[]) => {
+        if (!selectedElementIsLogin || !selectedElement || typeof selectedElement !== "object") {
+            return;
+        }
+
+        const fallbackTarget = selectedScreen?.id || "";
+        const currentCredentials = normalizeLoginCredentials((selectedElement as any).credentials, fallbackTarget);
+        const nextCredentials = normalizeLoginCredentials(updater(currentCredentials), fallbackTarget);
+        updateElement({
+            ...selectedElement,
+            credentials: nextCredentials,
+        });
+    };
+
+    const addLoginCredential = () => {
+        const fallbackTarget = selectedScreen?.id || "";
+        updateLoginCredentials((prevCredentials) => ([
+            ...prevCredentials,
+            {
+                username: `user${prevCredentials.length + 1}`,
+                password: "",
+                target: fallbackTarget,
+            },
+        ]));
+    };
+
+    const removeLoginCredential = (index: number) => {
+        updateLoginCredentials((prevCredentials) => {
+            return prevCredentials.filter((_, credentialIndex) => credentialIndex !== index);
+        });
+    };
+
+    const moveLoginCredential = (index: number, direction: -1 | 1) => {
+        updateLoginCredentials((prevCredentials) => {
+            const toIndex = index + direction;
+            if (index < 0 || toIndex < 0 || index >= prevCredentials.length || toIndex >= prevCredentials.length) {
+                return prevCredentials;
+            }
+
+            const nextCredentials = [...prevCredentials];
+            [nextCredentials[index], nextCredentials[toIndex]] = [nextCredentials[toIndex], nextCredentials[index]];
+            return nextCredentials;
+        });
+    };
+
+    const updateLoginNoMatchAction = (updater: (prevAction: PromptActionEntry) => PromptActionEntry) => {
+        if (!selectedElementIsLogin || !selectedElement || typeof selectedElement !== "object") {
+            return;
+        }
+
+        const nextAction = updater(selectedLoginNoMatchAction);
+        const type = asPromptActionType(nextAction.type, "dialog");
+        const serialized: PromptActionEntry = { type };
+
+        if ((type === "link" || type === "dialog") && typeof nextAction.target === "string") {
+            serialized.target = nextAction.target;
+        }
+        if (type === "action") {
+            serialized.action = (nextAction.action || "").trim().length
+                ? nextAction.action
+                : "resetState";
+        }
+
+        updateElement({
+            ...selectedElement,
+            noMatchAction: serialized,
         });
     };
 
@@ -3912,17 +4130,31 @@ const ScriptCreator: FC<ScriptCreatorProps> = ({ initialScript, onApply, onPrevi
                                                             />
                                                         </label>
 
-                                                        <label className="script-creator__field">
-                                                            <span>Case Sensitive</span>
-                                                            <CreatorSelect
-                                                                value={selectedElement.caseSensitive === false ? "false" : "true"}
-                                                                options={BOOLEAN_OPTIONS}
-                                                                onChange={(nextValue) => updateElement({
-                                                                    ...selectedElement,
-                                                                    caseSensitive: nextValue === "true",
-                                                                })}
-                                                            />
-                                                        </label>
+                                                        <div className="script-creator__link-target-grid">
+                                                            <label className="script-creator__field">
+                                                                <span>Case Sensitive</span>
+                                                                <CreatorSelect
+                                                                    value={selectedElement.caseSensitive === false ? "false" : "true"}
+                                                                    options={BOOLEAN_OPTIONS}
+                                                                    onChange={(nextValue) => updateElement({
+                                                                        ...selectedElement,
+                                                                        caseSensitive: nextValue === "true",
+                                                                    })}
+                                                                />
+                                                            </label>
+
+                                                            <label className="script-creator__field">
+                                                                <span>Blinking Cursor</span>
+                                                                <CreatorSelect
+                                                                    value={selectedElement.cursor === true ? "true" : "false"}
+                                                                    options={BOOLEAN_OPTIONS}
+                                                                    onChange={(nextValue) => updateElement({
+                                                                        ...selectedElement,
+                                                                        cursor: nextValue === "true",
+                                                                    })}
+                                                                />
+                                                            </label>
+                                                        </div>
 
                                                         <div className="script-creator__link-targets">
                                                             <div className="script-creator__list-header">
@@ -4107,6 +4339,279 @@ const ScriptCreator: FC<ScriptCreatorProps> = ({ initialScript, onApply, onPrevi
                                                                     </div>
                                                                 );
                                                             })}
+                                                        </div>
+                                                    </>
+                                                )}
+
+                                                {selectedElement && typeof selectedElement === "object" && selectedElementIsLogin && (
+                                                    <>
+                                                        <label className="script-creator__field">
+                                                            <span>Username Prompt</span>
+                                                            <input
+                                                                value={selectedElement.usernamePrompt || ""}
+                                                                onChange={(e) => updateElement({ ...selectedElement, usernamePrompt: e.target.value })}
+                                                            />
+                                                        </label>
+
+                                                        <label className="script-creator__field">
+                                                            <span>Password Prompt</span>
+                                                            <input
+                                                                value={selectedElement.passwordPrompt || ""}
+                                                                onChange={(e) => updateElement({ ...selectedElement, passwordPrompt: e.target.value })}
+                                                            />
+                                                        </label>
+
+                                                        <div className="script-creator__link-target-grid">
+                                                            <label className="script-creator__field">
+                                                                <span>Username Case Sensitive</span>
+                                                                <CreatorSelect
+                                                                    value={selectedElement.usernameCaseSensitive === false ? "false" : "true"}
+                                                                    options={BOOLEAN_OPTIONS}
+                                                                    onChange={(nextValue) => updateElement({
+                                                                        ...selectedElement,
+                                                                        usernameCaseSensitive: nextValue === "true",
+                                                                    })}
+                                                                />
+                                                            </label>
+
+                                                            <label className="script-creator__field">
+                                                                <span>Hide Username</span>
+                                                                <CreatorSelect
+                                                                    value={selectedElement.hideUsername === true ? "true" : "false"}
+                                                                    options={BOOLEAN_OPTIONS}
+                                                                    onChange={(nextValue) => updateElement({
+                                                                        ...selectedElement,
+                                                                        hideUsername: nextValue === "true",
+                                                                    })}
+                                                                />
+                                                            </label>
+                                                        </div>
+
+                                                        <div className="script-creator__link-target-grid">
+                                                            <label className="script-creator__field">
+                                                                <span>Password Case Sensitive</span>
+                                                                <CreatorSelect
+                                                                    value={selectedElement.passwordCaseSensitive === false ? "false" : "true"}
+                                                                    options={BOOLEAN_OPTIONS}
+                                                                    onChange={(nextValue) => updateElement({
+                                                                        ...selectedElement,
+                                                                        passwordCaseSensitive: nextValue === "true",
+                                                                    })}
+                                                                />
+                                                            </label>
+
+                                                            <label className="script-creator__field">
+                                                                <span>Hide Password</span>
+                                                                <CreatorSelect
+                                                                    value={selectedElement.hidePassword === false ? "false" : "true"}
+                                                                    options={BOOLEAN_OPTIONS}
+                                                                    onChange={(nextValue) => updateElement({
+                                                                        ...selectedElement,
+                                                                        hidePassword: nextValue === "true",
+                                                                    })}
+                                                                />
+                                                            </label>
+                                                        </div>
+
+                                                        <div className="script-creator__link-targets">
+                                                            <div className="script-creator__list-header">
+                                                                <span>Credential Matches</span>
+                                                                <button className="script-creator__btn" onClick={addLoginCredential}>[+ CREDENTIAL]</button>
+                                                            </div>
+
+                                                            {!selectedLoginCredentials.length && (
+                                                                <span className="script-creator__hint">No credentials configured.</span>
+                                                            )}
+
+                                                            {selectedLoginCredentials.map((credential: LoginCredentialEntry, credentialIndex: number) => {
+                                                                const canMoveUp = credentialIndex > 0;
+                                                                const canMoveDown = credentialIndex < selectedLoginCredentials.length - 1;
+                                                                return (
+                                                                    <div key={`login-credential-${credentialIndex}`} className="script-creator__link-target-row">
+                                                                        <div className="script-creator__link-target-grid">
+                                                                            <label className="script-creator__field">
+                                                                                <span>Username</span>
+                                                                                <input
+                                                                                    value={credential.username}
+                                                                                    onChange={(e) => {
+                                                                                        const nextUsername = e.target.value;
+                                                                                        updateLoginCredentials((prevCredentials) => {
+                                                                                            return prevCredentials.map((entry, index) => {
+                                                                                                return index === credentialIndex
+                                                                                                    ? { ...entry, username: nextUsername }
+                                                                                                    : entry;
+                                                                                            });
+                                                                                        });
+                                                                                    }}
+                                                                                />
+                                                                            </label>
+
+                                                                            <label className="script-creator__field">
+                                                                                <span>Password</span>
+                                                                                <input
+                                                                                    value={credential.password}
+                                                                                    onChange={(e) => {
+                                                                                        const nextPassword = e.target.value;
+                                                                                        updateLoginCredentials((prevCredentials) => {
+                                                                                            return prevCredentials.map((entry, index) => {
+                                                                                                return index === credentialIndex
+                                                                                                    ? { ...entry, password: nextPassword }
+                                                                                                    : entry;
+                                                                                            });
+                                                                                        });
+                                                                                    }}
+                                                                                />
+                                                                            </label>
+                                                                        </div>
+
+                                                                        <label className="script-creator__field">
+                                                                            <span>Success Target Screen</span>
+                                                                            <CreatorSelect
+                                                                                value={credential.target || ""}
+                                                                                options={screenOnDoneTargetSelectOptions}
+                                                                                fallbackLabel={credential.target || "(none)"}
+                                                                                searchable
+                                                                                onChange={(nextTarget) => {
+                                                                                    updateLoginCredentials((prevCredentials) => {
+                                                                                        return prevCredentials.map((entry, index) => {
+                                                                                            return index === credentialIndex
+                                                                                                ? { ...entry, target: nextTarget }
+                                                                                                : entry;
+                                                                                        });
+                                                                                    });
+                                                                                }}
+                                                                            />
+                                                                        </label>
+
+                                                                        <div className="script-creator__actions script-creator__actions--link-target">
+                                                                            <button
+                                                                                className="script-creator__btn"
+                                                                                onClick={() => moveLoginCredential(credentialIndex, -1)}
+                                                                                disabled={!canMoveUp}
+                                                                            >
+                                                                                [UP]
+                                                                            </button>
+                                                                            <button
+                                                                                className="script-creator__btn"
+                                                                                onClick={() => moveLoginCredential(credentialIndex, 1)}
+                                                                                disabled={!canMoveDown}
+                                                                            >
+                                                                                [DOWN]
+                                                                            </button>
+                                                                            <button
+                                                                                className="script-creator__btn"
+                                                                                onClick={() => removeLoginCredential(credentialIndex)}
+                                                                                disabled={selectedLoginCredentials.length <= 1}
+                                                                            >
+                                                                                [DELETE]
+                                                                            </button>
+                                                                        </div>
+                                                                    </div>
+                                                                );
+                                                            })}
+                                                        </div>
+
+                                                        <div className="script-creator__link-targets">
+                                                            <div className="script-creator__list-header">
+                                                                <span>No Match Action</span>
+                                                            </div>
+
+                                                            <div className="script-creator__link-target-row">
+                                                                <div className="script-creator__link-target-grid">
+                                                                    <label className="script-creator__field">
+                                                                        <span>Type</span>
+                                                                        <CreatorSelect
+                                                                            value={asPromptActionType(selectedLoginNoMatchAction.type, "dialog")}
+                                                                            options={PROMPT_ACTION_TYPE_OPTIONS}
+                                                                            onChange={(nextTypeRaw) => {
+                                                                                const nextType = asPromptActionType(nextTypeRaw, "dialog");
+                                                                                updateLoginNoMatchAction((prevAction) => {
+                                                                                    const nextAction: PromptActionEntry = {
+                                                                                        ...prevAction,
+                                                                                        type: nextType,
+                                                                                    };
+                                                                                    if (nextType === "action" && !nextAction.action) {
+                                                                                        nextAction.action = "resetState";
+                                                                                    }
+                                                                                    if (nextType === "link" && (!nextAction.target || !nextAction.target.length)) {
+                                                                                        nextAction.target = selectedScreen?.id || "";
+                                                                                    }
+                                                                                    if (nextType === "dialog" && typeof nextAction.target !== "string") {
+                                                                                        nextAction.target = "";
+                                                                                    }
+                                                                                    if (nextType !== "action") {
+                                                                                        delete nextAction.action;
+                                                                                    }
+                                                                                    if (nextType !== "link" && nextType !== "dialog") {
+                                                                                        delete nextAction.target;
+                                                                                    }
+                                                                                    return nextAction;
+                                                                                });
+                                                                            }}
+                                                                        />
+                                                                    </label>
+                                                                </div>
+
+                                                                {(selectedLoginNoMatchAction.type === "link" || selectedLoginNoMatchAction.type === "dialog") && (
+                                                                    <label className="script-creator__field">
+                                                                        <span>{selectedLoginNoMatchAction.type === "dialog" ? "Dialog ID" : "Target Screen"}</span>
+                                                                        {selectedLoginNoMatchAction.type === "dialog" && dialogIdSelectOptions.length > 0 ? (
+                                                                            <CreatorSelect
+                                                                                value={selectedLoginNoMatchAction.target || ""}
+                                                                                options={dialogIdSelectOptions}
+                                                                                fallbackLabel={selectedLoginNoMatchAction.target || "(dialog id)"}
+                                                                                searchable
+                                                                                onChange={(nextTarget) => {
+                                                                                    updateLoginNoMatchAction((prevAction) => ({
+                                                                                        ...prevAction,
+                                                                                        target: nextTarget,
+                                                                                    }));
+                                                                                }}
+                                                                            />
+                                                                        ) : selectedLoginNoMatchAction.type === "link" ? (
+                                                                            <CreatorSelect
+                                                                                value={selectedLoginNoMatchAction.target || ""}
+                                                                                options={screenOnDoneTargetSelectOptions}
+                                                                                fallbackLabel={selectedLoginNoMatchAction.target || "(none)"}
+                                                                                searchable
+                                                                                onChange={(nextTarget) => {
+                                                                                    updateLoginNoMatchAction((prevAction) => ({
+                                                                                        ...prevAction,
+                                                                                        target: nextTarget,
+                                                                                    }));
+                                                                                }}
+                                                                            />
+                                                                        ) : (
+                                                                            <input
+                                                                                value={selectedLoginNoMatchAction.target || ""}
+                                                                                onChange={(e) => {
+                                                                                    const nextTarget = e.target.value;
+                                                                                    updateLoginNoMatchAction((prevAction) => ({
+                                                                                        ...prevAction,
+                                                                                        target: nextTarget,
+                                                                                    }));
+                                                                                }}
+                                                                            />
+                                                                        )}
+                                                                    </label>
+                                                                )}
+
+                                                                {selectedLoginNoMatchAction.type === "action" && (
+                                                                    <label className="script-creator__field">
+                                                                        <span>Action</span>
+                                                                        <input
+                                                                            value={selectedLoginNoMatchAction.action || ""}
+                                                                            onChange={(e) => {
+                                                                                const nextActionValue = e.target.value;
+                                                                                updateLoginNoMatchAction((prevAction) => ({
+                                                                                    ...prevAction,
+                                                                                    action: nextActionValue,
+                                                                                }));
+                                                                            }}
+                                                                        />
+                                                                    </label>
+                                                                )}
+                                                            </div>
                                                         </div>
                                                     </>
                                                 )}
@@ -4362,6 +4867,101 @@ const ScriptCreator: FC<ScriptCreatorProps> = ({ initialScript, onApply, onPrevi
                                                                         scale: parsed,
                                                                     });
                                                                 }}
+                                                            />
+                                                        </label>
+                                                    </>
+                                                )}
+
+                                                {selectedElement && typeof selectedElement === "object" && selectedElement.type === "reportComposer" && (
+                                                    <>
+                                                        <label className="script-creator__field">
+                                                            <span>Composer ID</span>
+                                                            <input
+                                                                value={selectedElement.composerId || ""}
+                                                                onChange={(e) => updateElement({ ...selectedElement, composerId: e.target.value })}
+                                                            />
+                                                        </label>
+
+                                                        <label className="script-creator__field">
+                                                            <span>Title Template</span>
+                                                            <input
+                                                                value={selectedElement.titleTemplate || ""}
+                                                                onChange={(e) => updateElement({ ...selectedElement, titleTemplate: e.target.value })}
+                                                            />
+                                                        </label>
+
+                                                        <label className="script-creator__field script-creator__field--fill">
+                                                            <span>Template</span>
+                                                            <textarea
+                                                                className="script-creator__textarea-fill"
+                                                                value={selectedElement.template || ""}
+                                                                onChange={(e) => updateElement({ ...selectedElement, template: e.target.value })}
+                                                            />
+                                                        </label>
+
+                                                        <label className="script-creator__field">
+                                                            <span>Save Target Screen</span>
+                                                            <CreatorSelect
+                                                                value={selectedElement.saveTarget || ""}
+                                                                options={screenOnDoneTargetSelectOptions}
+                                                                fallbackLabel={selectedElement.saveTarget || "(none)"}
+                                                                searchable
+                                                                onChange={(nextTarget) => {
+                                                                    if (!nextTarget.length) {
+                                                                        const nextElement = { ...selectedElement };
+                                                                        delete nextElement.saveTarget;
+                                                                        updateElement(nextElement);
+                                                                        return;
+                                                                    }
+
+                                                                    updateElement({
+                                                                        ...selectedElement,
+                                                                        saveTarget: nextTarget,
+                                                                    });
+                                                                }}
+                                                            />
+                                                        </label>
+
+                                                        <label className="script-creator__field">
+                                                            <span>Cancel Target Screen</span>
+                                                            <CreatorSelect
+                                                                value={selectedElement.cancelTarget || ""}
+                                                                options={screenOnDoneTargetSelectOptions}
+                                                                fallbackLabel={selectedElement.cancelTarget || "(none)"}
+                                                                searchable
+                                                                onChange={(nextTarget) => {
+                                                                    if (!nextTarget.length) {
+                                                                        const nextElement = { ...selectedElement };
+                                                                        delete nextElement.cancelTarget;
+                                                                        updateElement(nextElement);
+                                                                        return;
+                                                                    }
+
+                                                                    updateElement({
+                                                                        ...selectedElement,
+                                                                        cancelTarget: nextTarget,
+                                                                    });
+                                                                }}
+                                                            />
+                                                        </label>
+                                                    </>
+                                                )}
+
+                                                {selectedElement && typeof selectedElement === "object" && selectedElement.type === "reportList" && (
+                                                    <>
+                                                        <label className="script-creator__field">
+                                                            <span>Composer ID</span>
+                                                            <input
+                                                                value={selectedElement.composerId || ""}
+                                                                onChange={(e) => updateElement({ ...selectedElement, composerId: e.target.value })}
+                                                            />
+                                                        </label>
+
+                                                        <label className="script-creator__field">
+                                                            <span>Empty Text</span>
+                                                            <input
+                                                                value={selectedElement.emptyText || ""}
+                                                                onChange={(e) => updateElement({ ...selectedElement, emptyText: e.target.value })}
                                                             />
                                                         </label>
                                                     </>

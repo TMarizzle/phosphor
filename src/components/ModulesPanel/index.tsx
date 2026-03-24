@@ -7,10 +7,8 @@ import "./style.scss";
 interface ModulesPanelProps {
     open: boolean;
     supabaseReady: boolean;
-    authLoading: boolean;
     busy: boolean;
     sessionUserId: string | null;
-    sessionEmail: string | null;
     currentScript: any;
     currentScriptLabel: string;
     activeModule: ModuleRecord | null;
@@ -24,8 +22,6 @@ interface ModulesPanelProps {
     onClose: () => void;
     onDismissError: () => void;
     onDismissNotice: () => void;
-    onSignIn: () => void;
-    onSignOut: () => void;
     onRefresh: () => void;
     onLoadModule: (module: ModuleRecord) => void;
     onToggleOwnScriptVisibility: (moduleId: string) => void;
@@ -57,10 +53,8 @@ const VISIBILITY_OPTIONS: CreatorSelectOption[] = [
 const ModulesPanel: FC<ModulesPanelProps> = ({
     open,
     supabaseReady,
-    authLoading,
     busy,
     sessionUserId,
-    sessionEmail,
     currentScript,
     currentScriptLabel,
     activeModule,
@@ -74,8 +68,6 @@ const ModulesPanel: FC<ModulesPanelProps> = ({
     onClose,
     onDismissError,
     onDismissNotice,
-    onSignIn,
-    onSignOut,
     onRefresh,
     onLoadModule,
     onToggleOwnScriptVisibility,
@@ -177,6 +169,15 @@ const ModulesPanel: FC<ModulesPanelProps> = ({
                         <p>Manage your modules and subscribed modules, then control what shows in the script dropdown.</p>
                     </div>
                     <div className="modules-panel__header-actions">
+                        {!!sessionUserId && (
+                            <button
+                                className="modules-panel__button modules-panel__button--ghost"
+                                onClick={onRefresh}
+                                disabled={busy}
+                            >
+                                Refresh
+                            </button>
+                        )}
                         <button
                             className="modules-panel__button"
                             onClick={() => setComposerOpen((prev) => !prev)}
@@ -231,48 +232,6 @@ const ModulesPanel: FC<ModulesPanelProps> = ({
 
                 <div className="modules-panel__body">
                     <div className="modules-panel__grid">
-                        <section className="modules-panel__section">
-                            <h3>Account</h3>
-
-                            {authLoading && <p>Checking session...</p>}
-
-                            {!authLoading && !sessionEmail && (
-                                <>
-                                    <p>Sign in with Google to save private modules and publish public ones.</p>
-                                    <p className="modules-panel__muted">Use unlisted for link-only sharing without showing in the library.</p>
-                                    <button
-                                        className="modules-panel__button"
-                                        onClick={onSignIn}
-                                        disabled={!supabaseReady || busy}
-                                    >
-                                        Sign In With Google
-                                    </button>
-                                </>
-                            )}
-
-                            {!authLoading && sessionEmail && (
-                                <>
-                                    <p>Signed in as <strong>{sessionEmail}</strong>.</p>
-                                    <div className="modules-panel__actions">
-                                        <button
-                                            className="modules-panel__button"
-                                            onClick={onRefresh}
-                                            disabled={busy}
-                                        >
-                                            Refresh Modules
-                                        </button>
-                                        <button
-                                            className="modules-panel__button modules-panel__button--ghost"
-                                            onClick={onSignOut}
-                                            disabled={busy}
-                                        >
-                                            Sign Out
-                                        </button>
-                                    </div>
-                                </>
-                            )}
-                        </section>
-
                         <section className="modules-panel__section">
                             <h3>Current Script</h3>
                             <p><strong>{currentScriptName}</strong></p>
