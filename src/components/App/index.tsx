@@ -23,6 +23,8 @@ import {
     ModuleVisibility,
     fetchAccessibleModuleById,
     getCurrentSession,
+    getProfileRole,
+    isModuleLinkShareable,
     isSupabaseConfigured,
     listOwnModules,
     listSubscribedModules,
@@ -128,6 +130,7 @@ class App extends Component<any, AppState> {
         this._scheduleHeaderLayoutUpdate = this._scheduleHeaderLayoutUpdate.bind(this);
         this._updateHeaderLayout = this._updateHeaderLayout.bind(this);
         this._handleClickOutside    = this._handleClickOutside.bind(this);
+        this._handleReloadCurrentScript = this._handleReloadCurrentScript.bind(this);
         this._handleClearData       = this._handleClearData.bind(this);
         this._handleSoundToggle     = this._handleSoundToggle.bind(this);
         this._handleCreatorOpen     = this._handleCreatorOpen.bind(this);
@@ -420,6 +423,27 @@ class App extends Component<any, AppState> {
         return getTerminalAppUrl(moduleId);
     }
 
+    private _getPhosphorStorageSlug(scriptJson: any): string {
+        return ((scriptJson?.config?.script || scriptJson?.config?.name || "default") as string)
+            .toLowerCase()
+            .replace(/[^a-z0-9]+/g, "-")
+            .replace(/^-+|-+$/g, "");
+    }
+
+    private _clearActiveScriptRuntimeState(): void {
+        try {
+            const slug = this._getPhosphorStorageSlug(this.state.activeScript?.json);
+            const sessionKey = `phosphor:session:${slug}:v1`;
+            const shipLogKey = `phosphor:ship-logs:${slug}:v1`;
+            const userReportKey = `phosphor:user-reports:${slug}:v1`;
+            localStorage.removeItem(sessionKey);
+            localStorage.removeItem(shipLogKey);
+            localStorage.removeItem(userReportKey);
+        } catch {
+            // ignore storage failures
+        }
+    }
+
     private _getSessionUserId(): string | null {
         return this.state.authSession?.user?.id || null;
     }
@@ -485,7 +509,7 @@ class App extends Component<any, AppState> {
                 return;
             }
 
-            await this._loadSharedModuleFromLocation();
+            await this._loadSharedModuleFromLocation(session);
         } catch (error: any) {
             this.setState({
                 authLoading: false,
@@ -496,7 +520,7 @@ class App extends Component<any, AppState> {
         }
     }
 
-    private async _loadSharedModuleFromLocation(): Promise<void> {
+    private async _loadSharedModuleFromLocation(sessionOverride?: Session | null): Promise<void> {
         const moduleId = this._readModuleIdFromLocation();
         if (!moduleId || !isSupabaseConfigured()) {
             return;
@@ -508,7 +532,13 @@ class App extends Component<any, AppState> {
         });
 
         try {
-            const module = await fetchAccessibleModuleById(moduleId, this._getSessionUserId());
+            const sessionUserId = sessionOverride?.user?.id || this._getSessionUserId();
+            const sessionRole = sessionUserId
+                ? await getProfileRole(sessionUserId).catch(() => "user")
+                : "user";
+            const module = await fetchAccessibleModuleById(moduleId, sessionUserId, {
+                role: sessionRole as "user" | "admin",
+            });
             if (!module) {
                 this.setState({
                     modulesBusy: false,
@@ -579,7 +609,7 @@ class App extends Component<any, AppState> {
             return;
         }
 
-        if (module.visibility === "public") {
+        if (isModuleLinkShareable(module.visibility)) {
             this._setModuleQueryParam(module.id);
             return;
         }
@@ -774,14 +804,17 @@ class App extends Component<any, AppState> {
             uploadError: null as string | null,
         }));
 
-        if (resolvedActiveModule?.visibility === "public") {
+        if (!resolvedActiveModule) {
+            this._setModuleQueryParam(null);
+            return;
+        }
+
+        if (isModuleLinkShareable(resolvedActiveModule.visibility)) {
             this._setModuleQueryParam(resolvedActiveModule.id);
             return;
         }
 
-        if (!resolvedActiveModule) {
-            this._setModuleQueryParam(null);
-        }
+        this._setModuleQueryParam(null);
     }
 
     private _handleThemeSelect(themeId: string): void {
@@ -855,6 +888,35 @@ class App extends Component<any, AppState> {
         localStorage.clear();
         sessionStorage.clear();
         window.location.reload();
+    }
+
+    private _handleReloadCurrentScript(): void {
+        this._clearActiveScriptRuntimeState();
+        this.setState((prev): Pick<AppState,
+            "activeScriptRevision"
+            | "activeTerminalScreenId"
+            | "scriptDropdownOpen"
+            | "optionsDropdownOpen"
+            | "customThemeEditorOpen"
+            | "mobileMenuOpen"
+            | "creatorOpen"
+            | "creatorInitialScript"
+            | "previewMode"
+            | "uploadError"
+            | "modulesNotice"
+        > => ({
+            activeScriptRevision: prev.activeScriptRevision + 1,
+            activeTerminalScreenId: null,
+            scriptDropdownOpen: false,
+            optionsDropdownOpen: false,
+            customThemeEditorOpen: false,
+            mobileMenuOpen: false,
+            creatorOpen: false,
+            creatorInitialScript: null,
+            previewMode: false,
+            uploadError: null as string | null,
+            modulesNotice: "Reloaded from the beginning.",
+        }));
     }
 
     private _handleSoundToggle(): void {
@@ -1280,7 +1342,7 @@ class App extends Component<any, AppState> {
                 modulesNotice: ownedActiveModule ? "Module updated." : "Module created.",
             }));
 
-            if (savedModule.visibility === "public") {
+            if (isModuleLinkShareable(savedModule.visibility)) {
                 this._setModuleQueryParam(savedModule.id);
             } else {
                 this._setModuleQueryParam(null);
@@ -1294,8 +1356,8 @@ class App extends Component<any, AppState> {
     }
 
     private async _handleModuleCopyLink(module: ModuleRecord): Promise<void> {
-        if (module.visibility !== "public") {
-            this.setState({ modulesError: "Only public modules can be shared." });
+        if (!isModuleLinkShareable(module.visibility)) {
+            this.setState({ modulesError: "Only public or unlisted modules can be shared." });
             return;
         }
 
@@ -1454,7 +1516,7 @@ class App extends Component<any, AppState> {
                             <a
                                 className="phosphor-header__btn"
                                 href={getModulesBrowserUrl()}
-                                title="Browse public modules"
+                                title="Browse library modules"
                             >
                                 [LIBRARY]
                             </a>
@@ -1496,8 +1558,19 @@ class App extends Component<any, AppState> {
                                         <button
                                             className="phosphor-header__dropdown-item"
                                             role="menuitem"
+                                            onClick={this._handleReloadCurrentScript}
+                                            title="Restart the current script from the beginning"
+                                        >
+                                            [RELOAD]
+                                        </button>
+                                    )}
+
+                                    {!previewMode && (
+                                        <button
+                                            className="phosphor-header__dropdown-item"
+                                            role="menuitem"
                                             onClick={this._handleClearData}
-                                            title="Clear all saved data and reload"
+                                            title="Clear all saved data, including login, and reload"
                                         >
                                             [RESET]
                                         </button>

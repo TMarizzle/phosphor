@@ -3,10 +3,16 @@ import type { Session } from "@supabase/supabase-js";
 import { createPortal } from "react-dom";
 import CreatorSelect, { CreatorSelectOption } from "../CreatorSelect";
 import {
+    AdminLibraryVisibilityFilter,
     deleteModule,
     ModuleRecord,
     ModuleSort,
+    ModuleVisibility,
+    ProfileRole,
+    fetchAccessibleModuleById,
     getCurrentSession,
+    getProfileRole,
+    isModuleLinkShareable,
     isSupabaseConfigured,
     listOwnModules,
     listUserRatings,
@@ -70,7 +76,7 @@ const TRANSIENT_AUTH_PARAMS = [
     "provider_refresh_token",
 ] as const;
 const OWNER_MENU_WIDTH = 224;
-const OWNER_MENU_HEIGHT = 140;
+const OWNER_MENU_HEIGHT = 188;
 const SHARE_MENU_WIDTH = 224;
 const SHARE_MENU_HEIGHT = 90;
 const MAX_AUTHOR_LENGTH = 25;
@@ -211,6 +217,7 @@ const getModuleRatingNumeric = (ratingAverage: number): string => {
 
 const ModulesBrowser: FC = () => {
     const supabaseReady = isSupabaseConfigured();
+    const initialSelectedModuleId = useMemo(() => parseInitialModuleId(), []);
     const [activeTheme, setActiveTheme] = useState<Theme>(() => loadPersistedTheme());
     const [customTheme, setCustomTheme] = useState<CustomThemeConfig>(() => loadPersistedCustomTheme());
     const [soundEnabled, setSoundEnabled] = useState<boolean>(() => loadPersistedSoundEnabled());
@@ -223,8 +230,10 @@ const ModulesBrowser: FC = () => {
     const [query, setQuery] = useState<string>(parseInitialSearch);
     const [sort, setSort] = useState<ModuleSort>(parseInitialSort);
     const [subscribedOnly, setSubscribedOnly] = useState<boolean>(parseInitialSubscribedOnly);
+    const [sessionRole, setSessionRole] = useState<ProfileRole>("user");
+    const [adminVisibilityFilter, setAdminVisibilityFilter] = useState<AdminLibraryVisibilityFilter>("all");
     const [modules, setModules] = useState<ModuleRecord[]>([]);
-    const [selectedModuleId, setSelectedModuleId] = useState<string | null>(parseInitialModuleId);
+    const [selectedModuleId, setSelectedModuleId] = useState<string | null>(initialSelectedModuleId);
     const [subscribedIds, setSubscribedIds] = useState<string[]>([]);
     const [createdModuleCount, setCreatedModuleCount] = useState<number>(0);
     const [ratingsByModuleId, setRatingsByModuleId] = useState<Record<string, number>>({});
@@ -244,6 +253,7 @@ const ModulesBrowser: FC = () => {
 
     const sessionUserId = session?.user?.id || null;
     const sessionEmail = session?.user?.email || null;
+    const isAdmin = !!sessionUserId && sessionRole === "admin";
     const subscribedIdSet = useMemo(() => new Set(subscribedIds), [subscribedIds]);
     const selectedModule = useMemo(() => {
         if (!modules.length) {
@@ -266,6 +276,7 @@ const ModulesBrowser: FC = () => {
     const ownerMenuDropdownRef = useRef<HTMLDivElement | null>(null);
     const shareMenuRef = useRef<HTMLDivElement | null>(null);
     const shareMenuDropdownRef = useRef<HTMLDivElement | null>(null);
+    const initialRequestedModuleIdRef = useRef<string | null>(initialSelectedModuleId);
 
     const updateOwnerMenuPosition = useCallback(() => {
         const anchor = ownerMenuRef.current;
@@ -323,26 +334,30 @@ const ModulesBrowser: FC = () => {
     }, []);
 
     const loadPersonalState = useCallback(async (userId: string) => {
-        const [nextSubscribedIds, nextRatingsByModuleId, ownModules] = await Promise.all([
+        const [nextSubscribedIds, nextRatingsByModuleId, ownModules, role] = await Promise.all([
             listUserSubscriptions(userId),
             listUserRatings(userId),
             listOwnModules(userId),
+            getProfileRole(userId),
         ]);
 
         setSubscribedIds(nextSubscribedIds);
         setRatingsByModuleId(nextRatingsByModuleId);
         setCreatedModuleCount(ownModules.length);
+        setSessionRole(role);
 
         return {
             subscribedIds: nextSubscribedIds,
             ratingsByModuleId: nextRatingsByModuleId,
             createdModuleCount: ownModules.length,
+            role,
         };
     }, []);
 
     const refreshCatalog = useCallback(async (
         currentUserId?: string | null,
-        currentSubscribedIds?: string[]
+        currentSubscribedIds?: string[],
+        currentRole: ProfileRole = "user"
     ) => {
         if (!supabaseReady) {
             setCatalogLoading(false);
@@ -351,7 +366,27 @@ const ModulesBrowser: FC = () => {
 
         setCatalogLoading(true);
         try {
-            let nextModules = await searchDiscoverableModules(query, sort, currentUserId, 80);
+            const catalogLimit: number | undefined = currentRole === "admin" && adminVisibilityFilter === "all"
+                ? undefined
+                : 80;
+            let nextModules = await searchDiscoverableModules(query, sort, {
+                userId: currentUserId,
+                role: currentRole,
+                adminVisibilityFilter: adminVisibilityFilter,
+                limit: catalogLimit,
+            });
+
+            const requestedModuleId = initialRequestedModuleIdRef.current;
+            if (requestedModuleId && !nextModules.some((module) => module.id === requestedModuleId)) {
+                const linkedModule = await fetchAccessibleModuleById(requestedModuleId, currentUserId, {
+                    role: currentRole,
+                });
+                if (linkedModule) {
+                    nextModules = [linkedModule, ...nextModules];
+                } else {
+                    initialRequestedModuleIdRef.current = null;
+                }
+            }
 
             if (subscribedOnly) {
                 const ids = currentSubscribedIds || [];
@@ -368,7 +403,7 @@ const ModulesBrowser: FC = () => {
         } finally {
             setCatalogLoading(false);
         }
-    }, [query, sort, subscribedOnly, supabaseReady]);
+    }, [adminVisibilityFilter, query, sort, subscribedOnly, supabaseReady]);
 
     useEffect(() => {
         applyTheme(activeTheme);
@@ -480,6 +515,22 @@ const ModulesBrowser: FC = () => {
     }, [shareMenuOpen, updateShareMenuPosition]);
 
     useEffect(() => {
+        if (isAdmin) {
+            return;
+        }
+        setAdminVisibilityFilter("all");
+    }, [isAdmin]);
+
+    useEffect(() => {
+        if (!selectedModule || isModuleLinkShareable(selectedModule.visibility)) {
+            return;
+        }
+        if (shareMenuOpen) {
+            setShareMenuOpen(false);
+        }
+    }, [selectedModule, shareMenuOpen]);
+
+    useEffect(() => {
         if (!isLegacyModulesBrowserPath()) {
             return;
         }
@@ -516,13 +567,14 @@ const ModulesBrowser: FC = () => {
                 let personalState = {
                     subscribedIds: [] as string[],
                     ratingsByModuleId: {} as Record<string, number>,
+                    role: "user" as ProfileRole,
                 };
                 if (nextSession?.user?.id) {
                     personalState = await loadPersonalState(nextSession.user.id);
                 }
 
                 if (mounted) {
-                    await refreshCatalog(nextSession?.user?.id || null, personalState.subscribedIds);
+                    await refreshCatalog(nextSession?.user?.id || null, personalState.subscribedIds, personalState.role);
                 }
             } catch (error: any) {
                 if (!mounted) {
@@ -550,16 +602,17 @@ const ModulesBrowser: FC = () => {
                 setSubscribedIds([]);
                 setRatingsByModuleId({});
                 setCreatedModuleCount(0);
+                setSessionRole("user");
                 setProfileOpen(false);
                 if (subscribedOnly) {
                     setSubscribedOnly(false);
                 }
-                void refreshCatalog(null, []);
+                void refreshCatalog(null, [], "user");
                 return;
             }
 
             void loadPersonalState(nextSession.user.id).then((personalState) => {
-                return refreshCatalog(nextSession.user.id, personalState.subscribedIds);
+                return refreshCatalog(nextSession.user.id, personalState.subscribedIds, personalState.role);
             }).catch((error: any) => {
                 setErrorMessage(error?.message || "Could not refresh your module state.");
             });
@@ -577,13 +630,13 @@ const ModulesBrowser: FC = () => {
 
     useEffect(() => {
         const timeoutId = window.setTimeout(() => {
-            void refreshCatalog(sessionUserId, subscribedIds);
+            void refreshCatalog(sessionUserId, subscribedIds, sessionRole);
         }, 350);
 
         return () => {
             window.clearTimeout(timeoutId);
         };
-    }, [refreshCatalog, sessionUserId, subscribedIds]);
+    }, [refreshCatalog, sessionRole, sessionUserId, subscribedIds]);
 
     useEffect(() => {
         if (!modules.length) {
@@ -737,6 +790,10 @@ const ModulesBrowser: FC = () => {
             setErrorMessage("Sign in to subscribe to modules.");
             return;
         }
+        if (!isModuleLinkShareable(module.visibility)) {
+            setErrorMessage("Private modules cannot be subscribed to.");
+            return;
+        }
 
         setActionModuleId(module.id);
         setErrorMessage(null);
@@ -749,7 +806,7 @@ const ModulesBrowser: FC = () => {
             }
 
             const personalState = await loadPersonalState(sessionUserId);
-            await refreshCatalog(sessionUserId, personalState.subscribedIds);
+            await refreshCatalog(sessionUserId, personalState.subscribedIds, personalState.role);
             setNoticeMessage(
                 subscribedIdSet.has(module.id)
                     ? `Unsubscribed from "${module.title}".`
@@ -767,6 +824,10 @@ const ModulesBrowser: FC = () => {
             setErrorMessage("Sign in to rate modules.");
             return;
         }
+        if (!isModuleLinkShareable(module.visibility)) {
+            setErrorMessage("Private modules cannot be rated.");
+            return;
+        }
 
         if (module.owner_id === sessionUserId) {
             setErrorMessage("You cannot rate your own module.");
@@ -779,7 +840,7 @@ const ModulesBrowser: FC = () => {
         try {
             await rateModule(module.id, sessionUserId, rating);
             const personalState = await loadPersonalState(sessionUserId);
-            await refreshCatalog(sessionUserId, personalState.subscribedIds);
+            await refreshCatalog(sessionUserId, personalState.subscribedIds, personalState.role);
             setNoticeMessage(`Rated "${module.title}" ${rating}/5.`);
         } catch (error: any) {
             setErrorMessage(error?.message || "Could not save your rating.");
@@ -864,7 +925,7 @@ const ModulesBrowser: FC = () => {
                 visibility: module.visibility,
             });
             const personalState = await loadPersonalState(sessionUserId);
-            await refreshCatalog(sessionUserId, personalState.subscribedIds);
+            await refreshCatalog(sessionUserId, personalState.subscribedIds, personalState.role);
             setSelectedModuleId(updatedModule.id);
             setEditingModuleId(null);
             setEditTitle("");
@@ -877,13 +938,20 @@ const ModulesBrowser: FC = () => {
         }
     };
 
-    const handleToggleOwnerVisibility = async (module: ModuleRecord): Promise<void> => {
+    const handleSetOwnerVisibility = async (
+        module: ModuleRecord,
+        nextVisibility: ModuleVisibility
+    ): Promise<void> => {
         if (!sessionUserId || module.owner_id !== sessionUserId) {
             setErrorMessage("Only the owner can change module visibility.");
             return;
         }
 
-        const nextVisibility = module.visibility === "public" ? "private" : "public";
+        if (module.visibility === nextVisibility) {
+            setOwnerMenuOpen(false);
+            return;
+        }
+
         setOwnerMenuOpen(false);
         setActionModuleId(module.id);
         setErrorMessage(null);
@@ -897,13 +965,9 @@ const ModulesBrowser: FC = () => {
                 visibility: nextVisibility,
             });
             const personalState = await loadPersonalState(sessionUserId);
-            await refreshCatalog(sessionUserId, personalState.subscribedIds);
+            await refreshCatalog(sessionUserId, personalState.subscribedIds, personalState.role);
             setSelectedModuleId(updatedModule.id);
-            setNoticeMessage(
-                nextVisibility === "public"
-                    ? `"${updatedModule.title}" is now public.`
-                    : `"${updatedModule.title}" is now private.`
-            );
+            setNoticeMessage(`"${updatedModule.title}" is now ${nextVisibility}.`);
         } catch (error: any) {
             setErrorMessage(error?.message || "Could not update module visibility.");
         } finally {
@@ -929,7 +993,7 @@ const ModulesBrowser: FC = () => {
         try {
             await deleteModule(module.id, sessionUserId);
             const personalState = await loadPersonalState(sessionUserId);
-            await refreshCatalog(sessionUserId, personalState.subscribedIds);
+            await refreshCatalog(sessionUserId, personalState.subscribedIds, personalState.role);
             setSelectedModuleId(null);
             setNoticeMessage(`Deleted "${module.title}".`);
         } catch (error: any) {
@@ -949,8 +1013,14 @@ const ModulesBrowser: FC = () => {
         if (query.trim().length) {
             return "No modules matched your search.";
         }
+        if (isAdmin && adminVisibilityFilter === "all") {
+            return "No modules found yet.";
+        }
+        if (isAdmin) {
+            return "No public modules found yet.";
+        }
         return sessionUserId ? "No public modules or owned modules found yet." : "No public modules found yet.";
-    }, [catalogLoading, query, sessionUserId, subscribedOnly]);
+    }, [adminVisibilityFilter, catalogLoading, isAdmin, query, sessionUserId, subscribedOnly]);
 
     return (
         <section className={browserClassName}>
@@ -1196,6 +1266,12 @@ const ModulesBrowser: FC = () => {
                                         <span className="modules-browser__profile-key">[MODULES CREATED]</span>
                                         <span className="modules-browser__profile-value">{createdModuleCount}</span>
                                     </div>
+                                    {isAdmin && (
+                                        <div className="modules-browser__profile-row">
+                                            <span className="modules-browser__profile-key">[ROLE]</span>
+                                            <span className="modules-browser__profile-value">admin</span>
+                                        </div>
+                                    )}
                                     <div className="phosphor-header__dropdown-item phosphor-header__dropdown-item--separator" />
                                     <button
                                         className="phosphor-header__dropdown-item"
@@ -1233,6 +1309,19 @@ const ModulesBrowser: FC = () => {
                     </label>
 
                     <div className="modules-browser__toolbar-actions">
+                        {isAdmin && (
+                            <button
+                                className={
+                                    "modules-browser__btn"
+                                    + (adminVisibilityFilter === "all" ? " modules-browser__btn--active" : "")
+                                }
+                                onClick={() => {
+                                    setAdminVisibilityFilter((prev) => (prev === "all" ? "public" : "all"));
+                                }}
+                            >
+                                Admin Scope: {adminVisibilityFilter === "all" ? "All" : "Public Only"}
+                            </button>
+                        )}
                         <button
                             className={
                                 "modules-browser__btn"
@@ -1275,7 +1364,9 @@ const ModulesBrowser: FC = () => {
                                 {modules.map((module) => {
                                     const isSelected = selectedModule?.id === module.id;
                                     const isSubscribed = subscribedIdSet.has(module.id);
-                                    const showPrivateFlag = module.visibility === "private" && module.owner_id === sessionUserId;
+                                    const visibilityFlag = module.visibility === "private"
+                                        ? "Private"
+                                        : (module.visibility === "unlisted" ? "Unlisted" : null);
                                     const author = getModuleAuthor(module);
                                     const ratingDisplay = getModuleRatingAscii(module.rating_average);
                                     const ratingNumeric = getModuleRatingNumeric(module.rating_average);
@@ -1302,8 +1393,8 @@ const ModulesBrowser: FC = () => {
                                                     </span>
                                                 </div>
                                                 <div className="modules-browser__list-flags">
-                                                    {showPrivateFlag && (
-                                                        <span className="modules-browser__list-flag">Private</span>
+                                                    {!!visibilityFlag && (
+                                                        <span className="modules-browser__list-flag">{visibilityFlag}</span>
                                                     )}
                                                     {isSubscribed && (
                                                         <span className="modules-browser__list-flag">Subscribed</span>
@@ -1372,6 +1463,9 @@ const ModulesBrowser: FC = () => {
                                             {selectedModule.visibility === "private" && (
                                                 <span className="modules-browser__pill">Private</span>
                                             )}
+                                            {selectedModule.visibility === "unlisted" && (
+                                                <span className="modules-browser__pill">Unlisted</span>
+                                            )}
                                             {isSubscribed && (
                                                 <span className="modules-browser__pill">Subscribed</span>
                                             )}
@@ -1388,18 +1482,20 @@ const ModulesBrowser: FC = () => {
                                             Open in Phosphor
                                         </button>
 
-                                        <div ref={shareMenuRef} className="modules-browser__share-menu">
-                                            <button
-                                                className="modules-browser__btn"
-                                                onClick={handleShareMenuToggle}
-                                                aria-haspopup="menu"
-                                                aria-expanded={shareMenuOpen}
-                                            >
-                                                {shareMenuOpen ? "Share ▲" : "Share ▼"}
-                                            </button>
-                                        </div>
+                                        {isModuleLinkShareable(selectedModule.visibility) && (
+                                            <div ref={shareMenuRef} className="modules-browser__share-menu">
+                                                <button
+                                                    className="modules-browser__btn"
+                                                    onClick={handleShareMenuToggle}
+                                                    aria-haspopup="menu"
+                                                    aria-expanded={shareMenuOpen}
+                                                >
+                                                    {shareMenuOpen ? "Share ▲" : "Share ▼"}
+                                                </button>
+                                            </div>
+                                        )}
 
-                                        {!isOwnModule && (
+                                        {!isOwnModule && isModuleLinkShareable(selectedModule.visibility) && (
                                             <button
                                                 className={
                                                     "modules-browser__btn"
@@ -1501,7 +1597,7 @@ const ModulesBrowser: FC = () => {
                                                                 "modules-browser__rating-btn"
                                                                 + (myRating === rating ? " modules-browser__rating-btn--active" : "")
                                                             }
-                                                            disabled={!sessionUserId || isOwnModule || isBusy}
+                                                            disabled={!sessionUserId || isOwnModule || isBusy || !isModuleLinkShareable(selectedModule.visibility)}
                                                             onClick={() => void handleRateModule(selectedModule, rating)}
                                                         >
                                                             {rating}
@@ -1511,6 +1607,9 @@ const ModulesBrowser: FC = () => {
                                             </div>
                                             {!sessionUserId && (
                                                 <small className="modules-browser__hint">Sign in to rate or subscribe.</small>
+                                            )}
+                                            {!!sessionUserId && !isModuleLinkShareable(selectedModule.visibility) && (
+                                                <small className="modules-browser__hint">Private modules cannot be rated or subscribed to.</small>
                                             )}
                                             {!!sessionUserId && isOwnModule && (
                                                 <small className="modules-browser__hint">You cannot rate or subscribe to your own module.</small>
@@ -1548,9 +1647,23 @@ const ModulesBrowser: FC = () => {
                     <button
                         className="phosphor-header__dropdown-item"
                         role="menuitem"
-                        onClick={() => void handleToggleOwnerVisibility(selectedModule)}
+                        onClick={() => void handleSetOwnerVisibility(selectedModule, "public")}
                     >
-                        {selectedModule.visibility === "public" ? "Make Private" : "Make Public"}
+                        {selectedModule.visibility === "public" ? "Visibility: Public" : "Set Public"}
+                    </button>
+                    <button
+                        className="phosphor-header__dropdown-item"
+                        role="menuitem"
+                        onClick={() => void handleSetOwnerVisibility(selectedModule, "unlisted")}
+                    >
+                        {selectedModule.visibility === "unlisted" ? "Visibility: Unlisted" : "Set Unlisted"}
+                    </button>
+                    <button
+                        className="phosphor-header__dropdown-item"
+                        role="menuitem"
+                        onClick={() => void handleSetOwnerVisibility(selectedModule, "private")}
+                    >
+                        {selectedModule.visibility === "private" ? "Visibility: Private" : "Set Private"}
                     </button>
                     <button
                         className="phosphor-header__dropdown-item modules-browser__dropdown-item--danger"
@@ -1563,7 +1676,7 @@ const ModulesBrowser: FC = () => {
                 document.body
             )}
 
-            {shareMenuOpen && !!selectedModule && !!shareMenuPosition && createPortal(
+            {shareMenuOpen && !!selectedModule && isModuleLinkShareable(selectedModule.visibility) && !!shareMenuPosition && createPortal(
                 <div
                     ref={shareMenuDropdownRef}
                     className={

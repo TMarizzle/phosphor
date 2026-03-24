@@ -1,8 +1,10 @@
 import type { Session } from "@supabase/supabase-js";
 import { hasSupabaseEnv, supabase } from "./supabase";
 
-export type ModuleVisibility = "private" | "public";
+export type ModuleVisibility = "private" | "unlisted" | "public";
 export type ModuleSort = "newest" | "top-rated" | "most-subscribed";
+export type ProfileRole = "user" | "admin";
+export type AdminLibraryVisibilityFilter = "all" | "public";
 
 export interface ModuleRecord {
     id: string;
@@ -42,6 +44,13 @@ export interface UserModuleRating {
     rating: number;
 }
 
+export interface SearchDiscoverableModulesOptions {
+    userId?: string | null;
+    role?: ProfileRole;
+    adminVisibilityFilter?: AdminLibraryVisibilityFilter;
+    limit?: number;
+}
+
 const MODULE_SELECT = [
     "id",
     "owner_id",
@@ -66,12 +75,20 @@ const requireSupabase = () => {
     return supabase;
 };
 
+const normalizeProfileRole = (role: any): ProfileRole => {
+    return role === "admin" ? "admin" : "user";
+};
+
 const normalizeModuleRecord = (record: any): ModuleRecord => ({
     ...record,
     rating_average: typeof record?.rating_average === "number"
         ? record.rating_average
         : Number(record?.rating_average || 0),
 });
+
+export const isModuleLinkShareable = (visibility: ModuleVisibility): boolean => {
+    return visibility === "public" || visibility === "unlisted";
+};
 
 const getSortableModuleTimestamp = (module: ModuleRecord): number => {
     const primaryTimestamp = new Date(module.published_at || module.updated_at || module.created_at).getTime();
@@ -131,6 +148,26 @@ const applyModuleSort = (query: any, sort: ModuleSort): any => {
         .order("updated_at", { ascending: false });
 };
 
+const applyAdminModuleSort = (query: any, sort: ModuleSort): any => {
+    if (sort === "top-rated") {
+        return query
+            .order("rating_average", { ascending: false })
+            .order("rating_count", { ascending: false })
+            .order("updated_at", { ascending: false });
+    }
+
+    if (sort === "most-subscribed") {
+        return query
+            .order("subscription_count", { ascending: false })
+            .order("rating_average", { ascending: false })
+            .order("updated_at", { ascending: false });
+    }
+
+    return query
+        .order("updated_at", { ascending: false })
+        .order("created_at", { ascending: false });
+};
+
 export const isSupabaseConfigured = (): boolean => {
     return !!supabase && hasSupabaseEnv;
 };
@@ -180,6 +217,21 @@ export const signOut = async (): Promise<void> => {
     }
 };
 
+export const getProfileRole = async (userId: string): Promise<ProfileRole> => {
+    const client = requireSupabase();
+    const { data, error } = await client
+        .from("profiles")
+        .select("role")
+        .eq("id", userId)
+        .maybeSingle();
+
+    if (error) {
+        throw error;
+    }
+
+    return normalizeProfileRole(data?.role);
+};
+
 export const listOwnModules = async (ownerId: string): Promise<ModuleRecord[]> => {
     const client = requireSupabase();
     const { data, error } = await client
@@ -200,11 +252,20 @@ export const searchPublicModules = async (
     sort: ModuleSort,
     limit = 60
 ): Promise<ModuleRecord[]> => {
+    return searchModulesByVisibility(queryText, sort, ["public"], limit);
+};
+
+const searchModulesByVisibility = async (
+    queryText: string,
+    sort: ModuleSort,
+    visibility: ModuleVisibility[],
+    limit = 60
+): Promise<ModuleRecord[]> => {
     const client = requireSupabase();
     let query = client
         .from("modules")
         .select(MODULE_SELECT)
-        .eq("visibility", "public");
+        .in("visibility", visibility);
 
     const trimmedQuery = queryText.trim();
     if (trimmedQuery.length) {
@@ -224,6 +285,7 @@ export const searchPublicModules = async (
 const searchOwnModules = async (
     ownerId: string,
     queryText: string,
+    visibility?: ModuleVisibility[],
     limit = 60
 ): Promise<ModuleRecord[]> => {
     const client = requireSupabase();
@@ -231,6 +293,10 @@ const searchOwnModules = async (
         .from("modules")
         .select(MODULE_SELECT)
         .eq("owner_id", ownerId);
+
+    if (visibility?.length) {
+        query = query.in("visibility", visibility);
+    }
 
     const trimmedQuery = queryText.trim();
     if (trimmedQuery.length) {
@@ -249,27 +315,88 @@ const searchOwnModules = async (
     return (data || []).map(normalizeModuleRecord);
 };
 
+const searchAllModules = async (
+    queryText: string,
+    sort: ModuleSort,
+    limit?: number
+): Promise<ModuleRecord[]> => {
+    const client = requireSupabase();
+    const trimmedQuery = queryText.trim();
+    const escapedQuery = trimmedQuery.length ? escapeModuleQuery(trimmedQuery) : "";
+    const pageSize = 1000;
+    const requestedLimit = typeof limit === "number" && Number.isFinite(limit) && limit > 0
+        ? Math.floor(limit)
+        : null;
+    const modules: ModuleRecord[] = [];
+    let offset = 0;
+
+    while (true) {
+        let query = client
+            .from("modules")
+            .select(MODULE_SELECT);
+
+        if (escapedQuery.length) {
+            query = query.or(`title.ilike.%${escapedQuery}%,summary.ilike.%${escapedQuery}%`);
+        }
+
+        const currentPageSize = requestedLimit
+            ? Math.min(pageSize, requestedLimit - modules.length)
+            : pageSize;
+        if (currentPageSize <= 0) {
+            break;
+        }
+
+        const end = offset + currentPageSize - 1;
+        const { data, error } = await applyAdminModuleSort(query, sort).range(offset, end);
+        if (error) {
+            throw error;
+        }
+
+        const normalizedPage = (data || []).map(normalizeModuleRecord);
+        modules.push(...normalizedPage);
+
+        if (normalizedPage.length < currentPageSize) {
+            break;
+        }
+
+        offset += normalizedPage.length;
+    }
+
+    return modules;
+};
+
 export const searchDiscoverableModules = async (
     queryText: string,
     sort: ModuleSort,
-    userId?: string | null,
-    limit = 60
+    options?: SearchDiscoverableModulesOptions
 ): Promise<ModuleRecord[]> => {
-    if (!userId) {
-        return searchPublicModules(queryText, sort, limit);
+    const userId = options?.userId || null;
+    const role = options?.role || "user";
+    const adminVisibilityFilter = options?.adminVisibilityFilter || "public";
+    const limit = options?.limit;
+
+    if (role === "admin" && userId) {
+        return adminVisibilityFilter === "all"
+            ? searchAllModules(queryText, sort, limit)
+            : searchPublicModules(queryText, sort, limit ?? 60);
     }
 
-    const [publicModules, ownModules] = await Promise.all([
-        searchPublicModules(queryText, sort, limit),
-        searchOwnModules(userId, queryText, limit),
+    if (!userId) {
+        return searchPublicModules(queryText, sort, limit ?? 60);
+    }
+
+    const effectiveLimit = limit ?? 60;
+    const [publicModules, ownPrivateModules] = await Promise.all([
+        searchPublicModules(queryText, sort, effectiveLimit),
+        searchOwnModules(userId, queryText, ["private"], effectiveLimit),
     ]);
 
     const mergedModules = new Map<string, ModuleRecord>();
-    [...publicModules, ...ownModules].forEach((module) => {
+    [...publicModules, ...ownPrivateModules].forEach((module) => {
         mergedModules.set(module.id, module);
     });
 
-    return sortModuleRecords(Array.from(mergedModules.values()), sort).slice(0, limit);
+    return sortModuleRecords(Array.from(mergedModules.values()), sort).slice(0, effectiveLimit);
 };
 
 export const fetchPublicModulesByIds = async (moduleIds: string[]): Promise<ModuleRecord[]> => {
@@ -281,7 +408,7 @@ export const fetchPublicModulesByIds = async (moduleIds: string[]): Promise<Modu
     const { data, error } = await client
         .from("modules")
         .select(MODULE_SELECT)
-        .eq("visibility", "public")
+        .in("visibility", ["public", "unlisted"])
         .in("id", moduleIds);
 
     if (error) {
@@ -316,7 +443,10 @@ export const fetchPublicModuleById = async (moduleId: string): Promise<ModuleRec
 
 export const fetchAccessibleModuleById = async (
     moduleId: string,
-    userId?: string | null
+    userId?: string | null,
+    options?: {
+        role?: ProfileRole;
+    }
 ): Promise<ModuleRecord | null> => {
     const client = requireSupabase();
     const { data, error } = await client
@@ -334,7 +464,11 @@ export const fetchAccessibleModuleById = async (
     }
 
     const module = normalizeModuleRecord(data);
-    if (module.visibility === "public") {
+    if (isModuleLinkShareable(module.visibility)) {
+        return module;
+    }
+
+    if (options?.role === "admin" && userId) {
         return module;
     }
 

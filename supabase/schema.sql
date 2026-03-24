@@ -31,10 +31,10 @@ returns trigger
 language plpgsql
 as $$
 begin
-    if new.visibility = 'public' then
+    if new.visibility in ('public', 'unlisted') then
         if tg_op = 'INSERT' then
             new.published_at = coalesce(new.published_at, timezone('utc', now()));
-        elsif old.visibility is distinct from 'public' then
+        elsif old.visibility = 'private' then
             new.published_at = coalesce(new.published_at, timezone('utc', now()));
         end if;
     else
@@ -45,10 +45,25 @@ begin
 end;
 $$;
 
+do $$
+begin
+    if not exists (
+        select 1
+        from pg_type t
+        join pg_namespace n on n.oid = t.typnamespace
+        where t.typname = 'profile_role'
+          and n.nspname = 'public'
+    ) then
+        create type public.profile_role as enum ('user', 'admin');
+    end if;
+end;
+$$;
+
 create table if not exists public.profiles (
     id uuid primary key references auth.users (id) on delete cascade,
     display_name text not null check (char_length(trim(display_name)) between 1 and 80),
     avatar_url text,
+    role public.profile_role not null default 'user'::public.profile_role,
     created_at timestamptz not null default timezone('utc', now()),
     updated_at timestamptz not null default timezone('utc', now())
 );
@@ -60,7 +75,7 @@ create table if not exists public.modules (
     summary text not null default '' check (char_length(summary) <= 2000),
     script_json jsonb not null check (public.is_valid_phosphor_script(script_json)),
     cover_image_url text,
-    visibility text not null default 'private' check (visibility in ('private', 'public')),
+    visibility text not null default 'private' check (visibility in ('private', 'unlisted', 'public')),
     rating_count integer not null default 0 check (rating_count >= 0),
     rating_average numeric(3, 2) not null default 0 check (rating_average >= 0 and rating_average <= 5),
     subscription_count integer not null default 0 check (subscription_count >= 0),
@@ -85,6 +100,45 @@ create table if not exists public.module_subscriptions (
     updated_at timestamptz not null default timezone('utc', now()),
     primary key (module_id, user_id)
 );
+
+alter table public.profiles
+    add column if not exists role public.profile_role;
+
+alter table public.profiles
+    drop constraint if exists profiles_role_check;
+
+do $$
+begin
+    if exists (
+        select 1
+        from information_schema.columns
+        where table_schema = 'public'
+          and table_name = 'profiles'
+          and column_name = 'role'
+          and udt_name <> 'profile_role'
+    ) then
+        alter table public.profiles
+            alter column role drop default;
+
+        alter table public.profiles
+            alter column role type public.profile_role
+            using (
+                case
+                    when role::text = 'admin' then 'admin'::public.profile_role
+                    else 'user'::public.profile_role
+                end
+            );
+    end if;
+end;
+$$;
+
+update public.profiles
+set role = 'user'::public.profile_role
+where role is null;
+
+alter table public.profiles
+    alter column role set default 'user'::public.profile_role,
+    alter column role set not null;
 
 create index if not exists modules_owner_id_idx
     on public.modules (owner_id);
@@ -274,21 +328,30 @@ create policy "users can insert their own profile"
     on public.profiles
     for insert
     to authenticated
-    with check (auth.uid() = id);
+    with check (auth.uid() = id and role = 'user');
 
 drop policy if exists "users can update their own profile" on public.profiles;
 create policy "users can update their own profile"
     on public.profiles
     for update
     to authenticated
-    using (auth.uid() = id)
-    with check (auth.uid() = id);
+    using (auth.uid() = id and role = 'user')
+    with check (auth.uid() = id and role = 'user');
+
+drop policy if exists "admins can update their own profile" on public.profiles;
+create policy "admins can update their own profile"
+    on public.profiles
+    for update
+    to authenticated
+    using (auth.uid() = id and role = 'admin')
+    with check (auth.uid() = id and role = 'admin');
 
 drop policy if exists "public modules are readable by everyone" on public.modules;
-create policy "public modules are readable by everyone"
+drop policy if exists "shared modules are readable by everyone" on public.modules;
+create policy "shared modules are readable by everyone"
     on public.modules
     for select
-    using (visibility = 'public');
+    using (visibility in ('public', 'unlisted'));
 
 drop policy if exists "owners can read their own modules" on public.modules;
 create policy "owners can read their own modules"
@@ -296,6 +359,20 @@ create policy "owners can read their own modules"
     for select
     to authenticated
     using (auth.uid() = owner_id);
+
+drop policy if exists "admins can read all modules" on public.modules;
+create policy "admins can read all modules"
+    on public.modules
+    for select
+    to authenticated
+    using (
+        exists (
+            select 1
+            from public.profiles p
+            where p.id = auth.uid()
+              and p.role = 'admin'
+        )
+    );
 
 drop policy if exists "owners can insert their own modules" on public.modules;
 create policy "owners can insert their own modules"
@@ -337,7 +414,7 @@ create policy "users can rate public modules"
             select 1
             from public.modules m
             where m.id = module_id
-              and m.visibility = 'public'
+              and m.visibility in ('public', 'unlisted')
               and m.owner_id <> auth.uid()
         )
     );
@@ -354,7 +431,7 @@ create policy "users can update their own ratings"
             select 1
             from public.modules m
             where m.id = module_id
-              and m.visibility = 'public'
+              and m.visibility in ('public', 'unlisted')
               and m.owner_id <> auth.uid()
         )
     );
@@ -384,7 +461,7 @@ create policy "users can subscribe to public modules"
             select 1
             from public.modules m
             where m.id = module_id
-              and m.visibility = 'public'
+              and m.visibility in ('public', 'unlisted')
               and m.owner_id <> auth.uid()
         )
     );

@@ -1,5 +1,6 @@
 import React, { FC, useEffect, useMemo, useState } from "react";
 import CreatorSelect, { CreatorSelectOption } from "../CreatorSelect";
+import { isModuleLinkShareable } from "../../lib/modules";
 import type { ModuleRecord, ModuleVisibility } from "../../lib/modules";
 import "./style.scss";
 
@@ -41,6 +42,7 @@ const toLocalTimestamp = (value: string): string => {
 
 const VISIBILITY_OPTIONS: CreatorSelectOption[] = [
     { value: "private", label: "Private" },
+    { value: "unlisted", label: "Unlisted" },
     { value: "public", label: "Public" },
 ];
 
@@ -123,11 +125,11 @@ const ModulesPanel: FC<ModulesPanelProps> = ({
                 <div className="modules-panel__header">
                     <div>
                         <h2>My Modules</h2>
-                        <p>Save scripts to Supabase, publish them, and jump into the public library when you want to browse.</p>
+                        <p>Save scripts to Supabase, set visibility, and jump into the library when you want to browse.</p>
                     </div>
                     <div className="modules-panel__header-actions">
                         <a className="modules-panel__button modules-panel__button--ghost" href={libraryUrl}>
-                            Public Library
+                            Library
                         </a>
                         <button className="modules-panel__button modules-panel__button--ghost" onClick={onClose}>
                             Close
@@ -162,6 +164,7 @@ const ModulesPanel: FC<ModulesPanelProps> = ({
                         {!authLoading && !sessionEmail && (
                             <>
                                 <p>Sign in with Google to save private modules and publish public ones.</p>
+                                <p className="modules-panel__muted">Use unlisted for link-only sharing without showing in the library.</p>
                                 <button
                                     className="modules-panel__button"
                                     onClick={onSignIn}
@@ -216,7 +219,7 @@ const ModulesPanel: FC<ModulesPanelProps> = ({
 
                         {activeModule && !activeModuleIsOwned && (
                             <p className="modules-panel__muted">
-                                This public module is not yours. Saving will create a copy in your account.
+                                This module is not yours. Saving will create a copy in your account.
                             </p>
                         )}
                     </section>
@@ -268,7 +271,7 @@ const ModulesPanel: FC<ModulesPanelProps> = ({
                                 {activeModuleIsOwned ? "Save Changes" : "Create Module"}
                             </button>
 
-                            {activeModule && activeModule.visibility === "public" && (
+                            {activeModule && isModuleLinkShareable(activeModule.visibility) && (
                                 <button
                                     className="modules-panel__button modules-panel__button--ghost"
                                     onClick={() => onCopyShareLink(activeModule)}
@@ -318,7 +321,7 @@ const ModulesPanel: FC<ModulesPanelProps> = ({
                                                     Load
                                                 </button>
 
-                                                {module.visibility === "public" && (
+                                                {isModuleLinkShareable(module.visibility) && (
                                                     <button
                                                         className="modules-panel__button modules-panel__button--ghost"
                                                         onClick={() => onCopyShareLink(module)}
