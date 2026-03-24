@@ -859,8 +859,8 @@ const ModulesBrowser: FC = () => {
             setErrorMessage("Sign in to subscribe to modules.");
             return;
         }
-        if (!isModuleLinkShareable(module.visibility)) {
-            setErrorMessage("Private modules cannot be subscribed to.");
+        if (module.visibility === "private" && !isAdmin) {
+            setErrorMessage("Only admins can subscribe to private modules.");
             return;
         }
 
@@ -1582,7 +1582,7 @@ const ModulesBrowser: FC = () => {
                                             </div>
                                         )}
 
-                                        {!isOwnModule && isModuleLinkShareable(selectedModule.visibility) && (
+                                        {!isOwnModule && (isModuleLinkShareable(selectedModule.visibility) || isAdmin) && (
                                             <button
                                                 className={
                                                     "modules-browser__btn"

@@ -15,6 +15,7 @@ interface ModulesPanelProps {
     currentScriptLabel: string;
     activeModule: ModuleRecord | null;
     myModules: ModuleRecord[];
+    ownScriptsVisibilityById: Record<string, boolean>;
     subscribedModules: ModuleRecord[];
     subscribedScriptsVisibilityById: Record<string, boolean>;
     errorMessage: string | null;
@@ -27,6 +28,7 @@ interface ModulesPanelProps {
     onSignOut: () => void;
     onRefresh: () => void;
     onLoadModule: (module: ModuleRecord) => void;
+    onToggleOwnScriptVisibility: (moduleId: string) => void;
     onSubscribeToModule: (module: ModuleRecord) => void;
     onSaveModule: (payload: {
         title: string;
@@ -63,6 +65,7 @@ const ModulesPanel: FC<ModulesPanelProps> = ({
     currentScriptLabel,
     activeModule,
     myModules,
+    ownScriptsVisibilityById,
     subscribedModules,
     subscribedScriptsVisibilityById,
     errorMessage,
@@ -75,6 +78,7 @@ const ModulesPanel: FC<ModulesPanelProps> = ({
     onSignOut,
     onRefresh,
     onLoadModule,
+    onToggleOwnScriptVisibility,
     onSubscribeToModule,
     onSaveModule,
     onCopyShareLink,
@@ -110,6 +114,11 @@ const ModulesPanel: FC<ModulesPanelProps> = ({
             return count + (subscribedScriptsVisibilityById[module.id] === false ? 0 : 1);
         }, 0);
     }, [subscribedModules, subscribedScriptsVisibilityById]);
+    const visibleOwnCount = useMemo(() => {
+        return myModules.reduce((count, module) => {
+            return count + (ownScriptsVisibilityById[module.id] === false ? 0 : 1);
+        }, 0);
+    }, [myModules, ownScriptsVisibilityById]);
 
     useEffect(() => {
         if (activeModule) {
@@ -289,7 +298,7 @@ const ModulesPanel: FC<ModulesPanelProps> = ({
                                 </p>
                             )}
 
-                            {!!activeModule && !activeModuleIsOwned && isModuleLinkShareable(activeModule.visibility) && (
+                            {!!activeModule && !activeModuleIsOwned && (
                                 <div className="modules-panel__actions">
                                     <button
                                         className="modules-panel__button"
@@ -375,46 +384,70 @@ const ModulesPanel: FC<ModulesPanelProps> = ({
                             )}
 
                             {!!sessionUserId && !!myModules.length && (
-                                <div className="modules-panel__list">
-                                    {myModules.map((module) => {
-                                        const isActive = activeModule?.id === module.id;
-                                        return (
-                                            <article
-                                                key={module.id}
-                                                className={"modules-panel__list-item" + (isActive ? " modules-panel__list-item--active" : "")}
-                                            >
-                                                <div className="modules-panel__list-main">
-                                                    <strong>{module.title}</strong>
-                                                    <span className="modules-panel__pill">{module.visibility}</span>
-                                                    <p>{module.summary || "No summary provided."}</p>
-                                                    <small className="modules-panel__muted">
-                                                        Updated {toLocalTimestamp(module.updated_at)}
-                                                    </small>
-                                                </div>
+                                <>
+                                    <p className="modules-panel__muted">
+                                        {visibleOwnCount} of {myModules.length} own modules are shown in the script dropdown.
+                                    </p>
+                                    <div className="modules-panel__list">
+                                        {myModules.map((module) => {
+                                            const isActive = activeModule?.id === module.id;
+                                            const showInScripts = ownScriptsVisibilityById[module.id] !== false;
+                                            return (
+                                                <article
+                                                    key={module.id}
+                                                    className={"modules-panel__list-item" + (isActive ? " modules-panel__list-item--active" : "")}
+                                                >
+                                                    <div className="modules-panel__list-main">
+                                                        <strong>{module.title}</strong>
+                                                        <span className="modules-panel__pill">{module.visibility}</span>
+                                                        <span className="modules-panel__pill">
+                                                            {showInScripts ? "Scripts: On" : "Scripts: Off"}
+                                                        </span>
+                                                        <p>{module.summary || "No summary provided."}</p>
+                                                        <small className="modules-panel__muted">
+                                                            Updated {toLocalTimestamp(module.updated_at)}
+                                                        </small>
+                                                    </div>
 
-                                                <div className="modules-panel__actions">
-                                                    <button
-                                                        className="modules-panel__button"
-                                                        onClick={() => onLoadModule(module)}
-                                                        disabled={busy}
-                                                    >
-                                                        Load
-                                                    </button>
-
-                                                    {isModuleLinkShareable(module.visibility) && (
+                                                    <div className="modules-panel__actions">
                                                         <button
-                                                            className="modules-panel__button modules-panel__button--ghost"
-                                                            onClick={() => onCopyShareLink(module)}
+                                                            className="modules-panel__button"
+                                                            onClick={() => onLoadModule(module)}
                                                             disabled={busy}
                                                         >
-                                                            Copy Link
+                                                            Load
                                                         </button>
-                                                    )}
-                                                </div>
-                                            </article>
-                                        );
-                                    })}
-                                </div>
+                                                        <a
+                                                            className="modules-panel__button modules-panel__button--ghost"
+                                                            href={getLibraryModuleUrl(module.id)}
+                                                        >
+                                                            View In Library
+                                                        </a>
+                                                        <label className="modules-panel__toggle">
+                                                            <input
+                                                                type="checkbox"
+                                                                checked={showInScripts}
+                                                                onChange={() => onToggleOwnScriptVisibility(module.id)}
+                                                                disabled={busy}
+                                                            />
+                                                            <span>Show in SCRIPT</span>
+                                                        </label>
+
+                                                        {isModuleLinkShareable(module.visibility) && (
+                                                            <button
+                                                                className="modules-panel__button modules-panel__button--ghost"
+                                                                onClick={() => onCopyShareLink(module)}
+                                                                disabled={busy}
+                                                            >
+                                                                Copy Link
+                                                            </button>
+                                                        )}
+                                                    </div>
+                                                </article>
+                                            );
+                                        })}
+                                    </div>
+                                </>
                             )}
                         </section>
 

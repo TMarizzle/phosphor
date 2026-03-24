@@ -1,6 +1,7 @@
 const SOUND_ENABLED_STORAGE_KEY = "phosphor:sound-enabled:v1";
 const MODULES_BROWSER_VIEW_MODE_STORAGE_KEY = "phosphor:modules-browser:view-mode:v1";
 const MODULES_BROWSER_FONT_MODE_STORAGE_KEY = "phosphor:modules-browser:font-mode:v1";
+const OWN_SCRIPTS_VISIBILITY_STORAGE_KEY = "phosphor:own-scripts:visibility:v1";
 const SUBSCRIBED_SCRIPTS_VISIBILITY_STORAGE_KEY = "phosphor:subscribed-scripts:visibility:v1";
 
 export type ModulesBrowserViewMode = "retro" | "web";
@@ -56,6 +57,40 @@ export const loadPersistedModulesBrowserFontMode = (): ModulesBrowserFontMode =>
 export const persistModulesBrowserFontMode = (fontMode: ModulesBrowserFontMode): void => {
     try {
         window.localStorage.setItem(MODULES_BROWSER_FONT_MODE_STORAGE_KEY, fontMode);
+    } catch {
+        // ignore storage write failures
+    }
+};
+
+export const loadPersistedOwnScriptsVisibility = (): Record<string, boolean> => {
+    try {
+        const raw = window.localStorage.getItem(OWN_SCRIPTS_VISIBILITY_STORAGE_KEY);
+        if (!raw) {
+            return {};
+        }
+
+        const parsed = JSON.parse(raw);
+        if (!parsed || typeof parsed !== "object" || Array.isArray(parsed)) {
+            return {};
+        }
+
+        return Object.entries(parsed).reduce((acc: Record<string, boolean>, [moduleId, visible]) => {
+            if (typeof moduleId === "string" && typeof visible === "boolean") {
+                acc[moduleId] = visible;
+            }
+            return acc;
+        }, {});
+    } catch {
+        return {};
+    }
+};
+
+export const persistOwnScriptsVisibility = (visibilityById: Record<string, boolean>): void => {
+    try {
+        window.localStorage.setItem(
+            OWN_SCRIPTS_VISIBILITY_STORAGE_KEY,
+            JSON.stringify(visibilityById)
+        );
     } catch {
         // ignore storage write failures
     }

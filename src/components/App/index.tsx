@@ -36,8 +36,10 @@ import {
 } from "../../lib/modules";
 import { APP_TITLE } from "../../lib/branding";
 import {
+    loadPersistedOwnScriptsVisibility,
     loadPersistedSoundEnabled,
     loadPersistedSubscribedScriptsVisibility,
+    persistOwnScriptsVisibility,
     persistSoundEnabled,
     persistSubscribedScriptsVisibility,
 } from "../../lib/preferences";
@@ -73,6 +75,7 @@ interface AppState {
     modulesError: string | null;
     modulesNotice: string | null;
     myModules: ModuleRecord[];
+    ownScriptsVisibilityById: Record<string, boolean>;
     subscribedModules: ModuleRecord[];
     subscribedScriptsVisibilityById: Record<string, boolean>;
     activeModule: ModuleRecord | null;
@@ -91,6 +94,7 @@ class App extends Component<any, AppState> {
         const persistedTheme = loadPersistedTheme();
         const customTheme = loadPersistedCustomTheme();
         const soundEnabled = loadPersistedSoundEnabled();
+        const ownScriptsVisibilityById = loadPersistedOwnScriptsVisibility();
         const subscribedScriptsVisibilityById = loadPersistedSubscribedScriptsVisibility();
         const customScripts = this._loadCustomScripts();
         const activeScript = this._resolveInitialActiveScript(customScripts);
@@ -122,6 +126,7 @@ class App extends Component<any, AppState> {
             modulesError: null,
             modulesNotice: null,
             myModules: [],
+            ownScriptsVisibilityById,
             subscribedModules: [],
             subscribedScriptsVisibilityById,
             activeModule: null,
@@ -159,6 +164,7 @@ class App extends Component<any, AppState> {
         this._handleModuleSubscribe = this._handleModuleSubscribe.bind(this);
         this._handleModuleSave      = this._handleModuleSave.bind(this);
         this._handleModuleCopyLink  = this._handleModuleCopyLink.bind(this);
+        this._handleToggleOwnScriptVisibility = this._handleToggleOwnScriptVisibility.bind(this);
         this._handleToggleSubscribedScriptVisibility = this._handleToggleSubscribedScriptVisibility.bind(this);
     }
 
@@ -461,6 +467,16 @@ class App extends Component<any, AppState> {
         return this.state.authSession?.user?.id || null;
     }
 
+    private _buildOwnScriptVisibility(
+        myModules: ModuleRecord[],
+        currentVisibilityById: Record<string, boolean>
+    ): Record<string, boolean> {
+        return myModules.reduce((acc: Record<string, boolean>, module) => {
+            acc[module.id] = currentVisibilityById[module.id] !== false;
+            return acc;
+        }, {});
+    }
+
     private _buildSubscribedScriptVisibility(
         subscribedModules: ModuleRecord[],
         currentVisibilityById: Record<string, boolean>
@@ -469,6 +485,33 @@ class App extends Component<any, AppState> {
             acc[module.id] = currentVisibilityById[module.id] !== false;
             return acc;
         }, {});
+    }
+
+    private _handleToggleOwnScriptVisibility(moduleId: string): void {
+        this.setState((prev): Pick<AppState, "ownScriptsVisibilityById" | "modulesNotice" | "modulesError"> => {
+            const module = prev.myModules.find((entry) => entry.id === moduleId);
+            if (!module) {
+                return {
+                    ownScriptsVisibilityById: prev.ownScriptsVisibilityById,
+                    modulesNotice: prev.modulesNotice,
+                    modulesError: prev.modulesError,
+                };
+            }
+
+            const nextValue = prev.ownScriptsVisibilityById[moduleId] === false;
+            const nextVisibilityById = {
+                ...prev.ownScriptsVisibilityById,
+                [moduleId]: nextValue,
+            };
+            persistOwnScriptsVisibility(nextVisibilityById);
+            return {
+                ownScriptsVisibilityById: nextVisibilityById,
+                modulesNotice: nextValue
+                    ? `"${module.title}" now appears in the script dropdown.`
+                    : `"${module.title}" hidden from the script dropdown.`,
+                modulesError: null,
+            };
+        });
     }
 
     private _handleToggleSubscribedScriptVisibility(moduleId: string): void {
@@ -1325,14 +1368,20 @@ class App extends Component<any, AppState> {
                 const refreshedActiveModule = prev.activeModule
                     ? knownModules.find((module) => module.id === prev.activeModule!.id) || prev.activeModule
                     : null;
+                const ownScriptsVisibilityById = this._buildOwnScriptVisibility(
+                    myModules,
+                    prev.ownScriptsVisibilityById
+                );
                 const subscribedScriptsVisibilityById = this._buildSubscribedScriptVisibility(
                     subscribedModules,
                     prev.subscribedScriptsVisibilityById
                 );
+                persistOwnScriptsVisibility(ownScriptsVisibilityById);
                 persistSubscribedScriptsVisibility(subscribedScriptsVisibilityById);
 
                 return {
                     myModules,
+                    ownScriptsVisibilityById,
                     subscribedModules,
                     subscribedScriptsVisibilityById,
                     activeModule: refreshedActiveModule,
@@ -1365,12 +1414,15 @@ class App extends Component<any, AppState> {
             return;
         }
 
-        if (!isModuleLinkShareable(module.visibility)) {
-            this.setState({
-                modulesError: "Only public or unlisted modules can be subscribed to.",
-                modulesNotice: null,
-            });
-            return;
+        if (module.visibility === "private") {
+            const role = await getProfileRole(userId).catch(() => "user");
+            if (role !== "admin") {
+                this.setState({
+                    modulesError: "Only admins can subscribe to private modules.",
+                    modulesNotice: null,
+                });
+                return;
+            }
         }
 
         if (this.state.subscribedModules.some((entry) => entry.id === module.id)) {
@@ -1399,14 +1451,20 @@ class App extends Component<any, AppState> {
                 const refreshedActiveModule = prev.activeModule
                     ? knownModules.find((entry) => entry.id === prev.activeModule!.id) || prev.activeModule
                     : null;
+                const ownScriptsVisibilityById = this._buildOwnScriptVisibility(
+                    myModules,
+                    prev.ownScriptsVisibilityById
+                );
                 const subscribedScriptsVisibilityById = this._buildSubscribedScriptVisibility(
                     subscribedModules,
                     prev.subscribedScriptsVisibilityById
                 );
+                persistOwnScriptsVisibility(ownScriptsVisibilityById);
                 persistSubscribedScriptsVisibility(subscribedScriptsVisibilityById);
 
                 return {
                     myModules,
+                    ownScriptsVisibilityById,
                     subscribedModules,
                     subscribedScriptsVisibilityById,
                     activeModule: refreshedActiveModule,
@@ -1462,15 +1520,27 @@ class App extends Component<any, AppState> {
                 | "activeTerminalScreenId"
                 | "activeModule"
                 | "myModules"
+                | "ownScriptsVisibilityById"
                 | "creatorInitialScript"
                 | "modulesBusy"
                 | "modulesNotice"
             > => ({
+                ...(() => {
+                    const myModules = this._upsertModuleRecord(prev.myModules, savedModule);
+                    const ownScriptsVisibilityById = {
+                        ...this._buildOwnScriptVisibility(myModules, prev.ownScriptsVisibilityById),
+                        [savedModule.id]: prev.ownScriptsVisibilityById[savedModule.id] !== false,
+                    };
+                    persistOwnScriptsVisibility(ownScriptsVisibilityById);
+                    return {
+                        myModules,
+                        ownScriptsVisibilityById,
+                    };
+                })(),
                 activeScript: nextScript,
                 activeScriptRevision: prev.activeScriptRevision + 1,
                 activeTerminalScreenId: null,
                 activeModule: savedModule,
-                myModules: this._upsertModuleRecord(prev.myModules, savedModule),
                 creatorInitialScript: null,
                 modulesBusy: false,
                 modulesNotice: ownedActiveModule ? "Module updated." : "Module created.",
@@ -1533,16 +1603,20 @@ class App extends Component<any, AppState> {
             modulesError,
             modulesNotice,
             myModules,
+            ownScriptsVisibilityById,
             subscribedModules,
             subscribedScriptsVisibilityById,
             activeModule,
         } = this.state;
+        const ownScripts = myModules
+            .filter((module) => ownScriptsVisibilityById[module.id] !== false)
+            .map((module) => this._buildModuleScript(module));
         const subscribedScripts = subscribedModules
             .filter((module) => subscribedScriptsVisibilityById[module.id] !== false)
             .map((module) => this._buildModuleScript(module));
         const availableScripts = (activeModule
-            ? [activeScript, ...subscribedScripts, ...BUNDLED_SCRIPTS, ...customScripts]
-            : [...subscribedScripts, ...BUNDLED_SCRIPTS, ...customScripts]
+            ? [activeScript, ...ownScripts, ...subscribedScripts, ...BUNDLED_SCRIPTS, ...customScripts]
+            : [...ownScripts, ...subscribedScripts, ...BUNDLED_SCRIPTS, ...customScripts]
         ).filter((script, index, scripts) => {
             return scripts.findIndex((candidate) => candidate.id === script.id) === index;
         });
@@ -1864,6 +1938,7 @@ class App extends Component<any, AppState> {
                     currentScriptLabel={activeScript.label}
                     activeModule={activeModule}
                     myModules={myModules}
+                    ownScriptsVisibilityById={ownScriptsVisibilityById}
                     subscribedModules={subscribedModules}
                     subscribedScriptsVisibilityById={subscribedScriptsVisibilityById}
                     errorMessage={modulesError}
@@ -1876,6 +1951,7 @@ class App extends Component<any, AppState> {
                     onSignOut={this._handleSignOut}
                     onRefresh={this._handleRefreshModules}
                     onLoadModule={this._handleModuleLoad}
+                    onToggleOwnScriptVisibility={this._handleToggleOwnScriptVisibility}
                     onSubscribeToModule={this._handleModuleSubscribe}
                     onSaveModule={this._handleModuleSave}
                     onCopyShareLink={this._handleModuleCopyLink}

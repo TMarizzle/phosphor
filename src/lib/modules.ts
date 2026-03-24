@@ -408,7 +408,6 @@ export const fetchPublicModulesByIds = async (moduleIds: string[]): Promise<Modu
     const { data, error } = await client
         .from("modules")
         .select(MODULE_SELECT)
-        .in("visibility", ["public", "unlisted"])
         .in("id", moduleIds);
 
     if (error) {

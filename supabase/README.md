@@ -68,8 +68,18 @@ create policy "users can subscribe to public modules"
             select 1
             from public.modules m
             where m.id = module_id
-              and m.visibility in ('public', 'unlisted')
-              and m.owner_id <> auth.uid()
+              and (
+                  (
+                      m.visibility in ('public', 'unlisted')
+                      and m.owner_id <> auth.uid()
+                  )
+                  or exists (
+                      select 1
+                      from public.profiles p
+                      where p.id = auth.uid()
+                        and p.role = 'admin'::public.profile_role
+                  )
+              )
         )
     );
 ```
