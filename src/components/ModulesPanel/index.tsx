@@ -15,6 +15,8 @@ interface ModulesPanelProps {
     currentScriptLabel: string;
     activeModule: ModuleRecord | null;
     myModules: ModuleRecord[];
+    subscribedModules: ModuleRecord[];
+    subscribedScriptsVisibilityById: Record<string, boolean>;
     errorMessage: string | null;
     noticeMessage: string | null;
     libraryUrl: string;
@@ -29,6 +31,7 @@ interface ModulesPanelProps {
         visibility: ModuleVisibility;
     }) => void;
     onCopyShareLink: (module: ModuleRecord) => void;
+    onToggleSubscribedScriptVisibility: (moduleId: string) => void;
 }
 
 const toLocalTimestamp = (value: string): string => {
@@ -57,6 +60,8 @@ const ModulesPanel: FC<ModulesPanelProps> = ({
     currentScriptLabel,
     activeModule,
     myModules,
+    subscribedModules,
+    subscribedScriptsVisibilityById,
     errorMessage,
     noticeMessage,
     libraryUrl,
@@ -67,10 +72,12 @@ const ModulesPanel: FC<ModulesPanelProps> = ({
     onLoadModule,
     onSaveModule,
     onCopyShareLink,
+    onToggleSubscribedScriptVisibility,
 }) => {
     const [title, setTitle] = useState<string>("");
     const [summary, setSummary] = useState<string>("");
     const [visibility, setVisibility] = useState<ModuleVisibility>("private");
+    const [composerOpen, setComposerOpen] = useState<boolean>(false);
 
     const currentScriptName = useMemo(() => {
         const configName = currentScript?.config?.name;
@@ -81,6 +88,11 @@ const ModulesPanel: FC<ModulesPanelProps> = ({
     }, [currentScript, currentScriptLabel]);
 
     const activeModuleIsOwned = !!activeModule && !!sessionUserId && activeModule.owner_id === sessionUserId;
+    const visibleSubscribedCount = useMemo(() => {
+        return subscribedModules.reduce((count, module) => {
+            return count + (subscribedScriptsVisibilityById[module.id] === false ? 0 : 1);
+        }, 0);
+    }, [subscribedModules, subscribedScriptsVisibilityById]);
 
     useEffect(() => {
         if (activeModule) {
@@ -94,6 +106,17 @@ const ModulesPanel: FC<ModulesPanelProps> = ({
         setSummary("");
         setVisibility("private");
     }, [activeModule, currentScriptName]);
+
+    useEffect(() => {
+        if (!open) {
+            setComposerOpen(false);
+            return;
+        }
+
+        if (activeModuleIsOwned) {
+            setComposerOpen(true);
+        }
+    }, [activeModuleIsOwned, open]);
 
     useEffect(() => {
         if (!open) {
@@ -125,9 +148,16 @@ const ModulesPanel: FC<ModulesPanelProps> = ({
                 <div className="modules-panel__header">
                     <div>
                         <h2>My Modules</h2>
-                        <p>Save scripts to Supabase, set visibility, and jump into the library when you want to browse.</p>
+                        <p>Manage your modules and subscribed modules, then control what shows in the script dropdown.</p>
                     </div>
                     <div className="modules-panel__header-actions">
+                        <button
+                            className="modules-panel__button"
+                            onClick={() => setComposerOpen((prev) => !prev)}
+                            disabled={!sessionUserId || busy}
+                        >
+                            {composerOpen ? "Hide Add Module" : "Add New Module"}
+                        </button>
                         <a className="modules-panel__button modules-panel__button--ghost" href={libraryUrl}>
                             Library
                         </a>
@@ -155,192 +185,262 @@ const ModulesPanel: FC<ModulesPanelProps> = ({
                     </div>
                 )}
 
-                <div className="modules-panel__grid">
-                    <section className="modules-panel__section">
-                        <h3>Account</h3>
+                <div className="modules-panel__body">
+                    <div className="modules-panel__grid">
+                        <section className="modules-panel__section">
+                            <h3>Account</h3>
 
-                        {authLoading && <p>Checking session...</p>}
+                            {authLoading && <p>Checking session...</p>}
 
-                        {!authLoading && !sessionEmail && (
-                            <>
-                                <p>Sign in with Google to save private modules and publish public ones.</p>
-                                <p className="modules-panel__muted">Use unlisted for link-only sharing without showing in the library.</p>
-                                <button
-                                    className="modules-panel__button"
-                                    onClick={onSignIn}
-                                    disabled={!supabaseReady || busy}
-                                >
-                                    Sign In With Google
-                                </button>
-                            </>
-                        )}
+                            {!authLoading && !sessionEmail && (
+                                <>
+                                    <p>Sign in with Google to save private modules and publish public ones.</p>
+                                    <p className="modules-panel__muted">Use unlisted for link-only sharing without showing in the library.</p>
+                                    <button
+                                        className="modules-panel__button"
+                                        onClick={onSignIn}
+                                        disabled={!supabaseReady || busy}
+                                    >
+                                        Sign In With Google
+                                    </button>
+                                </>
+                            )}
 
-                        {!authLoading && sessionEmail && (
-                            <>
-                                <p>Signed in as <strong>{sessionEmail}</strong>.</p>
+                            {!authLoading && sessionEmail && (
+                                <>
+                                    <p>Signed in as <strong>{sessionEmail}</strong>.</p>
+                                    <div className="modules-panel__actions">
+                                        <button
+                                            className="modules-panel__button"
+                                            onClick={onRefresh}
+                                            disabled={busy}
+                                        >
+                                            Refresh Modules
+                                        </button>
+                                        <button
+                                            className="modules-panel__button modules-panel__button--ghost"
+                                            onClick={onSignOut}
+                                            disabled={busy}
+                                        >
+                                            Sign Out
+                                        </button>
+                                    </div>
+                                </>
+                            )}
+                        </section>
+
+                        <section className="modules-panel__section">
+                            <h3>Current Script</h3>
+                            <p><strong>{currentScriptName}</strong></p>
+
+                            {activeModule && (
+                                <p>
+                                    Active module: <strong>{activeModule.title}</strong>{" "}
+                                    <span className="modules-panel__muted">
+                                        ({activeModule.visibility})
+                                    </span>
+                                </p>
+                            )}
+
+                            {!activeModule && (
+                                <p className="modules-panel__muted">
+                                    This script is local right now. Saving will create a new module.
+                                </p>
+                            )}
+
+                            {activeModule && !activeModuleIsOwned && (
+                                <p className="modules-panel__muted">
+                                    This module is not yours. Saving will create a copy in your account.
+                                </p>
+                            )}
+                        </section>
+
+                        {composerOpen && (
+                            <section className="modules-panel__section modules-panel__section--wide">
+                                <h3>{activeModuleIsOwned ? "Update Active Module" : "Create Module"}</h3>
+
+                                <label className="modules-panel__field">
+                                    <span>Title</span>
+                                    <input
+                                        value={title}
+                                        onChange={(event) => setTitle(event.target.value)}
+                                        maxLength={120}
+                                        placeholder="Module title"
+                                    />
+                                </label>
+
+                                <label className="modules-panel__field">
+                                    <span>Summary</span>
+                                    <textarea
+                                        value={summary}
+                                        onChange={(event) => setSummary(event.target.value)}
+                                        maxLength={2000}
+                                        rows={3}
+                                        placeholder="Short summary for the module listing"
+                                    />
+                                </label>
+
+                                <label className="modules-panel__field">
+                                    <span>Visibility</span>
+                                    <CreatorSelect
+                                        value={visibility}
+                                        options={VISIBILITY_OPTIONS}
+                                        onChange={(nextValue) => setVisibility(nextValue as ModuleVisibility)}
+                                        fallbackLabel={visibility}
+                                    />
+                                </label>
+
                                 <div className="modules-panel__actions">
                                     <button
                                         className="modules-panel__button"
-                                        onClick={onRefresh}
-                                        disabled={busy}
+                                        disabled={!sessionUserId || busy || !supabaseReady || !title.trim().length}
+                                        onClick={() => onSaveModule({
+                                            title: title.trim(),
+                                            summary: summary.trim(),
+                                            visibility,
+                                        })}
                                     >
-                                        Refresh Modules
+                                        {activeModuleIsOwned ? "Save Changes" : "Create Module"}
                                     </button>
-                                    <button
-                                        className="modules-panel__button modules-panel__button--ghost"
-                                        onClick={onSignOut}
-                                        disabled={busy}
-                                    >
-                                        Sign Out
-                                    </button>
-                                </div>
-                            </>
-                        )}
-                    </section>
 
-                    <section className="modules-panel__section">
-                        <h3>Current Script</h3>
-                        <p><strong>{currentScriptName}</strong></p>
-
-                        {activeModule && (
-                            <p>
-                                Active module: <strong>{activeModule.title}</strong>{" "}
-                                <span className="modules-panel__muted">
-                                    ({activeModule.visibility})
-                                </span>
-                            </p>
-                        )}
-
-                        {!activeModule && (
-                            <p className="modules-panel__muted">
-                                This script is local right now. Saving will create a new module.
-                            </p>
-                        )}
-
-                        {activeModule && !activeModuleIsOwned && (
-                            <p className="modules-panel__muted">
-                                This module is not yours. Saving will create a copy in your account.
-                            </p>
-                        )}
-                    </section>
-
-                    <section className="modules-panel__section modules-panel__section--wide">
-                        <h3>{activeModuleIsOwned ? "Update Active Module" : "Create Module"}</h3>
-
-                        <label className="modules-panel__field">
-                            <span>Title</span>
-                            <input
-                                value={title}
-                                onChange={(event) => setTitle(event.target.value)}
-                                maxLength={120}
-                                placeholder="Module title"
-                            />
-                        </label>
-
-                        <label className="modules-panel__field">
-                            <span>Summary</span>
-                            <textarea
-                                value={summary}
-                                onChange={(event) => setSummary(event.target.value)}
-                                maxLength={2000}
-                                rows={3}
-                                placeholder="Short summary for the module listing"
-                            />
-                        </label>
-
-                        <label className="modules-panel__field">
-                            <span>Visibility</span>
-                            <CreatorSelect
-                                value={visibility}
-                                options={VISIBILITY_OPTIONS}
-                                onChange={(nextValue) => setVisibility(nextValue as ModuleVisibility)}
-                                fallbackLabel={visibility}
-                            />
-                        </label>
-
-                        <div className="modules-panel__actions">
-                            <button
-                                className="modules-panel__button"
-                                disabled={!sessionUserId || busy || !supabaseReady || !title.trim().length}
-                                onClick={() => onSaveModule({
-                                    title: title.trim(),
-                                    summary: summary.trim(),
-                                    visibility,
-                                })}
-                            >
-                                {activeModuleIsOwned ? "Save Changes" : "Create Module"}
-                            </button>
-
-                            {activeModule && isModuleLinkShareable(activeModule.visibility) && (
-                                <button
-                                    className="modules-panel__button modules-panel__button--ghost"
-                                    onClick={() => onCopyShareLink(activeModule)}
-                                    disabled={busy}
-                                >
-                                    Copy Share Link
-                                </button>
-                            )}
-                        </div>
-                    </section>
-
-                    <section className="modules-panel__section modules-panel__section--wide">
-                        <h3>My Modules</h3>
-
-                        {!sessionUserId && (
-                            <p className="modules-panel__muted">Sign in to see your saved modules.</p>
-                        )}
-
-                        {!!sessionUserId && !myModules.length && (
-                            <p className="modules-panel__muted">No modules saved yet.</p>
-                        )}
-
-                        {!!sessionUserId && !!myModules.length && (
-                            <div className="modules-panel__list">
-                                {myModules.map((module) => {
-                                    const isActive = activeModule?.id === module.id;
-                                    return (
-                                        <article
-                                            key={module.id}
-                                            className={"modules-panel__list-item" + (isActive ? " modules-panel__list-item--active" : "")}
+                                    {activeModule && isModuleLinkShareable(activeModule.visibility) && (
+                                        <button
+                                            className="modules-panel__button modules-panel__button--ghost"
+                                            onClick={() => onCopyShareLink(activeModule)}
+                                            disabled={busy}
                                         >
-                                            <div className="modules-panel__list-main">
-                                                <strong>{module.title}</strong>
-                                                <span className="modules-panel__pill">{module.visibility}</span>
-                                                <p>{module.summary || "No summary provided."}</p>
-                                                <small className="modules-panel__muted">
-                                                    Updated {toLocalTimestamp(module.updated_at)}
-                                                </small>
-                                            </div>
+                                            Copy Share Link
+                                        </button>
+                                    )}
+                                </div>
+                            </section>
+                        )}
 
-                                            <div className="modules-panel__actions">
-                                                <button
-                                                    className="modules-panel__button"
-                                                    onClick={() => onLoadModule(module)}
-                                                    disabled={busy}
-                                                >
-                                                    Load
-                                                </button>
+                        <section className="modules-panel__section modules-panel__section--wide">
+                            <h3>My Modules</h3>
 
-                                                {isModuleLinkShareable(module.visibility) && (
+                            {!sessionUserId && (
+                                <p className="modules-panel__muted">Sign in to see your saved modules.</p>
+                            )}
+
+                            {!!sessionUserId && !myModules.length && (
+                                <p className="modules-panel__muted">No modules saved yet.</p>
+                            )}
+
+                            {!!sessionUserId && !!myModules.length && (
+                                <div className="modules-panel__list">
+                                    {myModules.map((module) => {
+                                        const isActive = activeModule?.id === module.id;
+                                        return (
+                                            <article
+                                                key={module.id}
+                                                className={"modules-panel__list-item" + (isActive ? " modules-panel__list-item--active" : "")}
+                                            >
+                                                <div className="modules-panel__list-main">
+                                                    <strong>{module.title}</strong>
+                                                    <span className="modules-panel__pill">{module.visibility}</span>
+                                                    <p>{module.summary || "No summary provided."}</p>
+                                                    <small className="modules-panel__muted">
+                                                        Updated {toLocalTimestamp(module.updated_at)}
+                                                    </small>
+                                                </div>
+
+                                                <div className="modules-panel__actions">
                                                     <button
-                                                        className="modules-panel__button modules-panel__button--ghost"
-                                                        onClick={() => onCopyShareLink(module)}
+                                                        className="modules-panel__button"
+                                                        onClick={() => onLoadModule(module)}
                                                         disabled={busy}
                                                     >
-                                                        Copy Link
+                                                        Load
                                                     </button>
-                                                )}
-                                            </div>
-                                        </article>
-                                    );
-                                })}
-                            </div>
-                        )}
 
-                        <p className="modules-panel__muted">
-                            Public modules you subscribe to will also appear in the main script dropdown.
-                        </p>
-                    </section>
+                                                    {isModuleLinkShareable(module.visibility) && (
+                                                        <button
+                                                            className="modules-panel__button modules-panel__button--ghost"
+                                                            onClick={() => onCopyShareLink(module)}
+                                                            disabled={busy}
+                                                        >
+                                                            Copy Link
+                                                        </button>
+                                                    )}
+                                                </div>
+                                            </article>
+                                        );
+                                    })}
+                                </div>
+                            )}
+                        </section>
+
+                        <section className="modules-panel__section modules-panel__section--wide">
+                            <h3>Subscribed Modules</h3>
+
+                            {!sessionUserId && (
+                                <p className="modules-panel__muted">Sign in to see your subscribed modules.</p>
+                            )}
+
+                            {!!sessionUserId && !subscribedModules.length && (
+                                <p className="modules-panel__muted">No subscriptions yet.</p>
+                            )}
+
+                            {!!sessionUserId && !!subscribedModules.length && (
+                                <>
+                                    <p className="modules-panel__muted">
+                                        {visibleSubscribedCount} of {subscribedModules.length} subscribed modules are shown in the script dropdown.
+                                    </p>
+                                    <div className="modules-panel__list">
+                                        {subscribedModules.map((module) => {
+                                            const isActive = activeModule?.id === module.id;
+                                            const showInScripts = subscribedScriptsVisibilityById[module.id] !== false;
+                                            return (
+                                                <article
+                                                    key={module.id}
+                                                    className={"modules-panel__list-item" + (isActive ? " modules-panel__list-item--active" : "")}
+                                                >
+                                                    <div className="modules-panel__list-main">
+                                                        <strong>{module.title}</strong>
+                                                        <span className="modules-panel__pill">{module.visibility}</span>
+                                                        <span className="modules-panel__pill">
+                                                            {showInScripts ? "Scripts: On" : "Scripts: Off"}
+                                                        </span>
+                                                        <p>{module.summary || "No summary provided."}</p>
+                                                        <small className="modules-panel__muted">
+                                                            Updated {toLocalTimestamp(module.updated_at)}
+                                                        </small>
+                                                    </div>
+
+                                                    <div className="modules-panel__actions">
+                                                        <button
+                                                            className="modules-panel__button"
+                                                            onClick={() => onLoadModule(module)}
+                                                            disabled={busy}
+                                                        >
+                                                            Load
+                                                        </button>
+                                                        <button
+                                                            className="modules-panel__button modules-panel__button--ghost"
+                                                            onClick={() => onToggleSubscribedScriptVisibility(module.id)}
+                                                            disabled={busy}
+                                                        >
+                                                            {showInScripts ? "Hide In Scripts" : "Show In Scripts"}
+                                                        </button>
+                                                        {isModuleLinkShareable(module.visibility) && (
+                                                            <button
+                                                                className="modules-panel__button modules-panel__button--ghost"
+                                                                onClick={() => onCopyShareLink(module)}
+                                                                disabled={busy}
+                                                            >
+                                                                Copy Link
+                                                            </button>
+                                                        )}
+                                                    </div>
+                                                </article>
+                                            );
+                                        })}
+                                    </div>
+                                </>
+                            )}
+                        </section>
+                    </div>
                 </div>
             </div>
         </section>

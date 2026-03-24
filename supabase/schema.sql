@@ -84,6 +84,13 @@ create table if not exists public.modules (
     updated_at timestamptz not null default timezone('utc', now())
 );
 
+alter table public.modules
+    drop constraint if exists modules_visibility_check;
+
+alter table public.modules
+    add constraint modules_visibility_check
+    check (visibility in ('private', 'unlisted', 'public'));
+
 create table if not exists public.module_ratings (
     module_id uuid not null references public.modules (id) on delete cascade,
     user_id uuid not null references public.profiles (id) on delete cascade,

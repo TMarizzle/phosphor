@@ -180,10 +180,39 @@ $browser-normal-font-stack: "Trebuchet MS", Verdana, Geneva, sans-serif;
         border: 1px solid currentColor;
         line-height: 1.3;
         background: var(--browser-panel-bg);
+        display: flex;
+        align-items: flex-start;
+        justify-content: space-between;
+        gap: 0.45rem;
     }
 
     &__notice--error {
         color: rgb(255, 110, 90);
+    }
+
+    &__notice-dismiss {
+        border: 1px solid currentColor;
+        background: transparent;
+        color: inherit;
+        font-family: var(--browser-font-family);
+        font-size: calc(16pt * var(--browser-size-scale));
+        line-height: 1;
+        width: 0.75rem;
+        min-width: 0.75rem;
+        height: 0.75rem;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        padding: 0;
+        cursor: pointer;
+        flex-shrink: 0;
+
+        &:hover {
+            background: var(--browser-selected-bg);
+            color: var(--browser-selected-fg);
+            border-color: var(--browser-selected-bg);
+            text-shadow: none;
+        }
     }
 
     &__content {

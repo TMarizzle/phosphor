@@ -1343,13 +1343,31 @@ const ModulesBrowser: FC = () => {
 
                 {errorMessage && (
                     <div className="modules-browser__notice modules-browser__notice--error">
-                        {errorMessage}
+                        <span>{errorMessage}</span>
+                        <button
+                            type="button"
+                            className="modules-browser__notice-dismiss"
+                            onClick={() => setErrorMessage(null)}
+                            aria-label="Dismiss error message"
+                            title="Dismiss"
+                        >
+                            X
+                        </button>
                     </div>
                 )}
 
                 {noticeMessage && (
                     <div className="modules-browser__notice">
-                        {noticeMessage}
+                        <span>{noticeMessage}</span>
+                        <button
+                            type="button"
+                            className="modules-browser__notice-dismiss"
+                            onClick={() => setNoticeMessage(null)}
+                            aria-label="Dismiss notice"
+                            title="Dismiss"
+                        >
+                            X
+                        </button>
                     </div>
                 )}
 

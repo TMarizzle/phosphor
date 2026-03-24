@@ -40,6 +40,19 @@ It also creates:
 - a signup trigger that creates a profile row automatically
 - rating/subscription counter triggers on `modules`
 
+### Existing project migration note
+
+If your project was created before `unlisted` visibility was added, run this once in Supabase SQL Editor:
+
+```sql
+alter table public.modules
+    drop constraint if exists modules_visibility_check;
+
+alter table public.modules
+    add constraint modules_visibility_check
+    check (visibility in ('private', 'unlisted', 'public'));
+```
+
 ## 3. Set up Google login
 
 In Supabase:

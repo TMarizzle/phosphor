@@ -37,6 +37,7 @@ const Prompt: FC<PromptProps> = (props) => {
     const css = [
         "__prompt__",
         disabled ? "disabled" : null,
+        caseSensitive === false ? "case-insensitive" : null,
         className ? className : null,
     ].join(" ").trim();
 

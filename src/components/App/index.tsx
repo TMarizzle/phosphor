@@ -34,7 +34,12 @@ import {
     signOut,
 } from "../../lib/modules";
 import { APP_TITLE } from "../../lib/branding";
-import { loadPersistedSoundEnabled, persistSoundEnabled } from "../../lib/preferences";
+import {
+    loadPersistedSoundEnabled,
+    loadPersistedSubscribedScriptsVisibility,
+    persistSoundEnabled,
+    persistSubscribedScriptsVisibility,
+} from "../../lib/preferences";
 import { getModulesBrowserUrl, getTerminalAppUrl } from "../../lib/routes";
 
 const CUSTOM_SCRIPTS_STORAGE_KEY = "phosphor:custom-scripts:v1";
@@ -68,6 +73,7 @@ interface AppState {
     modulesNotice: string | null;
     myModules: ModuleRecord[];
     subscribedModules: ModuleRecord[];
+    subscribedScriptsVisibilityById: Record<string, boolean>;
     activeModule: ModuleRecord | null;
 }
 
@@ -84,6 +90,7 @@ class App extends Component<any, AppState> {
         const persistedTheme = loadPersistedTheme();
         const customTheme = loadPersistedCustomTheme();
         const soundEnabled = loadPersistedSoundEnabled();
+        const subscribedScriptsVisibilityById = loadPersistedSubscribedScriptsVisibility();
         const customScripts = this._loadCustomScripts();
         const activeScript = this._resolveInitialActiveScript(customScripts);
         const initialThemeState = this._resolveThemeStateForScript(activeScript.json, persistedTheme, customTheme);
@@ -115,6 +122,7 @@ class App extends Component<any, AppState> {
             modulesNotice: null,
             myModules: [],
             subscribedModules: [],
+            subscribedScriptsVisibilityById,
             activeModule: null,
         };
 
@@ -147,6 +155,7 @@ class App extends Component<any, AppState> {
         this._handleModuleLoad      = this._handleModuleLoad.bind(this);
         this._handleModuleSave      = this._handleModuleSave.bind(this);
         this._handleModuleCopyLink  = this._handleModuleCopyLink.bind(this);
+        this._handleToggleSubscribedScriptVisibility = this._handleToggleSubscribedScriptVisibility.bind(this);
     }
 
     public componentDidMount(): void {
@@ -446,6 +455,43 @@ class App extends Component<any, AppState> {
 
     private _getSessionUserId(): string | null {
         return this.state.authSession?.user?.id || null;
+    }
+
+    private _buildSubscribedScriptVisibility(
+        subscribedModules: ModuleRecord[],
+        currentVisibilityById: Record<string, boolean>
+    ): Record<string, boolean> {
+        return subscribedModules.reduce((acc: Record<string, boolean>, module) => {
+            acc[module.id] = currentVisibilityById[module.id] !== false;
+            return acc;
+        }, {});
+    }
+
+    private _handleToggleSubscribedScriptVisibility(moduleId: string): void {
+        this.setState((prev): Pick<AppState, "subscribedScriptsVisibilityById" | "modulesNotice" | "modulesError"> => {
+            const module = prev.subscribedModules.find((entry) => entry.id === moduleId);
+            if (!module) {
+                return {
+                    subscribedScriptsVisibilityById: prev.subscribedScriptsVisibilityById,
+                    modulesNotice: prev.modulesNotice,
+                    modulesError: prev.modulesError,
+                };
+            }
+
+            const nextValue = prev.subscribedScriptsVisibilityById[moduleId] === false;
+            const nextVisibilityById = {
+                ...prev.subscribedScriptsVisibilityById,
+                [moduleId]: nextValue,
+            };
+            persistSubscribedScriptsVisibility(nextVisibilityById);
+            return {
+                subscribedScriptsVisibilityById: nextVisibilityById,
+                modulesNotice: nextValue
+                    ? `"${module.title}" now appears in the script dropdown.`
+                    : `"${module.title}" hidden from the script dropdown.`,
+                modulesError: null,
+            };
+        });
     }
 
     private _upsertModuleRecord(currentModules: ModuleRecord[], nextModule: ModuleRecord): ModuleRecord[] {
@@ -1267,10 +1313,16 @@ class App extends Component<any, AppState> {
                 const refreshedActiveModule = prev.activeModule
                     ? knownModules.find((module) => module.id === prev.activeModule!.id) || prev.activeModule
                     : null;
+                const subscribedScriptsVisibilityById = this._buildSubscribedScriptVisibility(
+                    subscribedModules,
+                    prev.subscribedScriptsVisibilityById
+                );
+                persistSubscribedScriptsVisibility(subscribedScriptsVisibilityById);
 
                 return {
                     myModules,
                     subscribedModules,
+                    subscribedScriptsVisibilityById,
                     activeModule: refreshedActiveModule,
                     modulesBusy: false,
                 };
@@ -1400,9 +1452,12 @@ class App extends Component<any, AppState> {
             modulesNotice,
             myModules,
             subscribedModules,
+            subscribedScriptsVisibilityById,
             activeModule,
         } = this.state;
-        const subscribedScripts = subscribedModules.map((module) => this._buildModuleScript(module));
+        const subscribedScripts = subscribedModules
+            .filter((module) => subscribedScriptsVisibilityById[module.id] !== false)
+            .map((module) => this._buildModuleScript(module));
         const availableScripts = (activeModule
             ? [activeScript, ...subscribedScripts, ...BUNDLED_SCRIPTS, ...customScripts]
             : [...subscribedScripts, ...BUNDLED_SCRIPTS, ...customScripts]
@@ -1727,6 +1782,8 @@ class App extends Component<any, AppState> {
                     currentScriptLabel={activeScript.label}
                     activeModule={activeModule}
                     myModules={myModules}
+                    subscribedModules={subscribedModules}
+                    subscribedScriptsVisibilityById={subscribedScriptsVisibilityById}
                     errorMessage={modulesError}
                     noticeMessage={modulesNotice}
                     libraryUrl={getModulesBrowserUrl()}
@@ -1737,6 +1794,7 @@ class App extends Component<any, AppState> {
                     onLoadModule={this._handleModuleLoad}
                     onSaveModule={this._handleModuleSave}
                     onCopyShareLink={this._handleModuleCopyLink}
+                    onToggleSubscribedScriptVisibility={this._handleToggleSubscribedScriptVisibility}
                 />
             </>
         );

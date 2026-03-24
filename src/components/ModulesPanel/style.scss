@@ -18,9 +18,7 @@ $modules-meta-size: 14pt;
     position: fixed;
     inset: 0;
     z-index: 500;
-    overflow-y: auto;
-    padding: 56px 16px 16px;
-    box-sizing: border-box;
+    overflow: hidden;
     background: var(--modules-overlay);
     color: var(--modules-fg);
     font-family: $font-family;
@@ -29,8 +27,15 @@ $modules-meta-size: 14pt;
     color-scheme: dark;
 
     &__dialog {
-        max-width: 920px;
-        margin: 0 auto;
+        position: absolute;
+        top: 56px;
+        left: 16px;
+        right: 16px;
+        bottom: 16px;
+        display: flex;
+        flex-direction: column;
+        min-height: 0;
+        overflow: hidden;
         border: 1px solid var(--modules-fg);
         background: var(--modules-bg);
         box-sizing: border-box;
@@ -190,6 +195,12 @@ $modules-meta-size: 14pt;
         color: var(--modules-fg);
     }
 
+    &__body {
+        flex: 1;
+        min-height: 0;
+        overflow: auto;
+    }
+
     &__list {
         display: flex;
         flex-direction: column;
@@ -332,7 +343,12 @@ $modules-meta-size: 14pt;
 
 @media (max-width: 860px) {
     .modules-panel {
-        padding: 52px 8px 8px;
+        &__dialog {
+            top: 52px;
+            left: 8px;
+            right: 8px;
+            bottom: 8px;
+        }
 
         &__grid {
             grid-template-columns: 1fr;
