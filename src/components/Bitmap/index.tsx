@@ -16,6 +16,7 @@ interface BitmapState {
     loading: boolean;
     image: HTMLImageElement;
     naturalWidth: number | null;
+    resolvedSrc: string;
 }
 
 const TICK = 150;
@@ -49,6 +50,7 @@ class Bitmap extends Component<BitmapProps, BitmapState> {
             loading,
             image: new Image(),
             naturalWidth: null,
+            resolvedSrc: this._getPreferredSource(props.src),
         };
     }
 
@@ -75,16 +77,17 @@ class Bitmap extends Component<BitmapProps, BitmapState> {
 
     public render(): ReactElement {
         const { className, src, alt } = this.props;
-        const { loading } = this.state;
+        const { loading, resolvedSrc } = this.state;
         const css = ["__image__", className ? className : null].join(" ").trim();
         const animated = this._isAnimatedSource();
         const style = this._getMediaStyle();
+        const mediaSrc = resolvedSrc || src;
 
         if (animated) {
             return (
                 <div className={css}>
                     {loading && <div className="progressbar" />}
-                    {!loading && <img src={src} alt={alt || ""} style={style} />}
+                    {!loading && <img src={mediaSrc} alt={alt || ""} style={style} />}
                 </div>
             );
         }
@@ -111,7 +114,8 @@ class Bitmap extends Component<BitmapProps, BitmapState> {
     }
 
     private _isAnimatedSource(): boolean {
-        const { animated, src } = this.props;
+        const { animated } = this.props;
+        const src = this.state?.resolvedSrc || this.props.src;
         if (animated) {
             return true;
         }
@@ -182,6 +186,7 @@ class Bitmap extends Component<BitmapProps, BitmapState> {
         const { image } = this.state;
         const canvas = this._canvasRef.current;
         const ctx = canvas && canvas.getContext("2d");
+        const resolvedSrc = this._getPreferredSource(src);
 
         if (canvas && ctx && image) {
             image.onload = () => {
@@ -198,10 +203,12 @@ class Bitmap extends Component<BitmapProps, BitmapState> {
                     this.setState({
                         loading: false,
                         naturalWidth: w,
+                        resolvedSrc,
                     }, () => this._animate());
                 } else {
                     this.setState({
                         naturalWidth: w,
+                        resolvedSrc,
                     }, () => {
                         ctx.clearRect(0, 0, w, h);
                         ctx.drawImage(image, 0, 0);
@@ -209,16 +216,24 @@ class Bitmap extends Component<BitmapProps, BitmapState> {
                     });
                 }
             };
-            image.src = src;
+            image.onerror = () => {
+                this.setState({
+                    loading: false,
+                    resolvedSrc,
+                }, () => onComplete && onComplete());
+            };
+            image.src = resolvedSrc;
         }
     }
 
     private _loadAnimatedImage(): void {
         const { autocomplete, onComplete, src } = this.props;
+        const resolvedSrc = this._getPreferredSource(src);
 
         if (autocomplete) {
             this.setState({
                 loading: false,
+                resolvedSrc,
             }, () => onComplete && onComplete());
             return;
         }
@@ -228,14 +243,47 @@ class Bitmap extends Component<BitmapProps, BitmapState> {
             this.setState({
                 loading: false,
                 naturalWidth: image.naturalWidth || image.width || null,
+                resolvedSrc,
             }, () => onComplete && onComplete());
         };
         image.onerror = () => {
             this.setState({
                 loading: false,
+                resolvedSrc,
             }, () => onComplete && onComplete());
         };
-        image.src = src;
+        image.src = resolvedSrc;
+    }
+
+    private _getPreferredSource(src: string): string {
+        const nextSrc = (src || "").trim();
+        if (!nextSrc.length) {
+            return src;
+        }
+
+        const extensionSlashPattern = /^(.*\.(?:png|jpe?g|jfif|gif|webp|bmp|svg|tif|tiff|avif|apng|ico|heic|heif))\/.+$/i;
+
+        if (/^https?:\/\//i.test(nextSrc)) {
+            try {
+                const url = new URL(nextSrc);
+                const pathnameMatch = url.pathname.match(extensionSlashPattern);
+                if (pathnameMatch && pathnameMatch[1]) {
+                    url.pathname = pathnameMatch[1];
+                    url.search = "";
+                    url.hash = "";
+                    return url.toString();
+                }
+            } catch {
+                // fall through to regex on the raw src string
+            }
+        }
+
+        const directMatch = nextSrc.match(extensionSlashPattern);
+        if (directMatch && directMatch[1]) {
+            return directMatch[1];
+        }
+
+        return nextSrc;
     }
 }
 
