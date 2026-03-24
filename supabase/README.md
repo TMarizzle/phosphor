@@ -53,6 +53,27 @@ alter table public.modules
     check (visibility in ('private', 'unlisted', 'public'));
 ```
 
+If your project already had subscription policies before unlisted support, run this once too:
+
+```sql
+drop policy if exists "users can subscribe to public modules" on public.module_subscriptions;
+
+create policy "users can subscribe to public modules"
+    on public.module_subscriptions
+    for insert
+    to authenticated
+    with check (
+        auth.uid() = user_id
+        and exists (
+            select 1
+            from public.modules m
+            where m.id = module_id
+              and m.visibility in ('public', 'unlisted')
+              and m.owner_id <> auth.uid()
+        )
+    );
+```
+
 ## 3. Set up Google login
 
 In Supabase:

@@ -5,6 +5,7 @@ import CreatorSelect, { CreatorSelectOption } from "../CreatorSelect";
 import {
     AdminLibraryVisibilityFilter,
     deleteModule,
+    fetchPublicModulesByIds,
     ModuleRecord,
     ModuleSort,
     ModuleVisibility,
@@ -215,6 +216,38 @@ const getModuleRatingNumeric = (ratingAverage: number): string => {
     return normalizedRating.toFixed(1);
 };
 
+const getSortableModuleTimestamp = (module: ModuleRecord): number => {
+    const primaryTimestamp = new Date(module.published_at || module.updated_at || module.created_at).getTime();
+    if (!Number.isNaN(primaryTimestamp)) {
+        return primaryTimestamp;
+    }
+
+    const fallbackTimestamp = new Date(module.updated_at || module.created_at).getTime();
+    return Number.isNaN(fallbackTimestamp) ? 0 : fallbackTimestamp;
+};
+
+const sortModulesForBrowser = (modules: ModuleRecord[], sort: ModuleSort): ModuleRecord[] => {
+    return [...modules].sort((left, right) => {
+        if (sort === "top-rated") {
+            if (right.rating_average !== left.rating_average) {
+                return right.rating_average - left.rating_average;
+            }
+            if (right.rating_count !== left.rating_count) {
+                return right.rating_count - left.rating_count;
+            }
+        } else if (sort === "most-subscribed") {
+            if (right.subscription_count !== left.subscription_count) {
+                return right.subscription_count - left.subscription_count;
+            }
+            if (right.rating_average !== left.rating_average) {
+                return right.rating_average - left.rating_average;
+            }
+        }
+
+        return getSortableModuleTimestamp(right) - getSortableModuleTimestamp(left);
+    });
+};
+
 const ModulesBrowser: FC = () => {
     const supabaseReady = isSupabaseConfigured();
     const initialSelectedModuleId = useMemo(() => parseInitialModuleId(), []);
@@ -376,6 +409,26 @@ const ModulesBrowser: FC = () => {
                 limit: catalogLimit,
             });
 
+            if (currentUserId) {
+                const subscribedIds = currentSubscribedIds || [];
+                const [ownModules, subscribedModules] = await Promise.all([
+                    listOwnModules(currentUserId),
+                    subscribedIds.length ? fetchPublicModulesByIds(subscribedIds) : Promise.resolve([] as ModuleRecord[]),
+                ]);
+
+                const mergedModules = new Map<string, ModuleRecord>();
+                nextModules.forEach((module) => {
+                    mergedModules.set(module.id, module);
+                });
+                ownModules.forEach((module) => {
+                    mergedModules.set(module.id, module);
+                });
+                subscribedModules.forEach((module) => {
+                    mergedModules.set(module.id, module);
+                });
+                nextModules = sortModulesForBrowser(Array.from(mergedModules.values()), sort);
+            }
+
             const requestedModuleId = initialRequestedModuleIdRef.current;
             if (requestedModuleId && !nextModules.some((module) => module.id === requestedModuleId)) {
                 const linkedModule = await fetchAccessibleModuleById(requestedModuleId, currentUserId, {
@@ -392,7 +445,9 @@ const ModulesBrowser: FC = () => {
                 const ids = currentSubscribedIds || [];
                 const subscribedLookup = new Set(ids);
                 nextModules = currentUserId
-                    ? nextModules.filter((module) => subscribedLookup.has(module.id))
+                    ? nextModules.filter((module) => {
+                        return subscribedLookup.has(module.id) || module.owner_id === currentUserId;
+                    })
                     : [];
             }
 
@@ -637,6 +692,20 @@ const ModulesBrowser: FC = () => {
             window.clearTimeout(timeoutId);
         };
     }, [refreshCatalog, sessionRole, sessionUserId, subscribedIds]);
+
+    useEffect(() => {
+        if (!noticeMessage) {
+            return;
+        }
+
+        const timeoutId = window.setTimeout(() => {
+            setNoticeMessage(null);
+        }, 5000);
+
+        return () => {
+            window.clearTimeout(timeoutId);
+        };
+    }, [noticeMessage]);
 
     useEffect(() => {
         if (!modules.length) {

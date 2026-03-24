@@ -21,10 +21,13 @@ interface ModulesPanelProps {
     noticeMessage: string | null;
     libraryUrl: string;
     onClose: () => void;
+    onDismissError: () => void;
+    onDismissNotice: () => void;
     onSignIn: () => void;
     onSignOut: () => void;
     onRefresh: () => void;
     onLoadModule: (module: ModuleRecord) => void;
+    onSubscribeToModule: (module: ModuleRecord) => void;
     onSaveModule: (payload: {
         title: string;
         summary: string;
@@ -66,10 +69,13 @@ const ModulesPanel: FC<ModulesPanelProps> = ({
     noticeMessage,
     libraryUrl,
     onClose,
+    onDismissError,
+    onDismissNotice,
     onSignIn,
     onSignOut,
     onRefresh,
     onLoadModule,
+    onSubscribeToModule,
     onSaveModule,
     onCopyShareLink,
     onToggleSubscribedScriptVisibility,
@@ -88,6 +94,17 @@ const ModulesPanel: FC<ModulesPanelProps> = ({
     }, [currentScript, currentScriptLabel]);
 
     const activeModuleIsOwned = !!activeModule && !!sessionUserId && activeModule.owner_id === sessionUserId;
+    const activeModuleIsSubscribed = !!activeModule && subscribedModules.some((module) => module.id === activeModule.id);
+    const getLibraryModuleUrl = (moduleId: string): string => {
+        try {
+            const url = new URL(libraryUrl);
+            url.searchParams.set("module", moduleId);
+            return url.toString();
+        } catch {
+            const joiner = libraryUrl.includes("?") ? "&" : "?";
+            return `${libraryUrl}${joiner}module=${encodeURIComponent(moduleId)}`;
+        }
+    };
     const visibleSubscribedCount = useMemo(() => {
         return subscribedModules.reduce((count, module) => {
             return count + (subscribedScriptsVisibilityById[module.id] === false ? 0 : 1);
@@ -175,13 +192,31 @@ const ModulesPanel: FC<ModulesPanelProps> = ({
 
                 {errorMessage && (
                     <div className="modules-panel__notice modules-panel__notice--error">
-                        {errorMessage}
+                        <span>{errorMessage}</span>
+                        <button
+                            type="button"
+                            className="modules-panel__notice-dismiss"
+                            onClick={onDismissError}
+                            aria-label="Dismiss error message"
+                            title="Dismiss"
+                        >
+                            X
+                        </button>
                     </div>
                 )}
 
                 {noticeMessage && (
                     <div className="modules-panel__notice modules-panel__notice--success">
-                        {noticeMessage}
+                        <span>{noticeMessage}</span>
+                        <button
+                            type="button"
+                            className="modules-panel__notice-dismiss"
+                            onClick={onDismissNotice}
+                            aria-label="Dismiss notice"
+                            title="Dismiss"
+                        >
+                            X
+                        </button>
                     </div>
                 )}
 
@@ -252,6 +287,18 @@ const ModulesPanel: FC<ModulesPanelProps> = ({
                                 <p className="modules-panel__muted">
                                     This module is not yours. Saving will create a copy in your account.
                                 </p>
+                            )}
+
+                            {!!activeModule && !activeModuleIsOwned && isModuleLinkShareable(activeModule.visibility) && (
+                                <div className="modules-panel__actions">
+                                    <button
+                                        className="modules-panel__button"
+                                        onClick={() => onSubscribeToModule(activeModule)}
+                                        disabled={!sessionUserId || busy || activeModuleIsSubscribed}
+                                    >
+                                        {activeModuleIsSubscribed ? "Subscribed" : "Subscribe"}
+                                    </button>
+                                </div>
                             )}
                         </section>
 
@@ -416,13 +463,21 @@ const ModulesPanel: FC<ModulesPanelProps> = ({
                                                         >
                                                             Load
                                                         </button>
-                                                        <button
+                                                        <a
                                                             className="modules-panel__button modules-panel__button--ghost"
-                                                            onClick={() => onToggleSubscribedScriptVisibility(module.id)}
-                                                            disabled={busy}
+                                                            href={getLibraryModuleUrl(module.id)}
                                                         >
-                                                            {showInScripts ? "Hide In Scripts" : "Show In Scripts"}
-                                                        </button>
+                                                            View In Library
+                                                        </a>
+                                                        <label className="modules-panel__toggle">
+                                                            <input
+                                                                type="checkbox"
+                                                                checked={showInScripts}
+                                                                onChange={() => onToggleSubscribedScriptVisibility(module.id)}
+                                                                disabled={busy}
+                                                            />
+                                                            <span>Show in SCRIPT</span>
+                                                        </label>
                                                         {isModuleLinkShareable(module.visibility) && (
                                                             <button
                                                                 className="modules-panel__button modules-panel__button--ghost"

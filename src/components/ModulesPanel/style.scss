@@ -149,6 +149,28 @@ $modules-meta-size: 14pt;
         gap: 0.1rem;
     }
 
+    &__toggle {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.28rem;
+        border: 1px solid var(--modules-fg);
+        padding: 0.1rem 0.25rem;
+        font-size: 14pt;
+        line-height: 1.2;
+        user-select: none;
+
+        input {
+            margin: 0;
+            width: 0.85rem;
+            height: 0.85rem;
+            accent-color: var(--modules-fg);
+        }
+
+        span {
+            text-transform: uppercase;
+        }
+    }
+
     &__button {
         display: inline-flex;
         align-items: center;
@@ -185,6 +207,10 @@ $modules-meta-size: 14pt;
         padding: 0.18rem 0.25rem;
         border: 1px solid currentColor;
         line-height: 1.25;
+        display: flex;
+        align-items: flex-start;
+        justify-content: space-between;
+        gap: 0.35rem;
     }
 
     &__notice--error {
@@ -193,6 +219,30 @@ $modules-meta-size: 14pt;
 
     &__notice--success {
         color: var(--modules-fg);
+    }
+
+    &__notice-dismiss {
+        border: 1px solid currentColor;
+        background: transparent;
+        color: inherit;
+        font-family: $font-family;
+        font-size: 16pt;
+        line-height: 1;
+        width: 0.75rem;
+        min-width: 0.75rem;
+        height: 0.75rem;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        padding: 0;
+        cursor: pointer;
+        flex-shrink: 0;
+
+        &:hover {
+            background: var(--modules-selected-bg);
+            color: var(--modules-selected-fg);
+            text-shadow: none;
+        }
     }
 
     &__body {

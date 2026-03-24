@@ -32,6 +32,7 @@ import {
     saveModule,
     signInWithGoogle,
     signOut,
+    subscribeToModule,
 } from "../../lib/modules";
 import { APP_TITLE } from "../../lib/branding";
 import {
@@ -149,10 +150,13 @@ class App extends Component<any, AppState> {
         this._handlePhosphorScreenChanged = this._handlePhosphorScreenChanged.bind(this);
         this._handleModulesOpen     = this._handleModulesOpen.bind(this);
         this._handleModulesClose    = this._handleModulesClose.bind(this);
+        this._handleModulesDismissError = this._handleModulesDismissError.bind(this);
+        this._handleModulesDismissNotice = this._handleModulesDismissNotice.bind(this);
         this._handleGoogleSignIn    = this._handleGoogleSignIn.bind(this);
         this._handleSignOut         = this._handleSignOut.bind(this);
         this._handleRefreshModules  = this._handleRefreshModules.bind(this);
         this._handleModuleLoad      = this._handleModuleLoad.bind(this);
+        this._handleModuleSubscribe = this._handleModuleSubscribe.bind(this);
         this._handleModuleSave      = this._handleModuleSave.bind(this);
         this._handleModuleCopyLink  = this._handleModuleCopyLink.bind(this);
         this._handleToggleSubscribedScriptVisibility = this._handleToggleSubscribedScriptVisibility.bind(this);
@@ -1245,6 +1249,14 @@ class App extends Component<any, AppState> {
         this.setState({ modulesOpen: false });
     }
 
+    private _handleModulesDismissError(): void {
+        this.setState({ modulesError: null });
+    }
+
+    private _handleModulesDismissNotice(): void {
+        this.setState({ modulesNotice: null });
+    }
+
     private async _handleGoogleSignIn(): Promise<void> {
         if (!isSupabaseConfigured()) {
             this.setState({ modulesError: "Supabase is not configured in this environment." });
@@ -1339,6 +1351,76 @@ class App extends Component<any, AppState> {
         this._loadModuleIntoApp(module, {
             notice: `Loaded module "${module.title}".`,
         });
+    }
+
+    private async _handleModuleSubscribe(module: ModuleRecord): Promise<void> {
+        const userId = this._getSessionUserId();
+        if (!userId) {
+            this.setState({ modulesError: "Sign in before subscribing to a module." });
+            return;
+        }
+
+        if (module.owner_id === userId) {
+            this.setState({ modulesError: "You already own this module.", modulesNotice: null });
+            return;
+        }
+
+        if (!isModuleLinkShareable(module.visibility)) {
+            this.setState({
+                modulesError: "Only public or unlisted modules can be subscribed to.",
+                modulesNotice: null,
+            });
+            return;
+        }
+
+        if (this.state.subscribedModules.some((entry) => entry.id === module.id)) {
+            this.setState({
+                modulesNotice: `Already subscribed to "${module.title}".`,
+                modulesError: null,
+            });
+            return;
+        }
+
+        this.setState({
+            modulesBusy: true,
+            modulesError: null,
+            modulesNotice: null,
+        });
+
+        try {
+            await subscribeToModule(module.id, userId);
+            const [myModules, subscribedModules] = await Promise.all([
+                listOwnModules(userId),
+                listSubscribedModules(userId),
+            ]);
+
+            this.setState((prev) => {
+                const knownModules = [...myModules, ...subscribedModules];
+                const refreshedActiveModule = prev.activeModule
+                    ? knownModules.find((entry) => entry.id === prev.activeModule!.id) || prev.activeModule
+                    : null;
+                const subscribedScriptsVisibilityById = this._buildSubscribedScriptVisibility(
+                    subscribedModules,
+                    prev.subscribedScriptsVisibilityById
+                );
+                persistSubscribedScriptsVisibility(subscribedScriptsVisibilityById);
+
+                return {
+                    myModules,
+                    subscribedModules,
+                    subscribedScriptsVisibilityById,
+                    activeModule: refreshedActiveModule,
+                    modulesBusy: false,
+                    modulesNotice: `Subscribed to "${module.title}".`,
+                    modulesError: null,
+                };
+            });
+        } catch (error: any) {
+            this.setState({
+                modulesBusy: false,
+                modulesError: error?.message || "Could not subscribe to the module.",
+            });
+        }
     }
 
     private async _handleModuleSave(payload: {
@@ -1788,10 +1870,13 @@ class App extends Component<any, AppState> {
                     noticeMessage={modulesNotice}
                     libraryUrl={getModulesBrowserUrl()}
                     onClose={this._handleModulesClose}
+                    onDismissError={this._handleModulesDismissError}
+                    onDismissNotice={this._handleModulesDismissNotice}
                     onSignIn={this._handleGoogleSignIn}
                     onSignOut={this._handleSignOut}
                     onRefresh={this._handleRefreshModules}
                     onLoadModule={this._handleModuleLoad}
+                    onSubscribeToModule={this._handleModuleSubscribe}
                     onSaveModule={this._handleModuleSave}
                     onCopyShareLink={this._handleModuleCopyLink}
                     onToggleSubscribedScriptVisibility={this._handleToggleSubscribedScriptVisibility}
