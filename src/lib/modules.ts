@@ -579,11 +579,12 @@ export const saveModule = async (input: SaveModuleInput): Promise<ModuleRecord> 
             throw error;
         }
 
+        const savedModule = normalizeModuleRecord(data as any);
         console.log("[Phosphor] saveModule update succeeded", {
-            moduleId: data?.id,
-            updatedAt: data?.updated_at,
+            moduleId: savedModule.id,
+            updatedAt: savedModule.updated_at,
         });
-        return normalizeModuleRecord(data);
+        return savedModule;
     }
 
     const { data, error } = await client
@@ -603,11 +604,12 @@ export const saveModule = async (input: SaveModuleInput): Promise<ModuleRecord> 
         throw error;
     }
 
+    const savedModule = normalizeModuleRecord(data as any);
     console.log("[Phosphor] saveModule insert succeeded", {
-        moduleId: data?.id,
-        updatedAt: data?.updated_at,
+        moduleId: savedModule.id,
+        updatedAt: savedModule.updated_at,
     });
-    return normalizeModuleRecord(data);
+    return savedModule;
 };
 
 export const updateModuleMetadata = async (input: UpdateModuleMetadataInput): Promise<ModuleRecord> => {

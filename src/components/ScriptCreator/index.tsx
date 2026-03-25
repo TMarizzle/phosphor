@@ -7,8 +7,17 @@ import {
     sanitizeCustomTheme,
 } from "../../themes";
 
+interface ScriptCreatorScriptOption {
+    id: string;
+    label: string;
+    json: any;
+}
+
 interface ScriptCreatorProps {
+    open: boolean;
     initialScript: any;
+    initialScriptId: string;
+    availableScripts: ScriptCreatorScriptOption[];
     onApply: (scriptJson: any) => void;
     onPreview: (
         scriptJson: any,
@@ -18,6 +27,20 @@ interface ScriptCreatorProps {
     ) => void;
     onClose: () => void;
     onSaveModule?: (scriptJson: any) => Promise<boolean> | boolean;
+}
+
+interface CreatorSelectionSnapshot {
+    activeView: "editor" | "schema";
+    configPanelVisible: boolean;
+    elementEditorMode: "fields" | "raw";
+    screenControlsOpen: boolean;
+    schemaRootId: string;
+    screenIdDraft: string;
+    selectedDialogContentIndex: number;
+    selectedDialogFocusId: string;
+    selectedElementIndex: number;
+    selectedScreenId: string;
+    sidebarListMode: "screens" | "dialogs";
 }
 
 type AddableElementType =
@@ -1512,14 +1535,22 @@ const focusEditorSearchOccurrence = (occurrence: EditorSearchOccurrence): void =
 };
 
 const ScriptCreator: FC<ScriptCreatorProps> = ({
+    open,
     initialScript,
+    initialScriptId,
+    availableScripts,
     onApply,
     onPreview,
     onClose,
     onSaveModule,
 }) => {
     const initialSelectedScreenId = getInitialSelectedScreenId(initialScript);
+    const initialSelectedScriptLabel = availableScripts.find((script) => script.id === initialScriptId)?.label
+        || String(initialScript?.config?.name || "CUSTOM SCRIPT").toUpperCase();
+    const scriptSnapshotsRef = useRef<Record<string, CreatorSelectionSnapshot>>({});
     const [script, setScript] = useState<any>(() => ensureScriptShape(initialScript));
+    const [selectedScriptId, setSelectedScriptId] = useState<string>(() => initialScriptId);
+    const [selectedScriptLabel, setSelectedScriptLabel] = useState<string>(() => initialSelectedScriptLabel);
     const [selectedScreenId, setSelectedScreenId] = useState<string>(() => initialSelectedScreenId);
     const [screenIdDraft, setScreenIdDraft] = useState<string>(() => initialSelectedScreenId);
     const [schemaRootId, setSchemaRootId] = useState<string>(() => initialSelectedScreenId);
@@ -1833,6 +1864,12 @@ const ScriptCreator: FC<ScriptCreatorProps> = ({
     const schemaRootSelectOptions = useMemo(() => {
         return schemaData.screenIds.map((id) => ({ value: id, label: id }));
     }, [schemaData.screenIds]);
+    const scriptSelectOptions = useMemo(() => {
+        return availableScripts.map((scriptOption) => ({
+            value: scriptOption.id,
+            label: scriptOption.label,
+        }));
+    }, [availableScripts]);
     const screenOnDoneTargetSelectOptions = useMemo(() => {
         return [
             { value: "", label: "(none)" },
@@ -1990,6 +2027,103 @@ const ScriptCreator: FC<ScriptCreatorProps> = ({
         setActiveSearchMatchIndex(-1);
         setActiveVisibleSearchOccurrenceIndex(-1);
         setVisibleSearchOccurrenceCount(0);
+    };
+
+    const getDefaultSelectionSnapshot = (normalizedScript: any): CreatorSelectionSnapshot => {
+        const selectedScreenIdForSnapshot = getInitialSelectedScreenId(normalizedScript);
+        return {
+            activeView: "editor",
+            configPanelVisible: true,
+            elementEditorMode: "fields",
+            screenControlsOpen: false,
+            schemaRootId: selectedScreenIdForSnapshot,
+            screenIdDraft: selectedScreenIdForSnapshot,
+            selectedDialogContentIndex: 0,
+            selectedDialogFocusId: "",
+            selectedElementIndex: getInitialSelectedElementIndex(normalizedScript, selectedScreenIdForSnapshot),
+            selectedScreenId: selectedScreenIdForSnapshot,
+            sidebarListMode: getInitialSidebarListMode(normalizedScript),
+        };
+    };
+
+    const captureSelectionSnapshot = (): CreatorSelectionSnapshot => {
+        return {
+            activeView,
+            configPanelVisible,
+            elementEditorMode,
+            screenControlsOpen,
+            schemaRootId,
+            screenIdDraft,
+            selectedDialogContentIndex,
+            selectedDialogFocusId,
+            selectedElementIndex,
+            selectedScreenId,
+            sidebarListMode,
+        };
+    };
+
+    const saveSelectionSnapshot = (scriptId: string): void => {
+        if (!scriptId.length) {
+            return;
+        }
+
+        scriptSnapshotsRef.current[scriptId] = captureSelectionSnapshot();
+    };
+
+    const applySelectionSnapshot = (snapshot: CreatorSelectionSnapshot): void => {
+        setSidebarListMode(snapshot.sidebarListMode);
+        setActiveView(snapshot.activeView);
+        setConfigPanelVisible(snapshot.configPanelVisible);
+        setElementEditorMode(snapshot.elementEditorMode);
+        setScreenControlsOpen(snapshot.screenControlsOpen);
+        setSchemaRootId(snapshot.schemaRootId);
+        setScreenIdDraft(snapshot.screenIdDraft);
+        setSelectedDialogContentIndex(snapshot.selectedDialogContentIndex);
+        setSelectedDialogFocusId(snapshot.selectedDialogFocusId);
+        setSelectedElementIndex(snapshot.selectedElementIndex);
+        setSelectedScreenId(snapshot.selectedScreenId);
+    };
+
+    const loadScriptIntoCreator = (nextScriptJson: any, nextScriptId: string, nextScriptLabel: string): void => {
+        const normalized = ensureScriptShape(nextScriptJson);
+        if (selectedScriptId && selectedScriptId !== nextScriptId) {
+            saveSelectionSnapshot(selectedScriptId);
+        }
+        const snapshot = scriptSnapshotsRef.current[nextScriptId] || getDefaultSelectionSnapshot(normalized);
+        const firstScreenId = snapshot.selectedScreenId && normalized.screens.some((screen: any) => screen?.id === snapshot.selectedScreenId)
+            ? snapshot.selectedScreenId
+            : getInitialSelectedScreenId(normalized);
+        const nextSnapshot: CreatorSelectionSnapshot = {
+            ...snapshot,
+            schemaRootId: snapshot.schemaRootId && normalized.screens.some((screen: any) => screen?.id === snapshot.schemaRootId)
+                ? snapshot.schemaRootId
+                : firstScreenId,
+            screenIdDraft: snapshot.screenIdDraft && normalized.screens.some((screen: any) => screen?.id === snapshot.screenIdDraft)
+                ? snapshot.screenIdDraft
+                : firstScreenId,
+            selectedDialogFocusId: snapshot.selectedDialogFocusId,
+            selectedElementIndex: snapshot.selectedElementIndex,
+            selectedScreenId: firstScreenId,
+        };
+
+        setScript(normalized);
+        setSelectedScriptId(nextScriptId);
+        setSelectedScriptLabel(nextScriptLabel);
+        applySelectionSnapshot(nextSnapshot);
+        setRawElementError(null);
+        setRawElementDraft("");
+        setRawDialogContentDraft("");
+        setSearchQuery("");
+        resetSearchNavigation();
+    };
+
+    const handleScriptSelect = (nextScriptId: string): void => {
+        const nextScript = availableScripts.find((scriptOption) => scriptOption.id === nextScriptId);
+        if (!nextScript) {
+            return;
+        }
+
+        loadScriptIntoCreator(nextScript.json, nextScript.id, nextScript.label);
     };
 
     useEffect(() => {
@@ -3186,20 +3320,11 @@ const ScriptCreator: FC<ScriptCreatorProps> = ({
 
     const startNewScript = () => {
         const freshScript = ensureScriptShape(createDefaultScript());
-        const firstScreenId = freshScript.screens[0]?.id || "";
-
-        setScript(freshScript);
-        setSidebarListMode("screens");
-        setSelectedScreenId(firstScreenId);
-        setSelectedDialogFocusId("");
-        setSchemaRootId(firstScreenId);
-        setSelectedElementIndex(0);
-        setSelectedDialogContentIndex(0);
-        setElementEditorMode("fields");
-        setRawElementError(null);
-        setActiveView("editor");
-        setSearchQuery("");
-        resetSearchNavigation();
+        loadScriptIntoCreator(
+            freshScript,
+            "",
+            String(freshScript.config?.name || "CUSTOM SCRIPT").toUpperCase()
+        );
     };
 
     const copyJson = async () => {
@@ -3388,6 +3513,7 @@ const ScriptCreator: FC<ScriptCreatorProps> = ({
     return (
         <section
             className={`script-creator script-creator--${creatorColorMode}${isResizingSidebar ? " script-creator--resizing" : ""}`}
+            style={open ? undefined : { display: "none" }}
             onKeyDown={handleEditorMarkdownShortcut}
             onClick={onClose}
         >
@@ -3395,6 +3521,13 @@ const ScriptCreator: FC<ScriptCreatorProps> = ({
                 <div className="script-creator__header">
                     <strong>Script Creator</strong>
                     <div className="script-creator__header-actions">
+                        <CreatorSelect
+                            className="script-creator-select--actions"
+                            value={selectedScriptId}
+                            options={scriptSelectOptions}
+                            fallbackLabel={selectedScriptLabel}
+                            onChange={handleScriptSelect}
+                        />
                         <button
                             className="script-creator__btn"
                             onClick={startNewScript}

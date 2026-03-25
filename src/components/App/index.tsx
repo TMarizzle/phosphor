@@ -1567,7 +1567,16 @@ class App extends Component<any, AppState> {
                 listSubscribedModules(userId),
             ]);
 
-            this.setState((prev) => {
+            this.setState((prev): Pick<AppState,
+                "myModules"
+                | "ownScriptsVisibilityById"
+                | "subscribedModules"
+                | "subscribedScriptsVisibilityById"
+                | "activeModule"
+                | "modulesBusy"
+                | "modulesNotice"
+                | "modulesError"
+            > => {
                 const knownModules = [...myModules, ...subscribedModules];
                 const refreshedActiveModule = prev.activeModule
                     ? knownModules.find((entry) => entry.id === prev.activeModule!.id) || prev.activeModule
@@ -2451,15 +2460,16 @@ class App extends Component<any, AppState> {
                     onScreenChanged={this._handlePhosphorScreenChanged}
                 />
 
-                {creatorOpen && (
-                    <ScriptCreator
-                        initialScript={creatorInitialScript || activeScript.json}
-                        onApply={this._handleCreatorApply}
-                        onPreview={this._handleCreatorPreview}
-                        onClose={this._handleCreatorClose}
-                        onSaveModule={ownedActiveModule ? this._handleCreatorSaveModule : undefined}
-                    />
-                )}
+                <ScriptCreator
+                    open={creatorOpen}
+                    initialScript={creatorInitialScript || activeScript.json}
+                    initialScriptId={activeScript.id}
+                    availableScripts={availableScripts}
+                    onApply={this._handleCreatorApply}
+                    onPreview={this._handleCreatorPreview}
+                    onClose={this._handleCreatorClose}
+                    onSaveModule={ownedActiveModule ? this._handleCreatorSaveModule : undefined}
+                />
 
                 <ModulesPanel
                     open={modulesOpen}
