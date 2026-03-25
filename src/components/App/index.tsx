@@ -60,7 +60,7 @@ interface AppState {
     activeTheme: Theme;
     customTheme: CustomThemeConfig;
     customThemeEditorOpen: boolean;
-    headerCompact: boolean;
+    headerOverflowLevel: number;
     soundEnabled: boolean;
     scriptDropdownOpen: boolean;
     optionsDropdownOpen: boolean;
@@ -113,7 +113,7 @@ class App extends Component<any, AppState> {
             activeTheme: initialThemeState.activeTheme,
             customTheme: initialThemeState.customTheme,
             customThemeEditorOpen: false,
-            headerCompact: false,
+            headerOverflowLevel: 0,
             soundEnabled,
             scriptDropdownOpen: false,
             optionsDropdownOpen: false,
@@ -293,7 +293,7 @@ class App extends Component<any, AppState> {
     private _buildModuleScript(module: ModuleRecord, scriptJsonOverride?: any): BundledScript {
         return {
             id: `${MODULE_SCRIPT_ID_PREFIX}${module.id}`,
-            label: module.title.toUpperCase().slice(0, 24),
+            label: module.title.toUpperCase().slice(0, 48),
             json: scriptJsonOverride || module.script_json,
         };
     }
@@ -788,6 +788,18 @@ class App extends Component<any, AppState> {
         this._headerLayoutRafId = window.requestAnimationFrame(this._updateHeaderLayout);
     }
 
+    private _setHeaderOverflowLevelClass(header: HTMLElement, level: number): void {
+        header.classList.toggle("phosphor-header--compact", level > 0);
+
+        for (let index = 1; index <= 7; index += 1) {
+            header.classList.remove(`phosphor-header--overflow-${index}`);
+        }
+
+        if (level > 0) {
+            header.classList.add(`phosphor-header--overflow-${level}`);
+        }
+    }
+
     private _updateHeaderLayout(): void {
         this._headerLayoutRafId = null;
 
@@ -798,49 +810,49 @@ class App extends Component<any, AppState> {
             return;
         }
 
-        // Measure in desktop mode even if currently compact.
-        const hadCompactClass = header.classList.contains("phosphor-header--compact");
-        if (hadCompactClass) {
-            header.classList.remove("phosphor-header--compact");
+        let nextOverflowLevel = 0;
+        for (let level = 0; level <= 7; level += 1) {
+            this._setHeaderOverflowLevelClass(header, level);
+
+            const headerRect = header.getBoundingClientRect();
+            const titleRect = title.getBoundingClientRect();
+            const controlsRect = controls.getBoundingClientRect();
+            const controlChildren = Array.from(controls.children)
+                .filter((child): child is HTMLElement => child instanceof HTMLElement)
+                .filter((child) => child.offsetParent !== null);
+
+            let controlsVisualLeft = controlsRect.left;
+            let controlsVisualRight = controlsRect.right;
+            controlChildren.forEach((child) => {
+                const childRect = child.getBoundingClientRect();
+                controlsVisualLeft = Math.min(controlsVisualLeft, childRect.left);
+                controlsVisualRight = Math.max(controlsVisualRight, childRect.right);
+            });
+
+            const titleOverlap = controlsVisualLeft < titleRect.right + 8;
+            const controlsOutsideHeader = controlsVisualLeft < headerRect.left + 1
+                || controlsVisualRight > headerRect.right - 1;
+            const fits = !titleOverlap
+                && !controlsOutsideHeader
+                && header.scrollWidth <= header.clientWidth + 1
+                && controls.scrollWidth <= controls.clientWidth + 1;
+
+            if (fits) {
+                nextOverflowLevel = level;
+                break;
+            }
+
+            nextOverflowLevel = 7;
         }
 
-        const headerRect = header.getBoundingClientRect();
-        const titleRect = title.getBoundingClientRect();
-        const controlsRect = controls.getBoundingClientRect();
-        const controlChildren = Array.from(controls.children)
-            .filter((child): child is HTMLElement => child instanceof HTMLElement)
-            .filter((child) => child.offsetParent !== null);
+        this._setHeaderOverflowLevelClass(header, nextOverflowLevel);
 
-        let controlsVisualLeft = controlsRect.left;
-        let controlsVisualRight = controlsRect.right;
-        controlChildren.forEach((child) => {
-            const childRect = child.getBoundingClientRect();
-            controlsVisualLeft = Math.min(controlsVisualLeft, childRect.left);
-            controlsVisualRight = Math.max(controlsVisualRight, childRect.right);
-        });
-
-        // scrollWidth catches right-side overflow, but when controls are right-aligned
-        // they can overflow to the left and overlap the title without changing scrollWidth.
-        const titleOverlap = controlsVisualLeft < titleRect.right + 8;
-        const controlsOutsideHeader = controlsVisualLeft < headerRect.left + 1
-            || controlsVisualRight > headerRect.right - 1;
-        const narrowViewport = window.innerWidth <= 900;
-        const shouldCompact = titleOverlap
-            || controlsOutsideHeader
-            || narrowViewport
-            || header.scrollWidth > header.clientWidth + 1
-            || controls.scrollWidth > controls.clientWidth + 1;
-
-        if (hadCompactClass) {
-            header.classList.add("phosphor-header--compact");
-        }
-
-        if (shouldCompact === this.state.headerCompact) {
+        if (nextOverflowLevel === this.state.headerOverflowLevel) {
             return;
         }
 
         this.setState({
-            headerCompact: shouldCompact,
+            headerOverflowLevel: nextOverflowLevel,
             mobileMenuOpen: false,
             scriptDropdownOpen: false,
             optionsDropdownOpen: false,
@@ -862,12 +874,17 @@ class App extends Component<any, AppState> {
             return;
         }
         const nextState: Partial<AppState> = {};
+        const overflowWrapper = target.closest(".phosphor-header__overflow-wrapper");
 
-        if (this.state.scriptDropdownOpen && !target.closest(".phosphor-header__script-wrapper")) {
+        if (this.state.scriptDropdownOpen
+            && !target.closest(".phosphor-header__script-wrapper")
+            && !(this.state.headerOverflowLevel >= 2 && overflowWrapper)) {
             nextState.scriptDropdownOpen = false;
         }
 
-        if (this.state.optionsDropdownOpen && !target.closest(".phosphor-header__options-wrapper")) {
+        if (this.state.optionsDropdownOpen
+            && !target.closest(".phosphor-header__options-wrapper")
+            && !(this.state.headerOverflowLevel >= 1 && overflowWrapper)) {
             nextState.optionsDropdownOpen = false;
             nextState.customThemeEditorOpen = false;
         }
@@ -923,7 +940,7 @@ class App extends Component<any, AppState> {
     }
 
     private _handleMobileMenuToggle(): void {
-        if (!this.state.headerCompact && window.innerWidth > 900) {
+        if (this.state.headerOverflowLevel === 0) {
             return;
         }
 
@@ -1156,7 +1173,7 @@ class App extends Component<any, AppState> {
                 && !this.state.activeScript.id.startsWith("custom:preview:"));
         const nextScript: BundledScript = {
             id: keepExistingId ? this.state.activeScript.id : `custom:creator:${Date.now()}`,
-            label: label.toUpperCase().slice(0, 24),
+            label: label.toUpperCase().slice(0, 48),
             json: cleanedJson,
         };
         const nextThemeState = this._applyScriptThemePreset(cleanedJson);
@@ -1241,7 +1258,7 @@ class App extends Component<any, AppState> {
         const label = (previewJson?.config?.name || "PREVIEW").toString();
         const previewScript: BundledScript = {
             id: `custom:preview:${Date.now()}`,
-            label: label.toUpperCase().slice(0, 24),
+            label: label.toUpperCase().slice(0, 48),
             json: previewJson,
         };
         const nextThemeState = this._applyScriptThemePreset(previewJson);
@@ -1327,7 +1344,7 @@ class App extends Component<any, AppState> {
                 const label = parsed?.config?.name || file.name.replace(/\.json$/i, "");
                 const customScript: BundledScript = {
                     id: `custom:${Date.now()}`,
-                    label: label.toUpperCase().slice(0, 24),
+                    label: label.toUpperCase().slice(0, 48),
                     json: parsed,
                 };
                 const nextThemeState = this._applyScriptThemePreset(parsed);
@@ -1730,7 +1747,7 @@ class App extends Component<any, AppState> {
             activeTheme,
             customTheme,
             customThemeEditorOpen,
-            headerCompact,
+            headerOverflowLevel,
             soundEnabled,
             scriptDropdownOpen,
             optionsDropdownOpen,
@@ -1773,7 +1790,10 @@ class App extends Component<any, AppState> {
             <>
                 <header
                     ref={this._headerRef}
-                    className={"phosphor-header" + (headerCompact ? " phosphor-header--compact" : "")}
+                    className={
+                        "phosphor-header" +
+                        (headerOverflowLevel > 0 ? ` phosphor-header--compact phosphor-header--overflow-${headerOverflowLevel}` : "")
+                    }
                 >
                     <a
                         ref={this._titleRef}
@@ -1783,16 +1803,6 @@ class App extends Component<any, AppState> {
                     >
                         {APP_TITLE}
                     </a>
-
-                    <button
-                        className="phosphor-header__btn phosphor-header__menu-btn"
-                        onClick={this._handleMobileMenuToggle}
-                        aria-haspopup="menu"
-                        aria-expanded={mobileMenuOpen}
-                        title="Toggle header controls"
-                    >
-                        [MENU {mobileMenuOpen ? "▲" : "▼"}]
-                    </button>
 
                     <div
                         ref={this._controlsRef}
@@ -1805,7 +1815,7 @@ class App extends Component<any, AppState> {
                         )}
 
                         {!previewMode && (
-                            <div className="phosphor-header__script-wrapper">
+                            <div className="phosphor-header__script-wrapper phosphor-header__hide-at-7">
                                 <button
                                     className="phosphor-header__btn"
                                     onClick={this._handleDropdownToggle}
@@ -1816,7 +1826,7 @@ class App extends Component<any, AppState> {
                                 </button>
 
                         {scriptDropdownOpen && (
-                            <div className="phosphor-header__dropdown" role="listbox">
+                            <div className="phosphor-header__dropdown phosphor-header__dropdown--scripts" role="listbox">
                                         {availableScripts.map((script) => (
                                             <button
                                                 key={script.id}
@@ -1863,7 +1873,7 @@ class App extends Component<any, AppState> {
 
                         {!previewMode && (
                             <button
-                                className="phosphor-header__btn"
+                                className="phosphor-header__btn phosphor-header__hide-at-5"
                                 onClick={this._handleCreatorOpen}
                                 title="Open visual JSON script creator"
                             >
@@ -1873,7 +1883,7 @@ class App extends Component<any, AppState> {
 
                         {!previewMode && (
                             <button
-                                className="phosphor-header__btn"
+                                className="phosphor-header__btn phosphor-header__hide-at-4"
                                 onClick={this._handleModulesOpen}
                                 title="Open your module manager"
                             >
@@ -1883,7 +1893,7 @@ class App extends Component<any, AppState> {
 
                         {!previewMode && (
                             <a
-                                className="phosphor-header__btn"
+                                className="phosphor-header__btn phosphor-header__hide-at-3"
                                 href={getModulesBrowserUrl()}
                                 title="Browse library modules"
                             >
@@ -1892,7 +1902,7 @@ class App extends Component<any, AppState> {
                         )}
 
 
-                        <div className="phosphor-header__options-wrapper">
+                        <div className="phosphor-header__options-wrapper phosphor-header__hide-at-1">
                             <button
                                 className="phosphor-header__btn"
                                 onClick={this._handleOptionsDropdownToggle}
@@ -2037,7 +2047,7 @@ class App extends Component<any, AppState> {
 
                         {!previewMode && (
                             <a
-                                className="phosphor-header__btn"
+                                className="phosphor-header__btn phosphor-header__hide-at-2"
                                 href="https://ko-fi.com/ethandunning"
                                 target="_blank"
                                 rel="noopener noreferrer"
@@ -2048,7 +2058,7 @@ class App extends Component<any, AppState> {
 
                         {!previewMode && (
                             <a
-                                className="phosphor-header__btn"
+                                className="phosphor-header__btn phosphor-header__hide-at-2"
                                 href="https://github.com/EthanDunning/phosphor"
                                 target="_blank"
                                 rel="noopener noreferrer"
@@ -2059,7 +2069,7 @@ class App extends Component<any, AppState> {
 
                         {!authLoading && !sessionEmail && (
                             <button
-                                className="phosphor-header__btn"
+                                className="phosphor-header__btn phosphor-header__hide-at-2"
                                 onClick={() => void this._handleGoogleSignIn()}
                             >
                                 [SIGN IN]
@@ -2067,7 +2077,7 @@ class App extends Component<any, AppState> {
                         )}
 
                         {!authLoading && !!sessionEmail && (
-                            <div className="phosphor-header__options-wrapper phosphor-header__profile-wrapper">
+                            <div className="phosphor-header__options-wrapper phosphor-header__profile-wrapper phosphor-header__hide-at-6">
                                 <button
                                     className="phosphor-header__btn"
                                     onClick={this._handleProfileDropdownToggle}
@@ -2106,6 +2116,330 @@ class App extends Component<any, AppState> {
                                 )}
                             </div>
                         )}
+
+                        <div className="phosphor-header__options-wrapper phosphor-header__overflow-wrapper">
+                            <button
+                                className="phosphor-header__btn phosphor-header__menu-btn"
+                                onClick={this._handleMobileMenuToggle}
+                                aria-haspopup="menu"
+                                aria-expanded={mobileMenuOpen}
+                                title="Open menu"
+                            >
+                                [MENU {mobileMenuOpen ? "▲" : "▼"}]
+                            </button>
+
+                            {mobileMenuOpen && (
+                                <div className="phosphor-header__dropdown phosphor-header__dropdown--options phosphor-header__overflow-dropdown" role="menu">
+                                    {!previewMode && headerOverflowLevel >= 1 && (
+                                        <div className="phosphor-header__overflow-section">
+                                            <button
+                                                className="phosphor-header__dropdown-item"
+                                                role="menuitem"
+                                                aria-expanded={optionsDropdownOpen}
+                                                onClick={this._handleOptionsDropdownToggle}
+                                            >
+                                                [OPTIONS {optionsDropdownOpen ? "▲" : "▼"}]
+                                            </button>
+
+                                            {optionsDropdownOpen && (
+                                                <>
+                                                    <button
+                                                        className="phosphor-header__dropdown-item"
+                                                        role="menuitem"
+                                                        onClick={this._handleSoundToggle}
+                                                        title="Toggle sound effects and ambient audio"
+                                                    >
+                                                        [SOUND:{soundEnabled ? "ON" : "OFF"}]
+                                                    </button>
+
+                                                    {!previewMode && (
+                                                        <button
+                                                            className="phosphor-header__dropdown-item"
+                                                            role="menuitem"
+                                                            onClick={this._handleReloadCurrentScript}
+                                                            title="Restart the current script from the beginning"
+                                                        >
+                                                            [RELOAD]
+                                                        </button>
+                                                    )}
+
+                                                    {!previewMode && (
+                                                        <button
+                                                            className="phosphor-header__dropdown-item"
+                                                            role="menuitem"
+                                                            onClick={this._handleClearData}
+                                                            title="Clear all saved data, including login, and reload"
+                                                        >
+                                                            [RESET]
+                                                        </button>
+                                                    )}
+
+                                                    <div className="phosphor-header__dropdown-item phosphor-header__dropdown-item--separator" />
+
+                                                    <div className="phosphor-header__dropdown-label">[THEME]</div>
+                                                    {THEMES.map((theme) => (
+                                                        <button
+                                                            key={theme.id}
+                                                            role="menuitemradio"
+                                                            aria-checked={theme.id === activeTheme.id}
+                                                            className={
+                                                                "phosphor-header__dropdown-item" +
+                                                                (theme.id === activeTheme.id ? " phosphor-header__dropdown-item--active" : "")
+                                                            }
+                                                            onClick={() => this._handleThemeSelect(theme.id)}
+                                                        >
+                                                            {theme.id === activeTheme.id ? "► " : "  "}{theme.name}
+                                                        </button>
+                                                    ))}
+
+                                                    <button
+                                                        role="menuitemradio"
+                                                        aria-checked={activeTheme.id === "custom"}
+                                                        className={
+                                                            "phosphor-header__dropdown-item" +
+                                                            (activeTheme.id === "custom" ? " phosphor-header__dropdown-item--active" : "")
+                                                        }
+                                                        onClick={() => {
+                                                            if (activeTheme.id !== "custom") {
+                                                                this._handleThemeSelect("custom");
+                                                                return;
+                                                            }
+                                                            this._handleCustomThemeEditorToggle();
+                                                        }}
+                                                    >
+                                                        {activeTheme.id === "custom" ? "► " : "  "}
+                                                        CUSTOM {activeTheme.id === "custom" ? (customThemeEditorOpen ? "▲" : "▼") : ""}
+                                                    </button>
+
+                                                    {activeTheme.id === "custom" && customThemeEditorOpen && (
+                                                        <div className="phosphor-header__theme-custom">
+                                                            <label className="phosphor-header__theme-color-field">
+                                                                <span>FG</span>
+                                                                <input
+                                                                    type="color"
+                                                                    aria-label="Custom foreground color"
+                                                                    value={customTheme.fgHex}
+                                                                    onChange={(e) => this._handleThemeColorChange("fgHex", e.target.value)}
+                                                                />
+                                                            </label>
+                                                            <label className="phosphor-header__theme-color-field">
+                                                                <span>ALERT</span>
+                                                                <input
+                                                                    type="color"
+                                                                    aria-label="Custom alert color"
+                                                                    value={customTheme.alertHex}
+                                                                    onChange={(e) => this._handleThemeColorChange("alertHex", e.target.value)}
+                                                                />
+                                                            </label>
+                                                            <label className="phosphor-header__theme-color-field">
+                                                                <span>EMPHASIS</span>
+                                                                <input
+                                                                    type="color"
+                                                                    aria-label="Custom emphasis color"
+                                                                    value={customTheme.emphasisHex}
+                                                                    onChange={(e) => this._handleThemeColorChange("emphasisHex", e.target.value)}
+                                                                />
+                                                            </label>
+                                                            <label className="phosphor-header__theme-color-field">
+                                                                <span>NOTICE</span>
+                                                                <input
+                                                                    type="color"
+                                                                    aria-label="Custom notice color"
+                                                                    value={customTheme.noticeHex}
+                                                                    onChange={(e) => this._handleThemeColorChange("noticeHex", e.target.value)}
+                                                                />
+                                                            </label>
+                                                            <label className="phosphor-header__theme-color-field">
+                                                                <span>HYPERLINK</span>
+                                                                <input
+                                                                    type="color"
+                                                                    aria-label="Custom hyperlink color"
+                                                                    value={customTheme.hyperlinkHex}
+                                                                    onChange={(e) => this._handleThemeColorChange("hyperlinkHex", e.target.value)}
+                                                                />
+                                                            </label>
+                                                            <label className="phosphor-header__theme-color-field">
+                                                                <span>SYSTEM</span>
+                                                                <input
+                                                                    type="color"
+                                                                    aria-label="Custom system color"
+                                                                    value={customTheme.systemHex}
+                                                                    onChange={(e) => this._handleThemeColorChange("systemHex", e.target.value)}
+                                                                />
+                                                            </label>
+                                                        </div>
+                                                    )}
+                                                </>
+                                            )}
+                                        </div>
+                                    )}
+
+                                    {!previewMode && headerOverflowLevel >= 7 && (
+                                        <div className="phosphor-header__overflow-section">
+                                            <button
+                                                className="phosphor-header__dropdown-item"
+                                                role="menuitem"
+                                                aria-expanded={scriptDropdownOpen}
+                                                onClick={this._handleDropdownToggle}
+                                            >
+                                                [SCRIPT: {activeScript.label} {scriptDropdownOpen ? "▲" : "▼"}]
+                                            </button>
+
+                                            {scriptDropdownOpen && (
+                                                <div className="phosphor-header__dropdown phosphor-header__dropdown--scripts phosphor-header__dropdown--scripts-inline" role="listbox">
+                                                    {availableScripts.map((script) => (
+                                                        <button
+                                                            key={script.id}
+                                                            role="option"
+                                                            aria-selected={script.id === activeScript.id}
+                                                            className={
+                                                                "phosphor-header__dropdown-item" +
+                                                                (script.id === activeScript.id ? " phosphor-header__dropdown-item--active" : "")
+                                                            }
+                                                            onClick={() => this._handleScriptSelect(script)}
+                                                        >
+                                                            {script.id === activeScript.id ? "► " : "  "}{script.label}
+                                                        </button>
+                                                    ))}
+
+                                                    <div className="phosphor-header__dropdown-item phosphor-header__dropdown-item--separator" />
+
+                                                    <label className="phosphor-header__dropdown-item">
+                                                        &nbsp;&nbsp;[UPLOAD JSON]
+                                                        <input
+                                                            type="file"
+                                                            accept=".json,application/json"
+                                                            style={{ display: "none" }}
+                                                            onChange={this._handleFileChange}
+                                                        />
+                                                    </label>
+                                                </div>
+                                            )}
+                                        </div>
+                                    )}
+
+                                    {!previewMode && headerOverflowLevel >= 2 && (
+                                        <>
+                                            <a
+                                                className="phosphor-header__dropdown-item"
+                                                href="https://ko-fi.com/ethandunning"
+                                                target="_blank"
+                                                rel="noopener noreferrer"
+                                                role="menuitem"
+                                                onClick={() => this.setState({ mobileMenuOpen: false })}
+                                            >
+                                                [DONATE]
+                                            </a>
+
+                                            <a
+                                                className="phosphor-header__dropdown-item"
+                                                href="https://github.com/EthanDunning/phosphor"
+                                                target="_blank"
+                                                rel="noopener noreferrer"
+                                                role="menuitem"
+                                                onClick={() => this.setState({ mobileMenuOpen: false })}
+                                            >
+                                                [GITHUB]
+                                            </a>
+
+                                            {!authLoading && !sessionEmail && (
+                                                <button
+                                                    className="phosphor-header__dropdown-item"
+                                                    role="menuitem"
+                                                    onClick={() => {
+                                                        this.setState({ mobileMenuOpen: false });
+                                                        void this._handleGoogleSignIn();
+                                                    }}
+                                                >
+                                                    [SIGN IN]
+                                                </button>
+                                            )}
+                                        </>
+                                    )}
+
+                                    {!previewMode && headerOverflowLevel >= 3 && (
+                                        <>
+                                            <div className="phosphor-header__dropdown-item phosphor-header__dropdown-item--separator" />
+
+                                            <a
+                                                className="phosphor-header__dropdown-item"
+                                                href={getModulesBrowserUrl()}
+                                                role="menuitem"
+                                                onClick={() => this.setState({ mobileMenuOpen: false })}
+                                            >
+                                                [LIBRARY]
+                                            </a>
+                                        </>
+                                    )}
+
+                                    {!previewMode && headerOverflowLevel >= 4 && (
+                                        <>
+                                            <div className="phosphor-header__dropdown-item phosphor-header__dropdown-item--separator" />
+
+                                            <button
+                                                className="phosphor-header__dropdown-item"
+                                                role="menuitem"
+                                                onClick={() => {
+                                                    this._handleModulesOpen();
+                                                    this.setState({ mobileMenuOpen: false });
+                                                }}
+                                            >
+                                                [MODULES]
+                                            </button>
+                                        </>
+                                    )}
+
+                                    {!previewMode && headerOverflowLevel >= 5 && (
+                                        <>
+                                            <div className="phosphor-header__dropdown-item phosphor-header__dropdown-item--separator" />
+
+                                            <button
+                                                className="phosphor-header__dropdown-item"
+                                                role="menuitem"
+                                                onClick={() => {
+                                                    this._handleCreatorOpen();
+                                                    this.setState({ mobileMenuOpen: false });
+                                                }}
+                                            >
+                                                [CREATOR]
+                                            </button>
+                                        </>
+                                    )}
+
+                                    {!authLoading && !!sessionEmail && headerOverflowLevel >= 6 && (
+                                        <>
+                                            <div className="phosphor-header__dropdown-item phosphor-header__dropdown-item--separator" />
+
+                                            <div className="phosphor-header__dropdown-label">[ACCOUNT]</div>
+                                            <div className="phosphor-header__profile-row">
+                                                <span className="phosphor-header__profile-key">[EMAIL]</span>
+                                                <span className="phosphor-header__profile-value">{sessionEmail}</span>
+                                            </div>
+                                            <div className="phosphor-header__profile-row">
+                                                <span className="phosphor-header__profile-key">[MODULES CREATED]</span>
+                                                <span className="phosphor-header__profile-value">{myModules.length}</span>
+                                            </div>
+                                            {profileRole === "admin" && (
+                                                <div className="phosphor-header__profile-row">
+                                                    <span className="phosphor-header__profile-key">[ROLE]</span>
+                                                    <span className="phosphor-header__profile-value">admin</span>
+                                                </div>
+                                            )}
+                                            <button
+                                                className="phosphor-header__dropdown-item"
+                                                role="menuitem"
+                                                onClick={() => {
+                                                    this.setState({ mobileMenuOpen: false });
+                                                    void this._handleSignOut();
+                                                }}
+                                            >
+                                                [SIGN OUT]
+                                            </button>
+                                        </>
+                                    )}
+                                </div>
+                            )}
+                        </div>
                     </div>
                 </header>
 
