@@ -166,6 +166,7 @@ class Phosphor extends Component<PhosphorProps, AppState> {
     private _charScrollPool: HTMLAudioElement[] = [];
     private _screenHistory: string[] = [];
     private _audioUnlocked = false;
+    private _audioAutoplayBlocked = false;
     private _charSingleLastPlayedAt = 0;
     private _scrollLastPlayedAt = 0;
     private _charSingleCooldownMs = 40;
@@ -242,7 +243,7 @@ class Phosphor extends Component<PhosphorProps, AppState> {
 
     // public react events
     public componentDidMount(): void {
-        this._initializeAudio();
+        void this._initializeAudio();
         document.addEventListener("click", this._handleFirstInteraction);
         document.addEventListener("keydown", this._handleFirstInteraction);
         document.addEventListener("keydown", this._handleGlobalKeyDown);
@@ -283,7 +284,7 @@ class Phosphor extends Component<PhosphorProps, AppState> {
             return;
         }
 
-        this._playAmbient();
+        void this._playAmbient();
     }
 
     // private methods
@@ -309,7 +310,7 @@ class Phosphor extends Component<PhosphorProps, AppState> {
         return pool;
     }
 
-    private _initializeAudio(): void {
+    private async _initializeAudio(): Promise<void> {
         this._ambientAudio = this._buildAudio(transformerSfx, 0.1, true);
         this._powerOnAudio = this._buildAudio(powerOnSfx, 0.4);
         this._powerOffAudio = this._buildAudio(powerOffSfx, 0.4);
@@ -332,8 +333,10 @@ class Phosphor extends Component<PhosphorProps, AppState> {
         ], 0.1, 2);
 
         // Try autoplay on load; if blocked, first user interaction will unlock it.
-        this._playPowerOn();
-        this._playAmbient();
+        const powerOnPlayed = await this._playPowerOn();
+        if (powerOnPlayed) {
+            await this._playAmbient();
+        }
     }
 
     private _teardownAudio(): void {
@@ -353,57 +356,82 @@ class Phosphor extends Component<PhosphorProps, AppState> {
         }
     }
 
-    private _playAudio(audio: HTMLAudioElement): void {
+    private _playAudio(audio: HTMLAudioElement, allowAutoplayBlocked = false): Promise<boolean> {
         if (!audio || !this._isSoundEnabled()) {
-            return;
+            return Promise.resolve(false);
+        }
+
+        if (this._audioAutoplayBlocked && !this._audioUnlocked && !allowAutoplayBlocked) {
+            return Promise.resolve(false);
         }
 
         audio.currentTime = 0;
-        audio.play().then(() => {
+        return audio.play().then(() => {
             this._audioUnlocked = true;
-        }).catch((): void => void 0);
+            this._audioAutoplayBlocked = false;
+            return true;
+        }).catch((error: any): boolean => {
+            if (error?.name === "NotAllowedError") {
+                this._audioAutoplayBlocked = true;
+            }
+
+            return false;
+        });
     }
 
-    private _playAudioFromPool(pool: HTMLAudioElement[]): void {
+    private _playAudioFromPool(pool: HTMLAudioElement[], allowAutoplayBlocked = false): Promise<boolean> {
         if (!pool.length || !this._isSoundEnabled()) {
-            return;
+            return Promise.resolve(false);
         }
 
         const available = pool.find((item) => item.paused || item.ended);
         const audio = available || pool[Math.floor(Math.random() * pool.length)];
-        this._playAudio(audio);
+        return this._playAudio(audio, allowAutoplayBlocked);
     }
 
-    private _playAmbient(): void {
+    private _playAmbient(allowAutoplayBlocked = false): Promise<boolean> {
         if (!this._ambientAudio || document.hidden || !this._isSoundEnabled()) {
-            return;
+            return Promise.resolve(false);
         }
 
-        this._ambientAudio.play().then(() => {
+        if (this._audioAutoplayBlocked && !this._audioUnlocked && !allowAutoplayBlocked) {
+            return Promise.resolve(false);
+        }
+
+        this._ambientAudio.currentTime = 0;
+        return this._ambientAudio.play().then(() => {
             this._audioUnlocked = true;
-        }).catch((): void => void 0);
+            this._audioAutoplayBlocked = false;
+            return true;
+        }).catch((error: any): boolean => {
+            if (error?.name === "NotAllowedError") {
+                this._audioAutoplayBlocked = true;
+            }
+
+            return false;
+        });
     }
 
-    private _playPowerOn(): void {
-        this._playAudio(this._powerOnAudio);
+    private _playPowerOn(allowAutoplayBlocked = false): Promise<boolean> {
+        return this._playAudio(this._powerOnAudio, allowAutoplayBlocked);
     }
 
-    private _playPowerOff(): void {
-        this._playAudio(this._powerOffAudio);
+    private _playPowerOff(allowAutoplayBlocked = false): Promise<boolean> {
+        return this._playAudio(this._powerOffAudio, allowAutoplayBlocked);
     }
 
-    private _playCharEnter(): void {
-        this._playAudioFromPool(this._charEnterPool);
+    private _playCharEnter(allowAutoplayBlocked = false): Promise<boolean> {
+        return this._playAudioFromPool(this._charEnterPool, allowAutoplayBlocked);
     }
 
-    private _playCharScroll(): void {
+    private _playCharScroll(allowAutoplayBlocked = false): Promise<boolean> {
         const now = Date.now();
         if (now - this._scrollLastPlayedAt < this._scrollCooldownMs) {
-            return;
+            return Promise.resolve(false);
         }
 
         this._scrollLastPlayedAt = now;
-        this._playAudioFromPool(this._charScrollPool);
+        return this._playAudioFromPool(this._charScrollPool, allowAutoplayBlocked);
     }
 
     private _handleFirstInteraction(): void {
@@ -412,12 +440,12 @@ class Phosphor extends Component<PhosphorProps, AppState> {
         }
 
         if (!this._audioUnlocked) {
-            this._playPowerOn();
+            void this._playPowerOn(true);
         }
 
         // Ambient can still be paused even when another SFX already unlocked audio.
         if (this._ambientAudio && this._ambientAudio.paused) {
-            this._playAmbient();
+            void this._playAmbient(true);
         }
     }
 
@@ -447,7 +475,7 @@ class Phosphor extends Component<PhosphorProps, AppState> {
             return;
         }
 
-        this._playCharScroll();
+        void this._playCharScroll();
     }
 
     private _handleVisibilityChange(): void {
@@ -460,7 +488,7 @@ class Phosphor extends Component<PhosphorProps, AppState> {
             return;
         }
 
-        this._playAmbient();
+        void this._playAmbient();
     }
 
     private _handleTeletypeCharDrawn(char: string, index: number): void {
@@ -481,11 +509,11 @@ class Phosphor extends Component<PhosphorProps, AppState> {
     }
 
     private _handlePromptEnter(): void {
-        this._playCharEnter();
+        void this._playCharEnter();
     }
 
     private _handleToggleClick(state?: any): void {
-        this._playCharEnter();
+        void this._playCharEnter();
 
         if (!state) {
             return;
@@ -1566,9 +1594,9 @@ class Phosphor extends Component<PhosphorProps, AppState> {
         }
 
         if (isBackNavigation) {
-            this._playPowerOff();
+            void this._playPowerOff();
         } else {
-            this._playPowerOn();
+            void this._playPowerOn();
         }
 
         if (currentScreenId) {
@@ -2238,7 +2266,7 @@ class Phosphor extends Component<PhosphorProps, AppState> {
     private _handleTeletypeNewLine(): void {
         // TODO: handle lineheight/scrolling
         // const ref = this._containerRef;
-        this._playCharScroll();
+        void this._playCharScroll();
         void 0;
         // console.log("scrolling!", ref);
         // const lineheight = this.props.measurements.lineHeight;
@@ -2248,7 +2276,7 @@ class Phosphor extends Component<PhosphorProps, AppState> {
     }
 
     private _handleLinkClick(target: string | any[], shiftKey: boolean): void {
-        this._playCharEnter();
+        void this._playCharEnter();
 
         // if it's a string, it's a screen
         if (typeof target === "string") {

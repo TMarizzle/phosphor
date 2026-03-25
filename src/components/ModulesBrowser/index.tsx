@@ -310,6 +310,10 @@ const ModulesBrowser: FC = () => {
     const shareMenuRef = useRef<HTMLDivElement | null>(null);
     const shareMenuDropdownRef = useRef<HTMLDivElement | null>(null);
     const initialRequestedModuleIdRef = useRef<string | null>(initialSelectedModuleId);
+    const isBootstrappingAuthRef = useRef<boolean>(true);
+    const lastHydratedSessionUserIdRef = useRef<string | null>(null);
+    const ownedModulesRef = useRef<ModuleRecord[]>([]);
+    const hasCatalogBootstrappedRef = useRef<boolean>(false);
 
     const updateOwnerMenuPosition = useCallback(() => {
         const anchor = ownerMenuRef.current;
@@ -376,12 +380,14 @@ const ModulesBrowser: FC = () => {
 
         setSubscribedIds(nextSubscribedIds);
         setRatingsByModuleId(nextRatingsByModuleId);
+        ownedModulesRef.current = ownModules;
         setCreatedModuleCount(ownModules.length);
         setSessionRole(role);
 
         return {
             subscribedIds: nextSubscribedIds,
             ratingsByModuleId: nextRatingsByModuleId,
+            ownModules,
             createdModuleCount: ownModules.length,
             role,
         };
@@ -390,6 +396,7 @@ const ModulesBrowser: FC = () => {
     const refreshCatalog = useCallback(async (
         currentUserId?: string | null,
         currentSubscribedIds?: string[],
+        currentOwnModules?: ModuleRecord[],
         currentRole: ProfileRole = "user"
     ) => {
         if (!supabaseReady) {
@@ -412,7 +419,7 @@ const ModulesBrowser: FC = () => {
             if (currentUserId) {
                 const subscribedIds = currentSubscribedIds || [];
                 const [ownModules, subscribedModules] = await Promise.all([
-                    listOwnModules(currentUserId),
+                    Promise.resolve(currentOwnModules ?? ownedModulesRef.current),
                     subscribedIds.length ? fetchPublicModulesByIds(subscribedIds) : Promise.resolve([] as ModuleRecord[]),
                 ]);
 
@@ -605,10 +612,13 @@ const ModulesBrowser: FC = () => {
         if (!supabaseReady) {
             setAuthLoading(false);
             setCatalogLoading(false);
+            hasCatalogBootstrappedRef.current = true;
+            isBootstrappingAuthRef.current = false;
             return;
         }
 
         let mounted = true;
+        isBootstrappingAuthRef.current = true;
         const initialize = async () => {
             try {
                 const nextSession = await getCurrentSession();
@@ -618,18 +628,14 @@ const ModulesBrowser: FC = () => {
 
                 setSession(nextSession);
                 setAuthLoading(false);
+                lastHydratedSessionUserIdRef.current = nextSession?.user?.id || null;
 
-                let personalState = {
-                    subscribedIds: [] as string[],
-                    ratingsByModuleId: {} as Record<string, number>,
-                    role: "user" as ProfileRole,
-                };
                 if (nextSession?.user?.id) {
-                    personalState = await loadPersonalState(nextSession.user.id);
+                    await loadPersonalState(nextSession.user.id);
                 }
 
                 if (mounted) {
-                    await refreshCatalog(nextSession?.user?.id || null, personalState.subscribedIds, personalState.role);
+                    hasCatalogBootstrappedRef.current = true;
                 }
             } catch (error: any) {
                 if (!mounted) {
@@ -640,6 +646,7 @@ const ModulesBrowser: FC = () => {
                 setErrorMessage(error?.message || "Could not initialize the modules browser.");
             } finally {
                 clearTransientAuthParams();
+                isBootstrappingAuthRef.current = false;
             }
         };
 
@@ -649,6 +656,17 @@ const ModulesBrowser: FC = () => {
             if (!mounted) {
                 return;
             }
+
+            if (isBootstrappingAuthRef.current) {
+                return;
+            }
+
+            const nextSessionUserId = nextSession?.user?.id || null;
+            if (lastHydratedSessionUserIdRef.current === nextSessionUserId) {
+                return;
+            }
+            lastHydratedSessionUserIdRef.current = nextSessionUserId;
+            hasCatalogBootstrappedRef.current = true;
 
             setSession(nextSession);
             setAuthLoading(false);
@@ -662,12 +680,12 @@ const ModulesBrowser: FC = () => {
                 if (subscribedOnly) {
                     setSubscribedOnly(false);
                 }
-                void refreshCatalog(null, [], "user");
+                hasCatalogBootstrappedRef.current = true;
                 return;
             }
 
-            void loadPersonalState(nextSession.user.id).then((personalState) => {
-                return refreshCatalog(nextSession.user.id, personalState.subscribedIds, personalState.role);
+            void loadPersonalState(nextSession.user.id).then(() => {
+                hasCatalogBootstrappedRef.current = true;
             }).catch((error: any) => {
                 setErrorMessage(error?.message || "Could not refresh your module state.");
             });
@@ -684,8 +702,12 @@ const ModulesBrowser: FC = () => {
     }, [persistBrowserQuery, query, sort, subscribedOnly]);
 
     useEffect(() => {
+        if (!hasCatalogBootstrappedRef.current) {
+            return;
+        }
+
         const timeoutId = window.setTimeout(() => {
-            void refreshCatalog(sessionUserId, subscribedIds, sessionRole);
+            void refreshCatalog(sessionUserId, subscribedIds, ownedModulesRef.current, sessionRole);
         }, 350);
 
         return () => {
@@ -875,7 +897,7 @@ const ModulesBrowser: FC = () => {
             }
 
             const personalState = await loadPersonalState(sessionUserId);
-            await refreshCatalog(sessionUserId, personalState.subscribedIds, personalState.role);
+            await refreshCatalog(sessionUserId, personalState.subscribedIds, personalState.ownModules, personalState.role);
             setNoticeMessage(
                 subscribedIdSet.has(module.id)
                     ? `Unsubscribed from "${module.title}".`
@@ -909,7 +931,7 @@ const ModulesBrowser: FC = () => {
         try {
             await rateModule(module.id, sessionUserId, rating);
             const personalState = await loadPersonalState(sessionUserId);
-            await refreshCatalog(sessionUserId, personalState.subscribedIds, personalState.role);
+            await refreshCatalog(sessionUserId, personalState.subscribedIds, personalState.ownModules, personalState.role);
             setNoticeMessage(`Rated "${module.title}" ${rating}/5.`);
         } catch (error: any) {
             setErrorMessage(error?.message || "Could not save your rating.");
@@ -994,7 +1016,7 @@ const ModulesBrowser: FC = () => {
                 visibility: module.visibility,
             });
             const personalState = await loadPersonalState(sessionUserId);
-            await refreshCatalog(sessionUserId, personalState.subscribedIds, personalState.role);
+            await refreshCatalog(sessionUserId, personalState.subscribedIds, personalState.ownModules, personalState.role);
             setSelectedModuleId(updatedModule.id);
             setEditingModuleId(null);
             setEditTitle("");
@@ -1034,7 +1056,7 @@ const ModulesBrowser: FC = () => {
                 visibility: nextVisibility,
             });
             const personalState = await loadPersonalState(sessionUserId);
-            await refreshCatalog(sessionUserId, personalState.subscribedIds, personalState.role);
+            await refreshCatalog(sessionUserId, personalState.subscribedIds, personalState.ownModules, personalState.role);
             setSelectedModuleId(updatedModule.id);
             setNoticeMessage(`"${updatedModule.title}" is now ${nextVisibility}.`);
         } catch (error: any) {
@@ -1062,7 +1084,7 @@ const ModulesBrowser: FC = () => {
         try {
             await deleteModule(module.id, sessionUserId);
             const personalState = await loadPersonalState(sessionUserId);
-            await refreshCatalog(sessionUserId, personalState.subscribedIds, personalState.role);
+            await refreshCatalog(sessionUserId, personalState.subscribedIds, personalState.ownModules, personalState.role);
             setSelectedModuleId(null);
             setNoticeMessage(`Deleted "${module.title}".`);
         } catch (error: any) {
