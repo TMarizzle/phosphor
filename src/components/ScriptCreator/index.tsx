@@ -17,6 +17,7 @@ interface ScriptCreatorProps {
         sidebarListMode: "screens" | "dialogs"
     ) => void;
     onClose: () => void;
+    onSaveModule?: (scriptJson: any) => Promise<boolean> | boolean;
 }
 
 type AddableElementType =
@@ -1510,7 +1511,13 @@ const focusEditorSearchOccurrence = (occurrence: EditorSearchOccurrence): void =
     }
 };
 
-const ScriptCreator: FC<ScriptCreatorProps> = ({ initialScript, onApply, onPreview, onClose }) => {
+const ScriptCreator: FC<ScriptCreatorProps> = ({
+    initialScript,
+    onApply,
+    onPreview,
+    onClose,
+    onSaveModule,
+}) => {
     const initialSelectedScreenId = getInitialSelectedScreenId(initialScript);
     const [script, setScript] = useState<any>(() => ensureScriptShape(initialScript));
     const [selectedScreenId, setSelectedScreenId] = useState<string>(() => initialSelectedScreenId);
@@ -1544,6 +1551,7 @@ const ScriptCreator: FC<ScriptCreatorProps> = ({ initialScript, onApply, onPrevi
     const [activeVisibleSearchOccurrenceIndex, setActiveVisibleSearchOccurrenceIndex] = useState<number>(-1);
     const [visibleSearchOccurrenceCount, setVisibleSearchOccurrenceCount] = useState<number>(0);
     const [searchFocusRequestId, setSearchFocusRequestId] = useState<number>(0);
+    const [moduleSaveState, setModuleSaveState] = useState<"idle" | "saving" | "saved" | "error">("idle");
     const bodyRef = useRef<HTMLDivElement | null>(null);
     const editorRef = useRef<HTMLElement | null>(null);
     const resizePointerIdRef = useRef<number | null>(null);
@@ -1552,6 +1560,14 @@ const ScriptCreator: FC<ScriptCreatorProps> = ({ initialScript, onApply, onPrevi
     const pendingSearchSelectionModeRef = useRef<PendingSearchSelectionMode | null>(null);
     const scriptThemePreset = normalizeScriptThemePreset(script.config?.theme);
     const scriptCustomTheme = getScriptCustomThemeConfig(script);
+
+    useEffect(() => {
+        if (moduleSaveState !== "saved" && moduleSaveState !== "error") {
+            return;
+        }
+
+        setModuleSaveState("idle");
+    }, [script]);
 
     const handleEditorMarkdownShortcut = (event: React.KeyboardEvent<HTMLElement>): void => {
         const nativeEvent = event.nativeEvent as KeyboardEvent & { isComposing?: boolean };
@@ -3137,6 +3153,29 @@ const ScriptCreator: FC<ScriptCreatorProps> = ({ initialScript, onApply, onPrevi
     const applyScript = () => {
         onApply(cloneJson(script));
     };
+
+    const saveModule = async (): Promise<void> => {
+        if (!onSaveModule || moduleSaveState === "saving") {
+            return;
+        }
+
+        setModuleSaveState("saving");
+
+        try {
+            const saved = await Promise.resolve(onSaveModule(cloneJson(script)));
+            setModuleSaveState(saved ? "saved" : "error");
+        } catch {
+            setModuleSaveState("error");
+        }
+    };
+
+    const moduleSaveStatusLabel = moduleSaveState === "saving"
+        ? "[SAVING MODULE...]"
+        : moduleSaveState === "saved"
+            ? "[SAVE COMPLETE]"
+            : moduleSaveState === "error"
+                ? "[SAVE FAILED]"
+                : null;
 
     const previewScript = () => {
         if (!selectedScreenId) {
@@ -5217,8 +5256,43 @@ const ScriptCreator: FC<ScriptCreatorProps> = ({ initialScript, onApply, onPrevi
 
                 <div className="script-creator__footer">
                     <button className="script-creator__btn" onClick={applyScript}>[APPLY TO APP]</button>
+                    {onSaveModule && (
+                        <button
+                            className="script-creator__btn"
+                            onClick={() => void saveModule()}
+                            type="button"
+                            disabled={moduleSaveState === "saving"}
+                        >
+                            [SAVE MODULE]
+                        </button>
+                    )}
                     <button className="script-creator__btn" onClick={copyJson}>[COPY JSON]</button>
                     <button className="script-creator__btn" onClick={downloadJson}>[DOWNLOAD JSON]</button>
+                    {moduleSaveStatusLabel && (
+                        <div
+                            className={`script-creator__footer-status script-creator__footer-status--${moduleSaveState}`}
+                            aria-live="polite"
+                            style={{
+                                marginLeft: "auto",
+                                flex: "0 0 auto",
+                                border: "1px solid currentColor",
+                                padding: "0.1rem 0.4rem",
+                                whiteSpace: "nowrap",
+                                textTransform: "uppercase",
+                                letterSpacing: "0.08em",
+                                fontSize: "0.65rem",
+                                lineHeight: 1,
+                                pointerEvents: "none",
+                                color: moduleSaveState === "saved"
+                                    ? "#8ee28f"
+                                    : moduleSaveState === "error"
+                                        ? "#ff8b5c"
+                                        : "#f2d15b",
+                            }}
+                        >
+                            {moduleSaveStatusLabel}
+                        </div>
+                    )}
                 </div>
             </div>
         </section>

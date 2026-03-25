@@ -1,6 +1,6 @@
 import React, { FC, useEffect, useMemo, useState } from "react";
 import CreatorSelect, { CreatorSelectOption } from "../CreatorSelect";
-import { isModuleLinkShareable } from "../../lib/modules";
+import { isModuleLinkShareable, MAX_MODULE_SUMMARY_LENGTH, MAX_MODULE_TITLE_LENGTH } from "../../lib/modules";
 import type { ModuleRecord, ModuleVisibility } from "../../lib/modules";
 import "./style.scss";
 
@@ -30,7 +30,7 @@ interface ModulesPanelProps {
         title: string;
         summary: string;
         visibility: ModuleVisibility;
-    }) => void;
+    }) => Promise<boolean> | void;
     onCopyShareLink: (module: ModuleRecord) => void;
     onToggleSubscribedScriptVisibility: (moduleId: string) => void;
 }
@@ -279,7 +279,7 @@ const ModulesPanel: FC<ModulesPanelProps> = ({
                                     <input
                                         value={title}
                                         onChange={(event) => setTitle(event.target.value)}
-                                        maxLength={120}
+                                        maxLength={MAX_MODULE_TITLE_LENGTH}
                                         placeholder="Module title"
                                     />
                                 </label>
@@ -289,7 +289,7 @@ const ModulesPanel: FC<ModulesPanelProps> = ({
                                     <textarea
                                         value={summary}
                                         onChange={(event) => setSummary(event.target.value)}
-                                        maxLength={2000}
+                                        maxLength={MAX_MODULE_SUMMARY_LENGTH}
                                         rows={3}
                                         placeholder="Short summary for the module listing"
                                     />
@@ -309,7 +309,7 @@ const ModulesPanel: FC<ModulesPanelProps> = ({
                                     <button
                                         className="modules-panel__button"
                                         disabled={!sessionUserId || busy || !supabaseReady || !title.trim().length}
-                                        onClick={() => onSaveModule({
+                                        onClick={() => void onSaveModule({
                                             title: title.trim(),
                                             summary: summary.trim(),
                                             visibility,

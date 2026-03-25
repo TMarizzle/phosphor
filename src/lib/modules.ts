@@ -67,6 +67,9 @@ const MODULE_SELECT = [
     "updated_at",
 ].join(", ");
 
+export const MAX_MODULE_TITLE_LENGTH = 120;
+export const MAX_MODULE_SUMMARY_LENGTH = 500;
+
 const requireSupabase = () => {
     if (!supabase || !hasSupabaseEnv) {
         throw new Error("Supabase is not configured. Add VITE_SUPABASE_URL and VITE_SUPABASE_PUBLISHABLE_KEY.");
@@ -85,6 +88,14 @@ const normalizeModuleRecord = (record: any): ModuleRecord => ({
         ? record.rating_average
         : Number(record?.rating_average || 0),
 });
+
+const normalizeModuleTitle = (title: string): string => {
+    return title.trim().slice(0, MAX_MODULE_TITLE_LENGTH);
+};
+
+const normalizeModuleSummary = (summary: string): string => {
+    return summary.trim().slice(0, MAX_MODULE_SUMMARY_LENGTH);
+};
 
 export const isModuleLinkShareable = (visibility: ModuleVisibility): boolean => {
     return visibility === "public" || visibility === "unlisted";
@@ -519,20 +530,36 @@ const MAX_SCRIPT_JSON_BYTES = 5 * 1024 * 1024; // 5 MB
 export const saveModule = async (input: SaveModuleInput): Promise<ModuleRecord> => {
     const client = requireSupabase();
 
-    const jsonSize = new Blob([JSON.stringify(input.scriptJson)]).size;
+    const jsonText = JSON.stringify(input.scriptJson);
+    const jsonSize = new Blob([jsonText]).size;
     if (jsonSize > MAX_SCRIPT_JSON_BYTES) {
         throw new Error("Script JSON is too large. Maximum size is 5 MB.");
     }
 
+    const isUpdate = !!input.id;
     const payload = {
         owner_id: input.ownerId,
-        title: input.title,
-        summary: input.summary,
+        title: normalizeModuleTitle(input.title),
+        summary: normalizeModuleSummary(input.summary),
         script_json: input.scriptJson,
         visibility: input.visibility,
     };
 
-    if (input.id) {
+    console.log(`[Phosphor] saveModule ${isUpdate ? "update" : "insert"} requested`, {
+        mode: isUpdate ? "update" : "insert",
+        moduleId: input.id || null,
+        ownerId: input.ownerId,
+        title: input.title,
+        titleLength: input.title.trim().length,
+        summaryLength: input.summary.trim().length,
+        visibility: input.visibility,
+        scriptJsonSizeBytes: jsonSize,
+        screenCount: Array.isArray(input.scriptJson?.screens) ? input.scriptJson.screens.length : 0,
+        dialogCount: Array.isArray(input.scriptJson?.dialogs) ? input.scriptJson.dialogs.length : 0,
+    });
+    console.log("[Phosphor] saveModule sanitized payload", payload);
+
+    if (isUpdate) {
         const { data, error } = await client
             .from("modules")
             .update(payload)
@@ -542,9 +569,20 @@ export const saveModule = async (input: SaveModuleInput): Promise<ModuleRecord> 
             .single();
 
         if (error) {
+            console.error("[Phosphor] saveModule update failed", {
+                message: error.message,
+                code: error.code,
+                details: error.details,
+                hint: error.hint,
+                error,
+            });
             throw error;
         }
 
+        console.log("[Phosphor] saveModule update succeeded", {
+            moduleId: data?.id,
+            updatedAt: data?.updated_at,
+        });
         return normalizeModuleRecord(data);
     }
 
@@ -555,9 +593,20 @@ export const saveModule = async (input: SaveModuleInput): Promise<ModuleRecord> 
         .single();
 
     if (error) {
+        console.error("[Phosphor] saveModule insert failed", {
+            message: error.message,
+            code: error.code,
+            details: error.details,
+            hint: error.hint,
+            error,
+        });
         throw error;
     }
 
+    console.log("[Phosphor] saveModule insert succeeded", {
+        moduleId: data?.id,
+        updatedAt: data?.updated_at,
+    });
     return normalizeModuleRecord(data);
 };
 
@@ -566,8 +615,8 @@ export const updateModuleMetadata = async (input: UpdateModuleMetadataInput): Pr
     const { data, error } = await client
         .from("modules")
         .update({
-            title: input.title,
-            summary: input.summary,
+            title: normalizeModuleTitle(input.title),
+            summary: normalizeModuleSummary(input.summary),
             visibility: input.visibility,
         })
         .eq("id", input.id)

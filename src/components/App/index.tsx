@@ -157,6 +157,7 @@ class App extends Component<any, AppState> {
         this._handleCreatorClose    = this._handleCreatorClose.bind(this);
         this._handleCreatorApply    = this._handleCreatorApply.bind(this);
         this._handleCreatorPreview  = this._handleCreatorPreview.bind(this);
+        this._handleCreatorSaveModule = this._handleCreatorSaveModule.bind(this);
         this._handlePreviewReturn   = this._handlePreviewReturn.bind(this);
         this._handlePhosphorScreenChanged = this._handlePhosphorScreenChanged.bind(this);
         this._handleModulesOpen     = this._handleModulesOpen.bind(this);
@@ -567,6 +568,63 @@ class App extends Component<any, AppState> {
         ].filter((module): module is ModuleRecord => !!module);
 
         return candidateModules.find((module) => module.id === moduleId) || null;
+    }
+
+    private _getOwnedActiveModule(userId: string | null): ModuleRecord | null {
+        if (!userId) {
+            return null;
+        }
+
+        return this.state.activeModule?.owner_id === userId ? this.state.activeModule : null;
+    }
+
+    private _applySavedModuleState(savedModule: ModuleRecord, cleanedScriptJson: any, modulesNotice: string): void {
+        const nextThemeState = this._applyScriptThemePreset(cleanedScriptJson);
+        const nextScript = this._buildModuleScript(savedModule, cleanedScriptJson);
+
+        this.setState((prev): Pick<AppState,
+            "activeScript"
+            | "activeScriptRevision"
+            | "activeTerminalScreenId"
+            | "activeModule"
+            | "activeTheme"
+            | "customTheme"
+            | "myModules"
+            | "ownScriptsVisibilityById"
+            | "creatorInitialScript"
+            | "modulesBusy"
+            | "modulesError"
+            | "modulesNotice"
+        > => ({
+            ...(() => {
+                const myModules = this._upsertModuleRecord(prev.myModules, savedModule);
+                const ownScriptsVisibilityById = {
+                    ...this._buildOwnScriptVisibility(myModules, prev.ownScriptsVisibilityById),
+                    [savedModule.id]: prev.ownScriptsVisibilityById[savedModule.id] !== false,
+                };
+                persistOwnScriptsVisibility(ownScriptsVisibilityById);
+                return {
+                    myModules,
+                    ownScriptsVisibilityById,
+                };
+            })(),
+            activeScript: nextScript,
+            activeScriptRevision: prev.activeScriptRevision + 1,
+            activeTerminalScreenId: null,
+            activeModule: savedModule,
+            ...nextThemeState,
+            creatorInitialScript: null,
+            modulesBusy: false,
+            modulesError: null,
+            modulesNotice,
+        }));
+
+        if (isModuleLinkShareable(savedModule.visibility)) {
+            this._setModuleQueryParam(savedModule.id);
+            return;
+        }
+
+        this._setModuleQueryParam(null);
     }
 
     private async _initializeModules(): Promise<void> {
@@ -1531,11 +1589,11 @@ class App extends Component<any, AppState> {
         title: string;
         summary: string;
         visibility: ModuleVisibility;
-    }): Promise<void> {
+    }): Promise<boolean> {
         const userId = this._getSessionUserId();
         if (!userId) {
             this.setState({ modulesError: "Sign in before saving a module." });
-            return;
+            return false;
         }
 
         this.setState({
@@ -1544,9 +1602,7 @@ class App extends Component<any, AppState> {
             modulesNotice: null,
         });
 
-        const ownedActiveModule = this.state.activeModule?.owner_id === userId
-            ? this.state.activeModule
-            : null;
+        const ownedActiveModule = this._getOwnedActiveModule(userId);
         const cleanedScriptJson = this._sanitizeScriptJson(this.state.activeScript.json);
 
         try {
@@ -1559,49 +1615,90 @@ class App extends Component<any, AppState> {
                 scriptJson: cleanedScriptJson,
             });
 
-            const nextScript = this._buildModuleScript(savedModule, cleanedScriptJson);
-            this.setState((prev): Pick<AppState,
-                "activeScript"
-                | "activeScriptRevision"
-                | "activeTerminalScreenId"
-                | "activeModule"
-                | "myModules"
-                | "ownScriptsVisibilityById"
-                | "creatorInitialScript"
-                | "modulesBusy"
-                | "modulesNotice"
-            > => ({
-                ...(() => {
-                    const myModules = this._upsertModuleRecord(prev.myModules, savedModule);
-                    const ownScriptsVisibilityById = {
-                        ...this._buildOwnScriptVisibility(myModules, prev.ownScriptsVisibilityById),
-                        [savedModule.id]: prev.ownScriptsVisibilityById[savedModule.id] !== false,
-                    };
-                    persistOwnScriptsVisibility(ownScriptsVisibilityById);
-                    return {
-                        myModules,
-                        ownScriptsVisibilityById,
-                    };
-                })(),
-                activeScript: nextScript,
-                activeScriptRevision: prev.activeScriptRevision + 1,
-                activeTerminalScreenId: null,
-                activeModule: savedModule,
-                creatorInitialScript: null,
-                modulesBusy: false,
-                modulesNotice: ownedActiveModule ? "Module updated." : "Module created.",
-            }));
-
-            if (isModuleLinkShareable(savedModule.visibility)) {
-                this._setModuleQueryParam(savedModule.id);
-            } else {
-                this._setModuleQueryParam(null);
-            }
+            this._applySavedModuleState(savedModule, cleanedScriptJson, ownedActiveModule ? "Module updated." : "Module created.");
+            return true;
         } catch (error: any) {
+            const errorMessage = error?.message || "Could not save the module.";
             this.setState({
                 modulesBusy: false,
-                modulesError: error?.message || "Could not save the module.",
+                modulesError: errorMessage,
             });
+            return false;
+        }
+    }
+
+    private async _handleCreatorSaveModule(scriptJson: any): Promise<boolean> {
+        const saveAttemptLabel = `creator-save-${Date.now().toString(36)}`;
+        console.log(`[Phosphor] ${saveAttemptLabel} creator save requested`, {
+            userId: this._getSessionUserId(),
+            activeModuleId: this.state.activeModule?.id || null,
+            activeModuleTitle: this.state.activeModule?.title || null,
+            activeModuleOwnerId: this.state.activeModule?.owner_id || null,
+            activeScriptLabel: this.state.activeScript.label,
+        });
+
+        if (!Array.isArray(scriptJson?.screens) || !scriptJson.screens.length) {
+            console.error(`[Phosphor] ${saveAttemptLabel} creator save rejected before Supabase call: missing screens array.`);
+            this.setState({
+                uploadError: "Invalid JSON: missing 'screens' array.",
+            });
+            return false;
+        }
+
+        const userId = this._getSessionUserId();
+        const ownedActiveModule = this._getOwnedActiveModule(userId);
+        if (!userId || !ownedActiveModule) {
+            console.error(`[Phosphor] ${saveAttemptLabel} creator save rejected before Supabase call: no owned active module is selected.`, {
+                userId,
+                activeModuleId: this.state.activeModule?.id || null,
+                activeModuleOwnerId: this.state.activeModule?.owner_id || null,
+            });
+            this.setState({
+                modulesError: "Open one of your modules before using Save Module.",
+            });
+            return false;
+        }
+
+        this.setState({
+            modulesBusy: true,
+            modulesError: null,
+            modulesNotice: null,
+        });
+
+        const cleanedScriptJson = this._sanitizeScriptJson(scriptJson);
+        console.log(`[Phosphor] ${saveAttemptLabel} creator save sanitized script JSON`, cleanedScriptJson);
+
+        try {
+            const savedModule = await saveModule({
+                id: ownedActiveModule.id,
+                ownerId: userId,
+                title: ownedActiveModule.title,
+                summary: ownedActiveModule.summary,
+                visibility: ownedActiveModule.visibility,
+                scriptJson: cleanedScriptJson,
+            });
+
+            console.log(`[Phosphor] ${saveAttemptLabel} creator save completed successfully`, {
+                moduleId: savedModule.id,
+                title: savedModule.title,
+                visibility: savedModule.visibility,
+            });
+            this._applySavedModuleState(savedModule, cleanedScriptJson, "Module updated.");
+            return true;
+        } catch (error: any) {
+            const errorMessage = error?.message || "Could not save the module.";
+            console.error(`[Phosphor] ${saveAttemptLabel} creator save failed`, {
+                message: error?.message,
+                code: error?.code,
+                details: error?.details,
+                hint: error?.hint,
+                error,
+            });
+            this.setState({
+                modulesBusy: false,
+                modulesError: errorMessage,
+            });
+            return false;
         }
     }
 
@@ -1669,6 +1766,8 @@ class App extends Component<any, AppState> {
             return scripts.findIndex((candidate) => candidate.id === script.id) === index;
         });
         const sessionEmail = authSession?.user?.email || null;
+        const sessionUserId = authSession?.user?.id || null;
+        const ownedActiveModule = this._getOwnedActiveModule(sessionUserId);
 
         return (
             <>
@@ -1716,21 +1815,8 @@ class App extends Component<any, AppState> {
                                     [SCRIPT: {activeScript.label} {scriptDropdownOpen ? "▲" : "▼"}]
                                 </button>
 
-                                {scriptDropdownOpen && (
-                                    <div className="phosphor-header__dropdown" role="listbox">
-                                        <button
-                                            className="phosphor-header__dropdown-item"
-                                            onClick={this._handleCreatorOpen}
-                                        >
-                                            [OPEN CREATOR]
-                                        </button>
-                                        <button
-                                            className="phosphor-header__dropdown-item"
-                                            onClick={this._handleModulesOpen}
-                                        >
-                                            [OPEN MODULES]
-                                        </button>
-                                        <div className="phosphor-header__dropdown-item phosphor-header__dropdown-item--separator" />
+                        {scriptDropdownOpen && (
+                            <div className="phosphor-header__dropdown" role="listbox">
                                         {availableScripts.map((script) => (
                                             <button
                                                 key={script.id}
@@ -1782,6 +1868,16 @@ class App extends Component<any, AppState> {
                                 title="Open visual JSON script creator"
                             >
                                 [CREATOR]
+                            </button>
+                        )}
+
+                        {!previewMode && (
+                            <button
+                                className="phosphor-header__btn"
+                                onClick={this._handleModulesOpen}
+                                title="Open your module manager"
+                            >
+                                [MODULES]
                             </button>
                         )}
 
@@ -2027,6 +2123,7 @@ class App extends Component<any, AppState> {
                         onApply={this._handleCreatorApply}
                         onPreview={this._handleCreatorPreview}
                         onClose={this._handleCreatorClose}
+                        onSaveModule={ownedActiveModule ? this._handleCreatorSaveModule : undefined}
                     />
                 )}
 
@@ -2034,7 +2131,7 @@ class App extends Component<any, AppState> {
                     open={modulesOpen}
                     supabaseReady={isSupabaseConfigured()}
                     busy={modulesBusy}
-                    sessionUserId={authSession?.user?.id || null}
+                    sessionUserId={sessionUserId}
                     currentScript={activeScript.json}
                     currentScriptLabel={activeScript.label}
                     activeModule={activeModule}

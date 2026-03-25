@@ -132,6 +132,7 @@ $creator-dark-control-bg: rgba($creator-dark-bg, 0.92);
         border-top: 1px solid var(--fg);
         justify-content: flex-start;
         gap: 0.5rem;
+        flex-wrap: wrap;
     }
 
     &__header-actions {
