@@ -84,6 +84,10 @@ interface AppState {
     activeModule: ModuleRecord | null;
 }
 
+type CreatorScriptOption = BundledScript & {
+    canSaveModule: boolean;
+};
+
 class App extends Component<any, AppState> {
     private _headerRef: React.RefObject<HTMLElement>;
     private _titleRef: React.RefObject<HTMLAnchorElement>;
@@ -1779,21 +1783,41 @@ class App extends Component<any, AppState> {
             subscribedScriptsVisibilityById,
             activeModule,
         } = this.state;
-        const ownScripts = myModules
-            .filter((module) => ownScriptsVisibilityById[module.id] !== false)
-            .map((module) => this._buildModuleScript(module));
-        const subscribedScripts = subscribedModules
-            .filter((module) => subscribedScriptsVisibilityById[module.id] !== false)
-            .map((module) => this._buildModuleScript(module));
-        const availableScripts = (activeModule
-            ? [activeScript, ...ownScripts, ...subscribedScripts, ...BUNDLED_SCRIPTS, ...customScripts]
-            : [...ownScripts, ...subscribedScripts, ...BUNDLED_SCRIPTS, ...customScripts]
-        ).filter((script, index, scripts) => {
-            return scripts.findIndex((candidate) => candidate.id === script.id) === index;
-        });
         const sessionEmail = authSession?.user?.email || null;
         const sessionUserId = authSession?.user?.id || null;
         const ownedActiveModule = this._getOwnedActiveModule(sessionUserId);
+        const ownScripts: CreatorScriptOption[] = myModules
+            .filter((module) => ownScriptsVisibilityById[module.id] !== false)
+            .map((module) => ({
+                ...this._buildModuleScript(module),
+                canSaveModule: true,
+            }));
+        const subscribedScripts: CreatorScriptOption[] = subscribedModules
+            .filter((module) => subscribedScriptsVisibilityById[module.id] !== false)
+            .map((module) => ({
+                ...this._buildModuleScript(module),
+                canSaveModule: false,
+            }));
+        const bundledScripts: CreatorScriptOption[] = BUNDLED_SCRIPTS.map((script) => ({
+            ...script,
+            canSaveModule: false,
+        }));
+        const customScriptsWithFlags: CreatorScriptOption[] = customScripts.map((script) => ({
+            ...script,
+            canSaveModule: false,
+        }));
+        const activeScriptWithFlag: CreatorScriptOption | null = activeModule
+            ? {
+                ...activeScript,
+                canSaveModule: !!ownedActiveModule,
+            }
+            : null;
+        const availableScripts = (activeModule
+            ? [activeScriptWithFlag, ...ownScripts, ...subscribedScripts, ...bundledScripts, ...customScriptsWithFlags]
+            : [...ownScripts, ...subscribedScripts, ...bundledScripts, ...customScriptsWithFlags]
+        ).filter((script): script is CreatorScriptOption => !!script).filter((script, index, scripts) => {
+            return scripts.findIndex((candidate) => candidate.id === script.id) === index;
+        });
 
         return (
             <>

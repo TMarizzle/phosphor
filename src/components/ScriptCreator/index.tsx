@@ -11,6 +11,7 @@ interface ScriptCreatorScriptOption {
     id: string;
     label: string;
     json: any;
+    canSaveModule: boolean;
 }
 
 interface ScriptCreatorProps {
@@ -1545,12 +1546,15 @@ const ScriptCreator: FC<ScriptCreatorProps> = ({
     onSaveModule,
 }) => {
     const initialSelectedScreenId = getInitialSelectedScreenId(initialScript);
-    const initialSelectedScriptLabel = availableScripts.find((script) => script.id === initialScriptId)?.label
+    const initialSelectedScript = availableScripts.find((script) => script.id === initialScriptId);
+    const initialSelectedScriptLabel = initialSelectedScript?.label
         || String(initialScript?.config?.name || "CUSTOM SCRIPT").toUpperCase();
+    const initialSelectedScriptCanSaveModule = !!initialSelectedScript?.canSaveModule;
     const scriptSnapshotsRef = useRef<Record<string, CreatorSelectionSnapshot>>({});
     const [script, setScript] = useState<any>(() => ensureScriptShape(initialScript));
     const [selectedScriptId, setSelectedScriptId] = useState<string>(() => initialScriptId);
     const [selectedScriptLabel, setSelectedScriptLabel] = useState<string>(() => initialSelectedScriptLabel);
+    const [selectedScriptCanSaveModule, setSelectedScriptCanSaveModule] = useState<boolean>(() => initialSelectedScriptCanSaveModule);
     const [selectedScreenId, setSelectedScreenId] = useState<string>(() => initialSelectedScreenId);
     const [screenIdDraft, setScreenIdDraft] = useState<string>(() => initialSelectedScreenId);
     const [schemaRootId, setSchemaRootId] = useState<string>(() => initialSelectedScreenId);
@@ -2084,7 +2088,12 @@ const ScriptCreator: FC<ScriptCreatorProps> = ({
         setSelectedScreenId(snapshot.selectedScreenId);
     };
 
-    const loadScriptIntoCreator = (nextScriptJson: any, nextScriptId: string, nextScriptLabel: string): void => {
+    const loadScriptIntoCreator = (
+        nextScriptJson: any,
+        nextScriptId: string,
+        nextScriptLabel: string,
+        nextScriptCanSaveModule: boolean = false
+    ): void => {
         const normalized = ensureScriptShape(nextScriptJson);
         if (selectedScriptId && selectedScriptId !== nextScriptId) {
             saveSelectionSnapshot(selectedScriptId);
@@ -2109,11 +2118,13 @@ const ScriptCreator: FC<ScriptCreatorProps> = ({
         setScript(normalized);
         setSelectedScriptId(nextScriptId);
         setSelectedScriptLabel(nextScriptLabel);
+        setSelectedScriptCanSaveModule(nextScriptCanSaveModule);
         applySelectionSnapshot(nextSnapshot);
         setRawElementError(null);
         setRawElementDraft("");
         setRawDialogContentDraft("");
         setSearchQuery("");
+        setModuleSaveState("idle");
         resetSearchNavigation();
     };
 
@@ -2123,7 +2134,7 @@ const ScriptCreator: FC<ScriptCreatorProps> = ({
             return;
         }
 
-        loadScriptIntoCreator(nextScript.json, nextScript.id, nextScript.label);
+        loadScriptIntoCreator(nextScript.json, nextScript.id, nextScript.label, !!nextScript.canSaveModule);
     };
 
     useEffect(() => {
@@ -3323,7 +3334,8 @@ const ScriptCreator: FC<ScriptCreatorProps> = ({
         loadScriptIntoCreator(
             freshScript,
             "",
-            String(freshScript.config?.name || "CUSTOM SCRIPT").toUpperCase()
+            String(freshScript.config?.name || "CUSTOM SCRIPT").toUpperCase(),
+            false
         );
     };
 
@@ -5389,7 +5401,7 @@ const ScriptCreator: FC<ScriptCreatorProps> = ({
 
                 <div className="script-creator__footer">
                     <button className="script-creator__btn" onClick={applyScript}>[APPLY TO APP]</button>
-                    {onSaveModule && (
+                    {selectedScriptCanSaveModule && onSaveModule && (
                         <button
                             className="script-creator__btn"
                             onClick={() => void saveModule()}
