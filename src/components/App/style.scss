@@ -19,7 +19,7 @@ $font-bump: 4pt;
     display: flex;
     align-items: center;
     justify-content: space-between;
-    gap: 1em;
+    gap: 0.25rem;
 
     padding: 0 1em;
     box-sizing: border-box;
@@ -37,7 +37,7 @@ $font-bump: 4pt;
         align-items: center;
         box-sizing: border-box;
         min-height: 1.8em;
-        padding: 0.15em 0.3em;
+        padding: 0.15em 0.25rem;
         border: 1px solid transparent;
         background: none;
         color: inherit;
@@ -60,7 +60,7 @@ $font-bump: 4pt;
         display: flex;
         align-items: center;
         justify-content: flex-end;
-        gap: 0.75em;
+        gap: 0.25rem;
         flex-wrap: nowrap;
         flex: 1 1 auto;
         min-width: 0;
@@ -87,7 +87,7 @@ $font-bump: 4pt;
         text-shadow: var(--fg-glow);
         text-decoration: none;
         cursor: pointer;
-        padding: 0.15em 0.5em;
+        padding: 0.15em 0.25rem;
         letter-spacing: 0.08em;
         white-space: nowrap;
 
@@ -107,7 +107,7 @@ $font-bump: 4pt;
         font-size: inherit;
         text-shadow: var(--fg-glow);
         cursor: pointer;
-        padding: 0.15em 0.5em;
+        padding: 0.15em 0.25rem;
         letter-spacing: 0.08em;
         white-space: nowrap;
 
@@ -272,7 +272,7 @@ $font-bump: 4pt;
 
     &__menu-btn {
         display: none;
-        margin-left: 0.35em;
+        margin-left: 0.25rem;
     }
 
     &__hide-at-1,

@@ -1801,7 +1801,7 @@ class App extends Component<any, AppState> {
                         href={getTerminalAppUrl()}
                         title="Return to the PHOSPHOR terminal"
                     >
-                        {APP_TITLE}
+                        {APP_TITLE} TERMINAL
                     </a>
 
                     <div
@@ -1822,7 +1822,7 @@ class App extends Component<any, AppState> {
                                     aria-haspopup="listbox"
                                     aria-expanded={scriptDropdownOpen}
                                 >
-                                    [SCRIPT: {activeScript.label} {scriptDropdownOpen ? "▲" : "▼"}]
+                                    [SCRIPT:{activeScript.label} {scriptDropdownOpen ? "▲" : "▼"}]
                                 </button>
 
                         {scriptDropdownOpen && (
@@ -2282,7 +2282,7 @@ class App extends Component<any, AppState> {
                                                 aria-expanded={scriptDropdownOpen}
                                                 onClick={this._handleDropdownToggle}
                                             >
-                                                [SCRIPT: {activeScript.label} {scriptDropdownOpen ? "▲" : "▼"}]
+                                                [SCRIPT:{activeScript.label} {scriptDropdownOpen ? "▲" : "▼"}]
                                             </button>
 
                                             {scriptDropdownOpen && (

@@ -1,4 +1,4 @@
-import React, { FC, useCallback, useEffect, useMemo, useRef, useState } from "react";
+import React, { FC, useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import type { Session } from "@supabase/supabase-js";
 import { createPortal } from "react-dom";
 import CreatorSelect, { CreatorSelectOption } from "../CreatorSelect";
@@ -82,6 +82,7 @@ const SHARE_MENU_WIDTH = 224;
 const SHARE_MENU_HEIGHT = 90;
 const MAX_AUTHOR_LENGTH = 25;
 const MAX_RATING = 5;
+const HEADER_OVERFLOW_MAX_LEVEL = 4;
 
 const getModulesBrowserUrlWithTransientAuthParams = (
     params?: Record<string, string | null | undefined>
@@ -276,6 +277,7 @@ const ModulesBrowser: FC = () => {
     const [optionsDropdownOpen, setOptionsDropdownOpen] = useState<boolean>(false);
     const [customThemeEditorOpen, setCustomThemeEditorOpen] = useState<boolean>(false);
     const [mobileMenuOpen, setMobileMenuOpen] = useState<boolean>(false);
+    const [headerOverflowLevel, setHeaderOverflowLevel] = useState<number>(0);
     const [ownerMenuOpen, setOwnerMenuOpen] = useState<boolean>(false);
     const [ownerMenuPosition, setOwnerMenuPosition] = useState<{ top: number; left: number } | null>(null);
     const [shareMenuOpen, setShareMenuOpen] = useState<boolean>(false);
@@ -303,6 +305,9 @@ const ModulesBrowser: FC = () => {
         ].filter(Boolean).join(" ");
     }, [fontMode, viewMode]);
     const headerRef = useRef<HTMLElement | null>(null);
+    const headerTitleRef = useRef<HTMLAnchorElement | null>(null);
+    const headerControlsRef = useRef<HTMLDivElement | null>(null);
+    const headerOverflowWrapperRef = useRef<HTMLDivElement | null>(null);
     const profileRef = useRef<HTMLDivElement | null>(null);
     const optionsRef = useRef<HTMLDivElement | null>(null);
     const ownerMenuRef = useRef<HTMLDivElement | null>(null);
@@ -314,6 +319,71 @@ const ModulesBrowser: FC = () => {
     const lastHydratedSessionUserIdRef = useRef<string | null>(null);
     const ownedModulesRef = useRef<ModuleRecord[]>([]);
     const hasCatalogBootstrappedRef = useRef<boolean>(false);
+
+    const setHeaderOverflowLevelClass = useCallback((header: HTMLElement, level: number): void => {
+        header.classList.toggle("phosphor-header--compact", level > 0);
+        for (let index = 1; index <= HEADER_OVERFLOW_MAX_LEVEL; index += 1) {
+            header.classList.remove(`phosphor-header--overflow-${index}`);
+        }
+
+        if (level > 0) {
+            header.classList.add(`phosphor-header--overflow-${level}`);
+        }
+    }, []);
+
+    const updateHeaderLayout = useCallback(() => {
+        const header = headerRef.current;
+        const title = headerTitleRef.current;
+        const controls = headerControlsRef.current;
+        if (!header || !title || !controls) {
+            return;
+        }
+
+        let nextOverflowLevel = 0;
+        for (let level = 0; level <= HEADER_OVERFLOW_MAX_LEVEL; level += 1) {
+            setHeaderOverflowLevelClass(header, level);
+
+            const headerRect = header.getBoundingClientRect();
+            const titleRect = title.getBoundingClientRect();
+            const controlsRect = controls.getBoundingClientRect();
+            const controlChildren = Array.from(controls.children)
+                .filter((child): child is HTMLElement => child instanceof HTMLElement)
+                .filter((child) => child.offsetParent !== null);
+
+            let controlsVisualLeft = controlsRect.left;
+            let controlsVisualRight = controlsRect.right;
+            controlChildren.forEach((child) => {
+                const childRect = child.getBoundingClientRect();
+                controlsVisualLeft = Math.min(controlsVisualLeft, childRect.left);
+                controlsVisualRight = Math.max(controlsVisualRight, childRect.right);
+            });
+
+            const titleOverlap = controlsVisualLeft < titleRect.right + 8;
+            const controlsOutsideHeader = controlsVisualLeft < headerRect.left + 1
+                || controlsVisualRight > headerRect.right - 1;
+            const fits = !titleOverlap
+                && !controlsOutsideHeader
+                && header.scrollWidth <= header.clientWidth + 1
+                && controls.scrollWidth <= controls.clientWidth + 1;
+
+            if (fits) {
+                nextOverflowLevel = level;
+                break;
+            }
+
+            nextOverflowLevel = HEADER_OVERFLOW_MAX_LEVEL;
+        }
+
+        setHeaderOverflowLevelClass(header, nextOverflowLevel);
+
+        if (nextOverflowLevel !== headerOverflowLevel) {
+            setHeaderOverflowLevel(nextOverflowLevel);
+            setMobileMenuOpen(false);
+            setOptionsDropdownOpen(false);
+            setProfileOpen(false);
+            setCustomThemeEditorOpen(false);
+        }
+    }, [headerOverflowLevel, setHeaderOverflowLevelClass]);
 
     const updateOwnerMenuPosition = useCallback(() => {
         const anchor = ownerMenuRef.current;
@@ -481,14 +551,21 @@ const ModulesBrowser: FC = () => {
             if (!target) {
                 return;
             }
+            const overflowWrapper = target instanceof Element
+                ? target.closest(".phosphor-header__overflow-wrapper")
+                : null;
 
             if (profileOpen && profileRef.current && !profileRef.current.contains(target)) {
-                setProfileOpen(false);
+                if (!(headerOverflowLevel > 0 && overflowWrapper)) {
+                    setProfileOpen(false);
+                }
             }
 
             if (optionsDropdownOpen && optionsRef.current && !optionsRef.current.contains(target)) {
-                setOptionsDropdownOpen(false);
-                setCustomThemeEditorOpen(false);
+                if (!(headerOverflowLevel > 0 && overflowWrapper)) {
+                    setOptionsDropdownOpen(false);
+                    setCustomThemeEditorOpen(false);
+                }
             }
 
             if (
@@ -509,7 +586,10 @@ const ModulesBrowser: FC = () => {
                 setShareMenuOpen(false);
             }
 
-            if (mobileMenuOpen && headerRef.current && !headerRef.current.contains(target)) {
+            if (mobileMenuOpen
+                && headerRef.current
+                && !headerRef.current.contains(target)
+                && !(headerOverflowLevel > 0 && overflowWrapper)) {
                 setMobileMenuOpen(false);
                 setProfileOpen(false);
                 setOptionsDropdownOpen(false);
@@ -536,7 +616,7 @@ const ModulesBrowser: FC = () => {
             document.removeEventListener("mousedown", handleDocumentMouseDown);
             document.removeEventListener("keydown", handleDocumentKeyDown);
         };
-    }, [mobileMenuOpen, optionsDropdownOpen, ownerMenuOpen, profileOpen, shareMenuOpen]);
+    }, [headerOverflowLevel, mobileMenuOpen, optionsDropdownOpen, ownerMenuOpen, profileOpen, shareMenuOpen]);
 
     useEffect(() => {
         if (!ownerMenuOpen) {
@@ -575,6 +655,40 @@ const ModulesBrowser: FC = () => {
             window.removeEventListener("scroll", handleViewportChange, true);
         };
     }, [shareMenuOpen, updateShareMenuPosition]);
+
+    useLayoutEffect(() => {
+        if (typeof window === "undefined") {
+            return;
+        }
+
+        let rafId = window.requestAnimationFrame(updateHeaderLayout);
+        const handleViewportChange = () => {
+            window.cancelAnimationFrame(rafId);
+            rafId = window.requestAnimationFrame(updateHeaderLayout);
+        };
+
+        window.addEventListener("resize", handleViewportChange);
+        return () => {
+            window.cancelAnimationFrame(rafId);
+            window.removeEventListener("resize", handleViewportChange);
+        };
+    }, [
+        authLoading,
+        createdModuleCount,
+        fontMode,
+        headerOverflowLevel,
+        isAdmin,
+        mobileMenuOpen,
+        optionsDropdownOpen,
+        profileOpen,
+        query,
+        sessionEmail,
+        sessionRole,
+        sort,
+        subscribedOnly,
+        updateHeaderLayout,
+        viewMode,
+    ]);
 
     useEffect(() => {
         if (isAdmin) {
@@ -1094,6 +1208,175 @@ const ModulesBrowser: FC = () => {
         }
     };
 
+    const renderOptionsMenuItems = () => (
+        <>
+            <button
+                className="phosphor-header__dropdown-item"
+                role="menuitem"
+                onClick={handleSoundToggle}
+            >
+                [SOUND:{soundEnabled ? "ON" : "OFF"}]
+            </button>
+
+            <div className="phosphor-header__dropdown-item phosphor-header__dropdown-item--separator" />
+
+            <div className="phosphor-header__dropdown-label">[DISPLAY]</div>
+            {BROWSER_VIEW_OPTIONS.map((option) => (
+                <button
+                    key={option.value}
+                    role="menuitemradio"
+                    aria-checked={viewMode === option.value}
+                    className={
+                        "phosphor-header__dropdown-item"
+                        + (viewMode === option.value ? " phosphor-header__dropdown-item--active" : "")
+                    }
+                    onClick={() => handleViewModeChange(option.value)}
+                >
+                    {viewMode === option.value ? "► " : "  "}{option.label}
+                </button>
+            ))}
+            {BROWSER_FONT_OPTIONS.map((option) => (
+                <button
+                    key={option.value}
+                    role="menuitemradio"
+                    aria-checked={fontMode === option.value}
+                    className={
+                        "phosphor-header__dropdown-item"
+                        + (fontMode === option.value ? " phosphor-header__dropdown-item--active" : "")
+                    }
+                    onClick={() => handleFontModeChange(option.value)}
+                >
+                    {fontMode === option.value ? "► " : "  "}{option.label}
+                </button>
+            ))}
+
+            <div className="phosphor-header__dropdown-item phosphor-header__dropdown-item--separator" />
+
+            <div className="phosphor-header__dropdown-label">[THEME]</div>
+            {THEMES.map((theme) => (
+                <button
+                    key={theme.id}
+                    role="menuitemradio"
+                    aria-checked={theme.id === activeTheme.id}
+                    className={
+                        "phosphor-header__dropdown-item"
+                        + (theme.id === activeTheme.id ? " phosphor-header__dropdown-item--active" : "")
+                    }
+                    onClick={() => handleThemeSelect(theme.id)}
+                >
+                    {theme.id === activeTheme.id ? "► " : "  "}{theme.name}
+                </button>
+            ))}
+
+            <button
+                role="menuitemradio"
+                aria-checked={activeTheme.id === "custom"}
+                className={
+                    "phosphor-header__dropdown-item"
+                    + (activeTheme.id === "custom" ? " phosphor-header__dropdown-item--active" : "")
+                }
+                onClick={() => {
+                    if (activeTheme.id !== "custom") {
+                        handleThemeSelect("custom");
+                        return;
+                    }
+
+                    handleCustomThemeEditorToggle();
+                }}
+            >
+                {activeTheme.id === "custom" ? "► " : "  "}
+                CUSTOM {activeTheme.id === "custom" ? (customThemeEditorOpen ? "▲" : "▼") : ""}
+            </button>
+
+            {activeTheme.id === "custom" && customThemeEditorOpen && (
+                <div className="phosphor-header__theme-custom">
+                    <label className="phosphor-header__theme-color-field">
+                        <span>FG</span>
+                        <input
+                            type="color"
+                            aria-label="Custom foreground color"
+                            value={customTheme.fgHex}
+                            onChange={(event) => handleThemeColorChange("fgHex", event.target.value)}
+                        />
+                    </label>
+                    <label className="phosphor-header__theme-color-field">
+                        <span>ALERT</span>
+                        <input
+                            type="color"
+                            aria-label="Custom alert color"
+                            value={customTheme.alertHex}
+                            onChange={(event) => handleThemeColorChange("alertHex", event.target.value)}
+                        />
+                    </label>
+                    <label className="phosphor-header__theme-color-field">
+                        <span>EMPHASIS</span>
+                        <input
+                            type="color"
+                            aria-label="Custom emphasis color"
+                            value={customTheme.emphasisHex}
+                            onChange={(event) => handleThemeColorChange("emphasisHex", event.target.value)}
+                        />
+                    </label>
+                    <label className="phosphor-header__theme-color-field">
+                        <span>NOTICE</span>
+                        <input
+                            type="color"
+                            aria-label="Custom notice color"
+                            value={customTheme.noticeHex}
+                            onChange={(event) => handleThemeColorChange("noticeHex", event.target.value)}
+                        />
+                    </label>
+                    <label className="phosphor-header__theme-color-field">
+                        <span>HYPERLINK</span>
+                        <input
+                            type="color"
+                            aria-label="Custom hyperlink color"
+                            value={customTheme.hyperlinkHex}
+                            onChange={(event) => handleThemeColorChange("hyperlinkHex", event.target.value)}
+                        />
+                    </label>
+                    <label className="phosphor-header__theme-color-field">
+                        <span>SYSTEM</span>
+                        <input
+                            type="color"
+                            aria-label="Custom system color"
+                            value={customTheme.systemHex}
+                            onChange={(event) => handleThemeColorChange("systemHex", event.target.value)}
+                        />
+                    </label>
+                </div>
+            )}
+        </>
+    );
+
+    const renderProfileMenuItems = () => (
+        <>
+            <div className="phosphor-header__dropdown-label">[ACCOUNT]</div>
+            <div className="modules-browser__profile-row">
+                <span className="modules-browser__profile-key">[EMAIL]</span>
+                <span className="modules-browser__profile-value">{sessionEmail}</span>
+            </div>
+            <div className="modules-browser__profile-row">
+                <span className="modules-browser__profile-key">[MODULES CREATED]</span>
+                <span className="modules-browser__profile-value">{createdModuleCount}</span>
+            </div>
+            {isAdmin && (
+                <div className="modules-browser__profile-row">
+                    <span className="modules-browser__profile-key">[ROLE]</span>
+                    <span className="modules-browser__profile-value">admin</span>
+                </div>
+            )}
+            <div className="phosphor-header__dropdown-item phosphor-header__dropdown-item--separator" />
+            <button
+                className="phosphor-header__dropdown-item"
+                role="menuitem"
+                onClick={() => void handleSignOut()}
+            >
+                [SIGN OUT]
+            </button>
+        </>
+    );
+
     const emptyMessage = useMemo(() => {
         if (catalogLoading) {
             return "Loading modules...";
@@ -1115,8 +1398,17 @@ const ModulesBrowser: FC = () => {
 
     return (
         <section className={browserClassName}>
-            <header ref={headerRef} className="phosphor-header modules-browser__topbar">
+            <header
+                ref={headerRef}
+                className={
+                    "phosphor-header modules-browser__topbar"
+                    + (headerOverflowLevel > 0
+                        ? ` phosphor-header--compact phosphor-header--overflow-${headerOverflowLevel}`
+                        : "")
+                }
+            >
                 <a
+                    ref={headerTitleRef}
                     className="phosphor-header__title"
                     href={getTerminalAppUrl()}
                     title="Return to the PHOSPHOR terminal"
@@ -1124,31 +1416,12 @@ const ModulesBrowser: FC = () => {
                     {APP_TITLE} LIBRARY
                 </a>
 
-                <button
-                    className="phosphor-header__btn phosphor-header__menu-btn"
-                    onClick={() => {
-                        setMobileMenuOpen((prev) => !prev);
-                        if (mobileMenuOpen) {
-                            setProfileOpen(false);
-                            setOptionsDropdownOpen(false);
-                            setCustomThemeEditorOpen(false);
-                        }
-                    }}
-                    aria-haspopup="menu"
-                    aria-expanded={mobileMenuOpen}
-                    title="Toggle library controls"
-                >
-                    [MENU {mobileMenuOpen ? "▲" : "▼"}]
-                </button>
-
                 <div
-                    className={
-                        "phosphor-header__controls"
-                        + (mobileMenuOpen ? " phosphor-header__controls--open" : "")
-                    }
+                    ref={headerControlsRef}
+                    className="phosphor-header__controls"
                 >
                     <a
-                        className="phosphor-header__btn"
+                        className="phosphor-header__btn phosphor-header__hide-at-4"
                         href={getTerminalAppUrl()}
                         onClick={() => {
                             setMobileMenuOpen(false);
@@ -1160,7 +1433,7 @@ const ModulesBrowser: FC = () => {
                         [TERMINAL]
                     </a>
 
-                    <div ref={optionsRef} className="phosphor-header__options-wrapper">
+                    <div ref={optionsRef} className="phosphor-header__options-wrapper phosphor-header__hide-at-3">
                         <button
                             className="phosphor-header__btn"
                             onClick={handleOptionsDropdownToggle}
@@ -1173,148 +1446,13 @@ const ModulesBrowser: FC = () => {
 
                         {optionsDropdownOpen && (
                             <div className="phosphor-header__dropdown phosphor-header__dropdown--options" role="menu">
-                                <button
-                                    className="phosphor-header__dropdown-item"
-                                    role="menuitem"
-                                    onClick={handleSoundToggle}
-                                >
-                                    [SOUND:{soundEnabled ? "ON" : "OFF"}]
-                                </button>
-
-                                <div className="phosphor-header__dropdown-item phosphor-header__dropdown-item--separator" />
-
-                                <div className="phosphor-header__dropdown-label">[DISPLAY]</div>
-                                {BROWSER_VIEW_OPTIONS.map((option) => (
-                                    <button
-                                        key={option.value}
-                                        role="menuitemradio"
-                                        aria-checked={viewMode === option.value}
-                                        className={
-                                            "phosphor-header__dropdown-item"
-                                            + (viewMode === option.value ? " phosphor-header__dropdown-item--active" : "")
-                                        }
-                                        onClick={() => handleViewModeChange(option.value)}
-                                    >
-                                        {viewMode === option.value ? "► " : "  "}{option.label}
-                                    </button>
-                                ))}
-                                {BROWSER_FONT_OPTIONS.map((option) => (
-                                    <button
-                                        key={option.value}
-                                        role="menuitemradio"
-                                        aria-checked={fontMode === option.value}
-                                        className={
-                                            "phosphor-header__dropdown-item"
-                                            + (fontMode === option.value ? " phosphor-header__dropdown-item--active" : "")
-                                        }
-                                        onClick={() => handleFontModeChange(option.value)}
-                                    >
-                                        {fontMode === option.value ? "► " : "  "}{option.label}
-                                    </button>
-                                ))}
-
-                                <div className="phosphor-header__dropdown-item phosphor-header__dropdown-item--separator" />
-
-                                <div className="phosphor-header__dropdown-label">[THEME]</div>
-                                {THEMES.map((theme) => (
-                                    <button
-                                        key={theme.id}
-                                        role="menuitemradio"
-                                        aria-checked={theme.id === activeTheme.id}
-                                        className={
-                                            "phosphor-header__dropdown-item"
-                                            + (theme.id === activeTheme.id ? " phosphor-header__dropdown-item--active" : "")
-                                        }
-                                        onClick={() => handleThemeSelect(theme.id)}
-                                    >
-                                        {theme.id === activeTheme.id ? "► " : "  "}{theme.name}
-                                    </button>
-                                ))}
-
-                                <button
-                                    role="menuitemradio"
-                                    aria-checked={activeTheme.id === "custom"}
-                                    className={
-                                        "phosphor-header__dropdown-item"
-                                        + (activeTheme.id === "custom" ? " phosphor-header__dropdown-item--active" : "")
-                                    }
-                                    onClick={() => {
-                                        if (activeTheme.id !== "custom") {
-                                            handleThemeSelect("custom");
-                                            return;
-                                        }
-
-                                        handleCustomThemeEditorToggle();
-                                    }}
-                                >
-                                    {activeTheme.id === "custom" ? "► " : "  "}
-                                    CUSTOM {activeTheme.id === "custom" ? (customThemeEditorOpen ? "▲" : "▼") : ""}
-                                </button>
-
-                                {activeTheme.id === "custom" && customThemeEditorOpen && (
-                                    <div className="phosphor-header__theme-custom">
-                                        <label className="phosphor-header__theme-color-field">
-                                            <span>FG</span>
-                                            <input
-                                                type="color"
-                                                aria-label="Custom foreground color"
-                                                value={customTheme.fgHex}
-                                                onChange={(event) => handleThemeColorChange("fgHex", event.target.value)}
-                                            />
-                                        </label>
-                                        <label className="phosphor-header__theme-color-field">
-                                            <span>ALERT</span>
-                                            <input
-                                                type="color"
-                                                aria-label="Custom alert color"
-                                                value={customTheme.alertHex}
-                                                onChange={(event) => handleThemeColorChange("alertHex", event.target.value)}
-                                            />
-                                        </label>
-                                        <label className="phosphor-header__theme-color-field">
-                                            <span>EMPHASIS</span>
-                                            <input
-                                                type="color"
-                                                aria-label="Custom emphasis color"
-                                                value={customTheme.emphasisHex}
-                                                onChange={(event) => handleThemeColorChange("emphasisHex", event.target.value)}
-                                            />
-                                        </label>
-                                        <label className="phosphor-header__theme-color-field">
-                                            <span>NOTICE</span>
-                                            <input
-                                                type="color"
-                                                aria-label="Custom notice color"
-                                                value={customTheme.noticeHex}
-                                                onChange={(event) => handleThemeColorChange("noticeHex", event.target.value)}
-                                            />
-                                        </label>
-                                        <label className="phosphor-header__theme-color-field">
-                                            <span>HYPERLINK</span>
-                                            <input
-                                                type="color"
-                                                aria-label="Custom hyperlink color"
-                                                value={customTheme.hyperlinkHex}
-                                                onChange={(event) => handleThemeColorChange("hyperlinkHex", event.target.value)}
-                                            />
-                                        </label>
-                                        <label className="phosphor-header__theme-color-field">
-                                            <span>SYSTEM</span>
-                                            <input
-                                                type="color"
-                                                aria-label="Custom system color"
-                                                value={customTheme.systemHex}
-                                                onChange={(event) => handleThemeColorChange("systemHex", event.target.value)}
-                                            />
-                                        </label>
-                                    </div>
-                                )}
+                                {renderOptionsMenuItems()}
                             </div>
                         )}
                     </div>
 
                     <a
-                        className="phosphor-header__btn"
+                        className="phosphor-header__btn phosphor-header__hide-at-2"
                         href="https://ko-fi.com/ethandunning"
                         target="_blank"
                         rel="noopener noreferrer"
@@ -1323,13 +1461,13 @@ const ModulesBrowser: FC = () => {
                     </a>
 
                     {!authLoading && !sessionEmail && (
-                        <button className="phosphor-header__btn" onClick={() => void handleSignIn()}>
+                        <button className="phosphor-header__btn phosphor-header__hide-at-1" onClick={() => void handleSignIn()}>
                             [SIGN IN]
                         </button>
                     )}
 
                     {!authLoading && !!sessionEmail && (
-                        <div ref={profileRef} className="phosphor-header__options-wrapper">
+                        <div ref={profileRef} className="phosphor-header__options-wrapper phosphor-header__profile-wrapper phosphor-header__hide-at-1">
                             <button
                                 className="phosphor-header__btn"
                                 onClick={() => {
@@ -1348,33 +1486,119 @@ const ModulesBrowser: FC = () => {
                                     className="phosphor-header__dropdown phosphor-header__dropdown--options modules-browser__profile-menu"
                                     role="menu"
                                 >
-                                    <div className="phosphor-header__dropdown-label">[ACCOUNT]</div>
-                                    <div className="modules-browser__profile-row">
-                                        <span className="modules-browser__profile-key">[EMAIL]</span>
-                                        <span className="modules-browser__profile-value">{sessionEmail}</span>
-                                    </div>
-                                    <div className="modules-browser__profile-row">
-                                        <span className="modules-browser__profile-key">[MODULES CREATED]</span>
-                                        <span className="modules-browser__profile-value">{createdModuleCount}</span>
-                                    </div>
-                                    {isAdmin && (
-                                        <div className="modules-browser__profile-row">
-                                            <span className="modules-browser__profile-key">[ROLE]</span>
-                                            <span className="modules-browser__profile-value">admin</span>
-                                        </div>
-                                    )}
-                                    <div className="phosphor-header__dropdown-item phosphor-header__dropdown-item--separator" />
-                                    <button
-                                        className="phosphor-header__dropdown-item"
-                                        role="menuitem"
-                                        onClick={() => void handleSignOut()}
-                                    >
-                                        [SIGN OUT]
-                                    </button>
+                                    {renderProfileMenuItems()}
                                 </div>
                             )}
                         </div>
                     )}
+
+                    <div
+                        ref={headerOverflowWrapperRef}
+                        className="phosphor-header__options-wrapper phosphor-header__overflow-wrapper"
+                    >
+                        <button
+                            className="phosphor-header__btn phosphor-header__menu-btn"
+                            onClick={() => {
+                                setMobileMenuOpen((prev) => !prev);
+                                setOptionsDropdownOpen(false);
+                                setProfileOpen(false);
+                                setCustomThemeEditorOpen(false);
+                            }}
+                            aria-haspopup="menu"
+                            aria-expanded={mobileMenuOpen}
+                            title="Toggle library controls"
+                        >
+                            [MENU {mobileMenuOpen ? "▲" : "▼"}]
+                        </button>
+
+                        {mobileMenuOpen && (
+                            <div
+                                className="phosphor-header__dropdown phosphor-header__dropdown--options phosphor-header__overflow-dropdown"
+                                role="menu"
+                            >
+                                {headerOverflowLevel >= 4 && (
+                                    <a
+                                        className="phosphor-header__dropdown-item"
+                                        href={getTerminalAppUrl()}
+                                        role="menuitem"
+                                        onClick={() => {
+                                            setMobileMenuOpen(false);
+                                            setOptionsDropdownOpen(false);
+                                            setProfileOpen(false);
+                                            setCustomThemeEditorOpen(false);
+                                        }}
+                                    >
+                                        [TERMINAL]
+                                    </a>
+                                )}
+
+                                {headerOverflowLevel >= 3 && (
+                                    <div className="phosphor-header__overflow-section">
+                                        <button
+                                            className="phosphor-header__dropdown-item"
+                                            role="menuitem"
+                                            aria-expanded={optionsDropdownOpen}
+                                            onClick={handleOptionsDropdownToggle}
+                                        >
+                                            [OPTIONS {optionsDropdownOpen ? "▲" : "▼"}]
+                                        </button>
+
+                                        {optionsDropdownOpen && renderOptionsMenuItems()}
+                                    </div>
+                                )}
+
+                                {headerOverflowLevel >= 2 && (
+                                    <a
+                                        className="phosphor-header__dropdown-item"
+                                        href="https://ko-fi.com/ethandunning"
+                                        target="_blank"
+                                        rel="noopener noreferrer"
+                                        role="menuitem"
+                                        onClick={() => {
+                                            setMobileMenuOpen(false);
+                                            setOptionsDropdownOpen(false);
+                                            setProfileOpen(false);
+                                            setCustomThemeEditorOpen(false);
+                                        }}
+                                    >
+                                        [DONATE]
+                                    </a>
+                                )}
+
+                                {headerOverflowLevel >= 1 && !authLoading && !sessionEmail && (
+                                    <button
+                                        className="phosphor-header__dropdown-item"
+                                        role="menuitem"
+                                        onClick={() => {
+                                            setMobileMenuOpen(false);
+                                            void handleSignIn();
+                                        }}
+                                    >
+                                        [SIGN IN]
+                                    </button>
+                                )}
+
+                                {headerOverflowLevel >= 1 && !authLoading && !!sessionEmail && (
+                                    <div className="phosphor-header__overflow-section">
+                                        <button
+                                            className="phosphor-header__dropdown-item"
+                                            role="menuitem"
+                                            aria-expanded={profileOpen}
+                                            onClick={() => {
+                                                setProfileOpen((prev) => !prev);
+                                                setOptionsDropdownOpen(false);
+                                                setCustomThemeEditorOpen(false);
+                                            }}
+                                        >
+                                            [PROFILE {profileOpen ? "▲" : "▼"}]
+                                        </button>
+
+                                        {profileOpen && renderProfileMenuItems()}
+                                    </div>
+                                )}
+                            </div>
+                        )}
+                    </div>
                 </div>
             </header>
 

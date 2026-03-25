@@ -65,6 +65,11 @@ $browser-normal-font-stack: "Trebuchet MS", Verdana, Geneva, sans-serif;
         z-index: 450;
     }
 
+    .phosphor-header__title {
+        flex: 0 0 auto;
+        white-space: nowrap;
+    }
+
     &__shell {
         position: absolute;
         top: calc(var(--header-height, 50px) + 6px);
