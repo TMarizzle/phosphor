@@ -34,6 +34,7 @@ interface CreatorSelectionSnapshot {
     activeView: "editor" | "schema";
     configPanelVisible: boolean;
     elementEditorMode: "fields" | "raw";
+    screenEditorMode: "fields" | "raw";
     screenControlsOpen: boolean;
     schemaRootId: string;
     screenIdDraft: string;
@@ -1570,6 +1571,9 @@ const ScriptCreator: FC<ScriptCreatorProps> = ({
     const [selectedDialogContentIndex, setSelectedDialogContentIndex] = useState<number>(0);
     const [sidebarListMode, setSidebarListMode] = useState<"screens" | "dialogs">(initialSidebarListMode);
     const [screenControlsOpen, setScreenControlsOpen] = useState<boolean>(false);
+    const [screenEditorMode, setScreenEditorMode] = useState<"fields" | "raw">("fields");
+    const [rawScreenError, setRawScreenError] = useState<string | null>(null);
+    const [rawScreenDraft, setRawScreenDraft] = useState<string>("");
     const [elementEditorMode, setElementEditorMode] = useState<"fields" | "raw">("fields");
     const [activeView, setActiveView] = useState<"editor" | "schema">("editor");
     const [creatorColorMode, setCreatorColorMode] = useState<CreatorColorMode>("theme");
@@ -2001,6 +2005,16 @@ const ScriptCreator: FC<ScriptCreatorProps> = ({
     }, [selectedScreen?.id]);
 
     useEffect(() => {
+        if (sidebarListMode !== "screens" || screenEditorMode !== "raw" || selectedScreen === undefined) {
+            setRawScreenDraft("");
+            return;
+        }
+
+        setRawScreenDraft(JSON.stringify(selectedScreen, null, 2));
+        setRawScreenError(null);
+    }, [screenEditorMode, selectedScreenId, sidebarListMode]);
+
+    useEffect(() => {
         if (sidebarListMode !== "screens" || elementEditorMode !== "raw" || selectedElement === undefined) {
             setRawElementDraft("");
             return;
@@ -2039,6 +2053,7 @@ const ScriptCreator: FC<ScriptCreatorProps> = ({
             activeView: "editor",
             configPanelVisible: true,
             elementEditorMode: "fields",
+            screenEditorMode: "fields",
             screenControlsOpen: false,
             schemaRootId: selectedScreenIdForSnapshot,
             screenIdDraft: selectedScreenIdForSnapshot,
@@ -2055,6 +2070,7 @@ const ScriptCreator: FC<ScriptCreatorProps> = ({
             activeView,
             configPanelVisible,
             elementEditorMode,
+            screenEditorMode,
             screenControlsOpen,
             schemaRootId,
             screenIdDraft,
@@ -2079,6 +2095,7 @@ const ScriptCreator: FC<ScriptCreatorProps> = ({
         setActiveView(snapshot.activeView);
         setConfigPanelVisible(snapshot.configPanelVisible);
         setElementEditorMode(snapshot.elementEditorMode);
+        setScreenEditorMode(snapshot.screenEditorMode);
         setScreenControlsOpen(snapshot.screenControlsOpen);
         setSchemaRootId(snapshot.schemaRootId);
         setScreenIdDraft(snapshot.screenIdDraft);
@@ -2120,6 +2137,8 @@ const ScriptCreator: FC<ScriptCreatorProps> = ({
         setSelectedScriptLabel(nextScriptLabel);
         setSelectedScriptCanSaveModule(nextScriptCanSaveModule);
         applySelectionSnapshot(nextSnapshot);
+        setRawScreenError(null);
+        setRawScreenDraft("");
         setRawElementError(null);
         setRawElementDraft("");
         setRawDialogContentDraft("");
@@ -2398,6 +2417,36 @@ const ScriptCreator: FC<ScriptCreatorProps> = ({
                 };
             }),
         }));
+    };
+
+    const replaceSelectedScreen = (nextScreen: any) => {
+        if (!selectedScreen) {
+            return;
+        }
+
+        const previousId = selectedScreen.id;
+        const nextId = typeof nextScreen?.id === "string" && nextScreen.id.trim().length
+            ? nextScreen.id.trim()
+            : previousId;
+
+        updateScript((prev) => ({
+            ...prev,
+            screens: prev.screens.map((screen: any) => {
+                if (screen.id !== previousId) {
+                    return screen;
+                }
+
+                return {
+                    ...nextScreen,
+                    id: nextId,
+                };
+            }),
+        }));
+
+        if (nextId !== previousId) {
+            setSelectedScreenId(nextId);
+            setScreenIdDraft(nextId);
+        }
     };
 
     const updateScreenOnDoneTarget = (nextTargetRaw: string) => {
@@ -3983,6 +4032,13 @@ const ScriptCreator: FC<ScriptCreatorProps> = ({
                                         >
                                             [CONTROLS]
                                         </button>
+                                        <button
+                                            className={"script-creator__btn" + (screenEditorMode === "raw" ? " script-creator__btn--active" : "")}
+                                            onClick={() => setScreenEditorMode((prev) => prev === "fields" ? "raw" : "fields")}
+                                            disabled={!selectedScreen}
+                                        >
+                                            Raw Screen Json
+                                        </button>
                                     </div>
 
                                     <label className="script-creator__field">
@@ -4036,6 +4092,41 @@ const ScriptCreator: FC<ScriptCreatorProps> = ({
                                     </div>
                                 )}
 
+                                {screenEditorMode === "raw" && selectedScreen && (
+                                    <div className="script-creator__screen-raw-panel">
+                                        <label className="script-creator__field script-creator__field--fill">
+                                            <span>Raw Screen JSON</span>
+                                            <textarea
+                                                className="script-creator__textarea-fill"
+                                                data-search-exclude="true"
+                                                spellCheck={false}
+                                                value={rawScreenDraft}
+                                                onChange={(e) => {
+                                                    const nextRaw = e.target.value;
+                                                    setRawScreenDraft(nextRaw);
+                                                    try {
+                                                        const parsed = JSON.parse(nextRaw);
+                                                        replaceSelectedScreen(parsed);
+                                                        setRawScreenError(null);
+                                                    } catch {
+                                                        setRawScreenError(null);
+                                                    }
+                                                }}
+                                                onBlur={() => {
+                                                    try {
+                                                        const parsed = JSON.parse(rawScreenDraft);
+                                                        replaceSelectedScreen(parsed);
+                                                        setRawScreenError(null);
+                                                    } catch {
+                                                        setRawScreenError("JSON parse error");
+                                                    }
+                                                }}
+                                            />
+                                        </label>
+                                        {rawScreenError && <div className="script-creator__error">{rawScreenError}</div>}
+                                    </div>
+                                )}
+
                                 <div className="script-creator__list-header">
                                     <span>Elements</span>
                                     <div className="script-creator__actions">
@@ -4050,7 +4141,7 @@ const ScriptCreator: FC<ScriptCreatorProps> = ({
                                             className="script-creator__btn"
                                             onClick={() => setElementEditorMode((prev) => prev === "fields" ? "raw" : "fields")}
                                         >
-                                            {elementEditorMode === "fields" ? "[VIEW RAW JSON]" : "[VIEW FIELDS]"}
+                                            Raw Element Json
                                         </button>
                                     </div>
                                 </div>

@@ -583,7 +583,8 @@ $creator-dark-control-bg: rgba($creator-dark-bg, 0.92);
 
     &__actions--screen-header {
         align-items: flex-end;
-        flex-wrap: nowrap;
+        flex-wrap: wrap;
+        justify-content: flex-end;
     }
 
     &__screen-controls-panel {
@@ -592,6 +593,16 @@ $creator-dark-control-bg: rgba($creator-dark-bg, 0.92);
         gap: 0.35rem;
         border: 1px solid var(--fg);
         padding: 0.3rem;
+    }
+
+    &__screen-raw-panel {
+        display: flex;
+        flex-direction: column;
+        gap: 0.35rem;
+        border: 1px solid var(--fg);
+        padding: 0.3rem;
+        min-height: 0;
+        flex: 1;
     }
 
     &__actions--sidebar-switch {
