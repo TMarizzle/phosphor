@@ -68,6 +68,7 @@ interface AppState {
     mobileMenuOpen: boolean;
     creatorOpen: boolean;
     creatorInitialScript: any | null;
+    creatorRemountVersion: number;
     modulesOpen: boolean;
     previewMode: boolean;
     uploadError: string | null;
@@ -125,6 +126,7 @@ class App extends Component<any, AppState> {
             mobileMenuOpen: false,
             creatorOpen: false,
             creatorInitialScript: null,
+            creatorRemountVersion: 0,
             modulesOpen: this._hasAuthReturnParams(),
             previewMode: false,
             uploadError: null,
@@ -1139,13 +1141,28 @@ class App extends Component<any, AppState> {
         });
     }
 
-    private _handleCreatorOpen(): void {
-        this.setState({
+    private _handleCreatorOpen(event?: React.MouseEvent<HTMLButtonElement>): void {
+        const forceSyncToCurrentView = !!event?.shiftKey;
+        this.setState((prev): Pick<AppState,
+            | "creatorOpen"
+            | "creatorInitialScript"
+            | "creatorRemountVersion"
+            | "scriptDropdownOpen"
+            | "optionsDropdownOpen"
+            | "profileDropdownOpen"
+            | "customThemeEditorOpen"
+            | "mobileMenuOpen"
+            | "previewMode"
+            | "uploadError"
+        > => ({
             creatorOpen: true,
             creatorInitialScript: this._buildCreatorInitialScript(
-                this.state.activeScript.json,
-                this.state.activeTerminalScreenId
+                prev.activeScript.json,
+                prev.activeTerminalScreenId
             ),
+            creatorRemountVersion: forceSyncToCurrentView
+                ? prev.creatorRemountVersion + 1
+                : prev.creatorRemountVersion,
             scriptDropdownOpen: false,
             optionsDropdownOpen: false,
             profileDropdownOpen: false,
@@ -1153,7 +1170,7 @@ class App extends Component<any, AppState> {
             mobileMenuOpen: false,
             previewMode: false,
             uploadError: null as string | null,
-        });
+        }));
     }
 
     private _handleCreatorClose(): void {
@@ -1768,6 +1785,7 @@ class App extends Component<any, AppState> {
             mobileMenuOpen,
             creatorOpen,
             creatorInitialScript,
+            creatorRemountVersion,
             modulesOpen,
             previewMode,
             uploadError,
@@ -1908,7 +1926,7 @@ class App extends Component<any, AppState> {
                             <button
                                 className="phosphor-header__btn phosphor-header__hide-at-5"
                                 onClick={this._handleCreatorOpen}
-                                title="Open visual JSON script creator"
+                                title="Open visual JSON script creator (Shift+Click to sync current script/screen)"
                             >
                                 [CREATOR]
                             </button>
@@ -2429,8 +2447,8 @@ class App extends Component<any, AppState> {
                                             <button
                                                 className="phosphor-header__dropdown-item"
                                                 role="menuitem"
-                                                onClick={() => {
-                                                    this._handleCreatorOpen();
+                                                onClick={(event) => {
+                                                    this._handleCreatorOpen(event);
                                                     this.setState({ mobileMenuOpen: false });
                                                 }}
                                             >
@@ -2485,6 +2503,7 @@ class App extends Component<any, AppState> {
                 />
 
                 <ScriptCreator
+                    key={`creator:${creatorRemountVersion}`}
                     open={creatorOpen}
                     initialScript={creatorInitialScript || activeScript.json}
                     initialScriptId={activeScript.id}
