@@ -1349,7 +1349,37 @@ const getElementListLabel = (entry: any): string => {
     }
 
     const type = (typeof entry.type === "string" ? entry.type : "object").toLowerCase();
-    const headline = (entry.text || entry.prompt || entry.usernamePrompt || entry.src || entry.id || "").toString().slice(0, 24) || "(empty)";
+    const cyclerPreviewText = ((): string => {
+        if (type !== "toggle" && type !== "list") {
+            return "";
+        }
+
+        const states = Array.isArray(entry.states) ? entry.states : [];
+        if (!states.length) {
+            return "";
+        }
+
+        const activeState = states.find((state: any) => state && typeof state === "object" && state.active === true);
+        const candidateState = activeState || states[0];
+        if (typeof candidateState === "string") {
+            return candidateState;
+        }
+
+        if (!candidateState || typeof candidateState !== "object" || typeof candidateState.text !== "string") {
+            return "";
+        }
+
+        return candidateState.text;
+    })();
+    const headline = (
+        (cyclerPreviewText.trim().length ? cyclerPreviewText : "")
+        || entry.text
+        || entry.prompt
+        || entry.usernamePrompt
+        || entry.src
+        || entry.id
+        || ""
+    ).toString().slice(0, 24) || "(empty)";
     const className = (typeof entry.className === "string" ? entry.className.trim() : "");
 
     if (type === "text" && className.length) {
