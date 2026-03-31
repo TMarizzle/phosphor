@@ -76,6 +76,7 @@ const TRANSIENT_AUTH_PARAMS = [
     "provider_token",
     "provider_refresh_token",
 ] as const;
+const PERSISTED_BROWSER_PARAMS = ["module"] as const;
 const OWNER_MENU_WIDTH = 224;
 const OWNER_MENU_HEIGHT = 188;
 const SHARE_MENU_WIDTH = 224;
@@ -97,11 +98,33 @@ const getModulesBrowserUrlWithTransientAuthParams = (
                 nextUrl.searchParams.set(param, value);
             }
         });
+        PERSISTED_BROWSER_PARAMS.forEach((param) => {
+            if (nextUrl.searchParams.has(param)) {
+                return;
+            }
+
+            const value = currentUrl.searchParams.get(param);
+            if (value) {
+                nextUrl.searchParams.set(param, value);
+            }
+        });
     } catch {
         // ignore invalid URLs
     }
 
     return nextUrl.toString();
+};
+
+const getCurrentLibraryReturnUrl = (): string => {
+    try {
+        const currentUrl = new URL(window.location.href);
+        [...TRANSIENT_AUTH_PARAMS, "auth_return"].forEach((param) => {
+            currentUrl.searchParams.delete(param);
+        });
+        return currentUrl.toString();
+    } catch {
+        return getModulesBrowserUrlWithTransientAuthParams();
+    }
 };
 
 const clearTransientAuthParams = (): void => {
@@ -816,7 +839,7 @@ const ModulesBrowser: FC = () => {
     }, [persistBrowserQuery, query, sort, subscribedOnly]);
 
     useEffect(() => {
-        if (!hasCatalogBootstrappedRef.current) {
+        if (authLoading || !hasCatalogBootstrappedRef.current) {
             return;
         }
 
@@ -827,7 +850,7 @@ const ModulesBrowser: FC = () => {
         return () => {
             window.clearTimeout(timeoutId);
         };
-    }, [refreshCatalog, sessionRole, sessionUserId, subscribedIds]);
+    }, [authLoading, refreshCatalog, sessionRole, sessionUserId, subscribedIds]);
 
     useEffect(() => {
         if (!noticeMessage) {
@@ -879,9 +902,7 @@ const ModulesBrowser: FC = () => {
         setErrorMessage(null);
         setNoticeMessage(null);
         try {
-            const returnUrl = new URL(getTerminalAppUrl());
-            returnUrl.searchParams.set("auth_return", "library");
-            await signInWithGoogle(returnUrl.toString());
+            await signInWithGoogle(getCurrentLibraryReturnUrl());
         } catch (error: any) {
             setErrorMessage(error?.message || "Could not start Google sign-in.");
         }
