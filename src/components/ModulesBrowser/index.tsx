@@ -76,7 +76,6 @@ const TRANSIENT_AUTH_PARAMS = [
     "provider_token",
     "provider_refresh_token",
 ] as const;
-const PERSISTED_BROWSER_PARAMS = ["module"] as const;
 const OWNER_MENU_WIDTH = 224;
 const OWNER_MENU_HEIGHT = 188;
 const SHARE_MENU_WIDTH = 224;
@@ -98,16 +97,6 @@ const getModulesBrowserUrlWithTransientAuthParams = (
                 nextUrl.searchParams.set(param, value);
             }
         });
-        PERSISTED_BROWSER_PARAMS.forEach((param) => {
-            if (nextUrl.searchParams.has(param)) {
-                return;
-            }
-
-            const value = currentUrl.searchParams.get(param);
-            if (value) {
-                nextUrl.searchParams.set(param, value);
-            }
-        });
     } catch {
         // ignore invalid URLs
     }
@@ -118,12 +107,20 @@ const getModulesBrowserUrlWithTransientAuthParams = (
 const getCurrentLibraryReturnUrl = (): string => {
     try {
         const currentUrl = new URL(window.location.href);
-        [...TRANSIENT_AUTH_PARAMS, "auth_return"].forEach((param) => {
-            currentUrl.searchParams.delete(param);
+        const returnUrl = new URL(getTerminalAppUrl(currentUrl.searchParams.get("module") || undefined));
+        currentUrl.searchParams.forEach((value, key) => {
+            if ([...TRANSIENT_AUTH_PARAMS, "auth_return"].includes(key as typeof TRANSIENT_AUTH_PARAMS[number] | "auth_return")) {
+                return;
+            }
+
+            returnUrl.searchParams.set(key, value);
         });
-        return currentUrl.toString();
+        returnUrl.searchParams.set("auth_return", "library");
+        return returnUrl.toString();
     } catch {
-        return getModulesBrowserUrlWithTransientAuthParams();
+        const fallbackUrl = new URL(getTerminalAppUrl());
+        fallbackUrl.searchParams.set("auth_return", "library");
+        return fallbackUrl.toString();
     }
 };
 
@@ -453,12 +450,14 @@ const ModulesBrowser: FC = () => {
     const persistBrowserQuery = useCallback((
         nextQuery: string,
         nextSort: ModuleSort,
-        nextSubscribedOnly: boolean
+        nextSubscribedOnly: boolean,
+        nextModuleId: string | null
     ) => {
         const params: Record<string, string | undefined> = {
             q: nextQuery.trim() || undefined,
             sort: nextSort !== "newest" ? nextSort : undefined,
             subscribed: nextSubscribedOnly ? "1" : undefined,
+            module: nextModuleId || undefined,
         };
         window.history.replaceState({}, "", getModulesBrowserUrlWithTransientAuthParams(params));
     }, []);
@@ -835,8 +834,8 @@ const ModulesBrowser: FC = () => {
     }, [loadPersonalState, refreshCatalog, subscribedOnly, supabaseReady]);
 
     useEffect(() => {
-        persistBrowserQuery(query, sort, subscribedOnly);
-    }, [persistBrowserQuery, query, sort, subscribedOnly]);
+        persistBrowserQuery(query, sort, subscribedOnly, selectedModuleId);
+    }, [persistBrowserQuery, query, selectedModuleId, sort, subscribedOnly]);
 
     useEffect(() => {
         if (authLoading || !hasCatalogBootstrappedRef.current) {
@@ -868,7 +867,7 @@ const ModulesBrowser: FC = () => {
 
     useEffect(() => {
         if (!modules.length) {
-            if (selectedModuleId !== null) {
+            if (!catalogLoading && selectedModuleId !== null) {
                 setSelectedModuleId(null);
             }
             return;
@@ -877,7 +876,7 @@ const ModulesBrowser: FC = () => {
         if (!selectedModuleId || !modules.some((module) => module.id === selectedModuleId)) {
             setSelectedModuleId(modules[0].id);
         }
-    }, [modules, selectedModuleId]);
+    }, [catalogLoading, modules, selectedModuleId]);
 
     useEffect(() => {
         setOwnerMenuOpen(false);

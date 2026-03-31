@@ -415,10 +415,45 @@ class App extends Component<any, AppState> {
         }
     }
 
+    private _getModulesBrowserReturnUrl(): string {
+        try {
+            const currentUrl = new URL(window.location.href);
+            const nextUrl = new URL(getModulesBrowserUrl());
+            nextUrl.hash = currentUrl.hash;
+            nextUrl.search = currentUrl.search;
+
+            [
+                "code",
+                "state",
+                "error",
+                "error_code",
+                "error_description",
+                "auth_return",
+                "provider_token",
+                "provider_refresh_token",
+            ].forEach((param) => {
+                nextUrl.searchParams.delete(param);
+            });
+
+            return nextUrl.toString();
+        } catch {
+            return getModulesBrowserUrl();
+        }
+    }
+
     private _clearTransientAuthParams(): void {
         try {
             const url = new URL(window.location.href);
-            const removableParams = ["code", "state", "error", "error_code", "error_description", "auth_return"];
+            const removableParams = [
+                "code",
+                "state",
+                "error",
+                "error_code",
+                "error_description",
+                "auth_return",
+                "provider_token",
+                "provider_refresh_token",
+            ];
             let changed = false;
             removableParams.forEach((param) => {
                 if (url.searchParams.has(param)) {
@@ -670,7 +705,7 @@ class App extends Component<any, AppState> {
             }
 
             if (this._shouldReturnToModulesBrowser()) {
-                window.location.href = getModulesBrowserUrl();
+                window.location.href = this._getModulesBrowserReturnUrl();
                 return;
             }
 
