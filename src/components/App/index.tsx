@@ -169,6 +169,7 @@ class App extends Component<any, AppState> {
         this._handleCreatorClose    = this._handleCreatorClose.bind(this);
         this._handleCreatorApply    = this._handleCreatorApply.bind(this);
         this._handleCreatorPreview  = this._handleCreatorPreview.bind(this);
+        this._handleClearLocalModules = this._handleClearLocalModules.bind(this);
         this._handleCreatorSaveModule = this._handleCreatorSaveModule.bind(this);
         this._handlePreviewReturn   = this._handlePreviewReturn.bind(this);
         this._handlePhosphorScreenChanged = this._handlePhosphorScreenChanged.bind(this);
@@ -314,6 +315,15 @@ class App extends Component<any, AppState> {
             label: module.title.toUpperCase().slice(0, 48),
             json: scriptJsonOverride || module.script_json,
         };
+    }
+
+    private _formatLocalUploadLabel(rawLabel: string): string {
+        const normalizedLabel = (rawLabel || "LOCAL SCRIPT")
+            .toString()
+            .trim()
+            .replace(/^\[LOCAL\]\s*/i, "")
+            .toUpperCase();
+        return `[LOCAL] ${normalizedLabel}`.slice(0, 48);
     }
 
     private _isBundledSubscribedScriptId(scriptId: string): boolean {
@@ -1209,6 +1219,53 @@ class App extends Component<any, AppState> {
         window.location.reload();
     }
 
+    private _handleClearLocalModules(): void {
+        const shouldResetActiveScript = this.state.activeScript.id.startsWith("custom:");
+        const nextThemeState = shouldResetActiveScript
+            ? this._applyScriptThemePreset(DEFAULT_SCRIPT.json)
+            : null;
+
+        this._persistCustomScripts([]);
+        this.setState((prev): Pick<AppState,
+            "customScripts"
+            | "activeScript"
+            | "activeScriptRevision"
+            | "activeTerminalScreenId"
+            | "activeModule"
+            | "activeTheme"
+            | "customTheme"
+            | "scriptDropdownOpen"
+            | "optionsDropdownOpen"
+            | "profileDropdownOpen"
+            | "customThemeEditorOpen"
+            | "mobileMenuOpen"
+            | "creatorInitialScript"
+            | "previewMode"
+            | "uploadError"
+        > => ({
+            customScripts: [],
+            activeScript: shouldResetActiveScript ? DEFAULT_SCRIPT : prev.activeScript,
+            activeScriptRevision: shouldResetActiveScript
+                ? prev.activeScriptRevision + 1
+                : prev.activeScriptRevision,
+            activeTerminalScreenId: shouldResetActiveScript ? null : prev.activeTerminalScreenId,
+            activeModule: shouldResetActiveScript ? null : prev.activeModule,
+            ...(nextThemeState || {}),
+            scriptDropdownOpen: false,
+            optionsDropdownOpen: false,
+            profileDropdownOpen: false,
+            customThemeEditorOpen: false,
+            mobileMenuOpen: false,
+            creatorInitialScript: null,
+            previewMode: false,
+            uploadError: null as string | null,
+        }));
+
+        if (shouldResetActiveScript) {
+            this._setModuleQueryParam(null);
+        }
+    }
+
     private _handleReloadCurrentScript(): void {
         this._clearActiveScriptRuntimeState();
         this.setState((prev): Pick<AppState,
@@ -1472,7 +1529,7 @@ class App extends Component<any, AppState> {
                 const label = parsed?.config?.name || file.name.replace(/\.json$/i, "");
                 const customScript: BundledScript = {
                     id: `custom:${Date.now()}`,
-                    label: label.toUpperCase().slice(0, 48),
+                    label: this._formatLocalUploadLabel(label),
                     json: parsed,
                 };
                 const nextThemeState = this._applyScriptThemePreset(parsed);
@@ -2464,6 +2521,17 @@ class App extends Component<any, AppState> {
                                         <button
                                             className="phosphor-header__dropdown-item"
                                             role="menuitem"
+                                            onClick={this._handleClearLocalModules}
+                                            title="Remove local uploaded scripts from this browser only"
+                                        >
+                                            Clear Local Modules
+                                        </button>
+                                    )}
+
+                                    {!previewMode && (
+                                        <button
+                                            className="phosphor-header__dropdown-item"
+                                            role="menuitem"
                                             onClick={this._handleClearData}
                                             title="Clear all saved data, including login, and reload"
                                         >
@@ -2685,6 +2753,17 @@ class App extends Component<any, AppState> {
                                                             title="Restart the current script from the beginning"
                                                         >
                                                             [RELOAD]
+                                                        </button>
+                                                    )}
+
+                                                    {!previewMode && (
+                                                        <button
+                                                            className="phosphor-header__dropdown-item"
+                                                            role="menuitem"
+                                                            onClick={this._handleClearLocalModules}
+                                                            title="Remove local uploaded scripts from this browser only"
+                                                        >
+                                                            Clear Local Modules
                                                         </button>
                                                     )}
 
