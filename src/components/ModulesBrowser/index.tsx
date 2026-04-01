@@ -154,7 +154,7 @@ const parseInitialSort = (): ModuleSort => {
         // ignore invalid URLs
     }
 
-    return "newest";
+    return "most-subscribed";
 };
 
 const parseInitialSearch = (): string => {
@@ -455,7 +455,7 @@ const ModulesBrowser: FC = () => {
     ) => {
         const params: Record<string, string | undefined> = {
             q: nextQuery.trim() || undefined,
-            sort: nextSort !== "newest" ? nextSort : undefined,
+            sort: nextSort !== "most-subscribed" ? nextSort : undefined,
             subscribed: nextSubscribedOnly ? "1" : undefined,
             module: nextModuleId || undefined,
         };

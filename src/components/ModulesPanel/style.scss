@@ -149,6 +149,66 @@ $modules-meta-size: 14pt;
         gap: 0.1rem;
     }
 
+    &__inline-editor {
+        margin-top: 0.28rem;
+        padding-top: 0.24rem;
+        border-top: 1px dashed currentColor;
+
+        .modules-panel__field {
+            margin-bottom: 0.24rem;
+        }
+    }
+
+    &__manage {
+        position: relative;
+        display: inline-flex;
+    }
+
+    &__manage-menu {
+        position: absolute;
+        top: calc(100% + 1px);
+        right: 0;
+        min-width: 11rem;
+        border: 1px solid var(--modules-fg);
+        background: var(--modules-bg);
+        color: var(--modules-fg);
+        z-index: 45;
+    }
+
+    &__manage-item {
+        display: block;
+        width: 100%;
+        border: none;
+        border-bottom: 1px solid rgba(127, 127, 127, 0.35);
+        background: transparent;
+        color: inherit;
+        font-family: $font-family;
+        font-size: inherit;
+        line-height: 1.2;
+        text-align: left;
+        text-shadow: none;
+        padding: 0.16rem 0.34rem;
+        cursor: pointer;
+
+        &:last-child {
+            border-bottom: none;
+        }
+
+        &:hover:not(:disabled) {
+            background: var(--modules-selected-bg);
+            color: var(--modules-selected-fg);
+        }
+
+        &:disabled {
+            opacity: 0.45;
+            cursor: default;
+        }
+    }
+
+    &__manage-item--danger {
+        color: rgb(255, 110, 90);
+    }
+
     &__toggle {
         display: inline-flex;
         align-items: center;

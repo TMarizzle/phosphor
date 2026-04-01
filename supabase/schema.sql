@@ -31,13 +31,25 @@ returns trigger
 language plpgsql
 as $$
 begin
+    if tg_op = 'INSERT' then
+        if new.visibility in ('public', 'unlisted') then
+            new.published_at = coalesce(new.published_at, timezone('utc', now()));
+        else
+            new.published_at = null;
+        end if;
+        return new;
+    end if;
+
     if new.visibility in ('public', 'unlisted') then
-        if tg_op = 'INSERT' then
-            new.published_at = coalesce(new.published_at, timezone('utc', now()));
-        elsif old.visibility = 'private' then
-            new.published_at = coalesce(new.published_at, timezone('utc', now()));
+        if old.visibility in ('public', 'unlisted') then
+            -- Edits to already-published modules must not bump published_at.
+            new.published_at = coalesce(old.published_at, timezone('utc', now()));
+        else
+            -- First transition from private -> public/unlisted.
+            new.published_at = coalesce(old.published_at, new.published_at, timezone('utc', now()));
         end if;
     else
+        -- Private modules should not expose a publication timestamp.
         new.published_at = null;
     end if;
 

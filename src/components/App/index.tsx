@@ -19,6 +19,7 @@ import {
     sanitizeCustomTheme,
 } from "../../themes";
 import {
+    deleteModule,
     ModuleRecord,
     ProfileRole,
     ModuleVisibility,
@@ -34,6 +35,8 @@ import {
     signInWithGoogle,
     signOut,
     subscribeToModule,
+    unsubscribeFromModule,
+    updateModuleMetadata,
 } from "../../lib/modules";
 import { APP_TITLE } from "../../lib/branding";
 import {
@@ -51,6 +54,9 @@ const ACTIVE_SCRIPT_STORAGE_KEY = "phosphor:active-script:v1";
 const MAX_CUSTOM_SCRIPTS = 50;
 const MODULE_SCRIPT_ID_PREFIX = "module:";
 const MODULE_QUERY_PARAM = "module";
+const BUNDLED_SUBSCRIBED_ENTRY_PREFIX = "bundled:";
+const BUNDLED_SUBSCRIBED_SCRIPT_IDS = ["ypsilon14", "sample"] as const;
+const BUNDLED_OWNER_ID_PLACEHOLDER = "00000000-0000-0000-0000-000000000000";
 
 interface AppState {
     activeScript: BundledScript;
@@ -174,9 +180,15 @@ class App extends Component<any, AppState> {
         this._handleSignOut         = this._handleSignOut.bind(this);
         this._handleRefreshModules  = this._handleRefreshModules.bind(this);
         this._handleModuleLoad      = this._handleModuleLoad.bind(this);
+        this._handleBundledSubscribedScriptLoad = this._handleBundledSubscribedScriptLoad.bind(this);
+        this._handleCopyBundledLibraryLink = this._handleCopyBundledLibraryLink.bind(this);
         this._handleModuleSubscribe = this._handleModuleSubscribe.bind(this);
+        this._handleModuleUnsubscribe = this._handleModuleUnsubscribe.bind(this);
         this._handleModuleSave      = this._handleModuleSave.bind(this);
         this._handleModuleCopyLink  = this._handleModuleCopyLink.bind(this);
+        this._handleModuleUpdateDetails = this._handleModuleUpdateDetails.bind(this);
+        this._handleModuleSetVisibility = this._handleModuleSetVisibility.bind(this);
+        this._handleModuleDelete = this._handleModuleDelete.bind(this);
         this._handleToggleOwnScriptVisibility = this._handleToggleOwnScriptVisibility.bind(this);
         this._handleToggleSubscribedScriptVisibility = this._handleToggleSubscribedScriptVisibility.bind(this);
     }
@@ -302,6 +314,56 @@ class App extends Component<any, AppState> {
             label: module.title.toUpperCase().slice(0, 48),
             json: scriptJsonOverride || module.script_json,
         };
+    }
+
+    private _isBundledSubscribedScriptId(scriptId: string): boolean {
+        return (BUNDLED_SUBSCRIBED_SCRIPT_IDS as readonly string[]).includes(scriptId);
+    }
+
+    private _toBundledSubscribedEntryId(scriptId: string): string | null {
+        if (!this._isBundledSubscribedScriptId(scriptId)) {
+            return null;
+        }
+
+        return `${BUNDLED_SUBSCRIBED_ENTRY_PREFIX}${scriptId}`;
+    }
+
+    private _fromBundledSubscribedEntryId(entryId: string): string | null {
+        if (!entryId.startsWith(BUNDLED_SUBSCRIBED_ENTRY_PREFIX)) {
+            return null;
+        }
+
+        const scriptId = entryId.slice(BUNDLED_SUBSCRIBED_ENTRY_PREFIX.length);
+        return this._isBundledSubscribedScriptId(scriptId) ? scriptId : null;
+    }
+
+    private _findBundledScriptBySubscribedEntryId(entryId: string): BundledScript | null {
+        const scriptId = this._fromBundledSubscribedEntryId(entryId);
+        if (!scriptId) {
+            return null;
+        }
+
+        return BUNDLED_SCRIPTS.find((script) => script.id === scriptId) || null;
+    }
+
+    private _buildBundledSubscribedModules(): ModuleRecord[] {
+        return BUNDLED_SCRIPTS
+            .filter((script) => this._isBundledSubscribedScriptId(script.id))
+            .map((script): ModuleRecord => ({
+                id: `${BUNDLED_SUBSCRIBED_ENTRY_PREFIX}${script.id}`,
+                owner_id: BUNDLED_OWNER_ID_PLACEHOLDER,
+                title: script.label,
+                summary: "Bundled script included with Phosphor.",
+                script_json: script.json,
+                cover_image_url: null,
+                visibility: "public",
+                rating_count: 0,
+                rating_average: 0,
+                subscription_count: 0,
+                published_at: null,
+                created_at: "Built-in",
+                updated_at: "Built-in",
+            }));
     }
 
     private _resolveThemeStateForScript(
@@ -529,10 +591,16 @@ class App extends Component<any, AppState> {
         subscribedModules: ModuleRecord[],
         currentVisibilityById: Record<string, boolean>
     ): Record<string, boolean> {
-        return subscribedModules.reduce((acc: Record<string, boolean>, module) => {
+        const bundledEntries = this._buildBundledSubscribedModules();
+        const bundledVisibility = bundledEntries.reduce((acc: Record<string, boolean>, module) => {
             acc[module.id] = currentVisibilityById[module.id] !== false;
             return acc;
         }, {});
+
+        return subscribedModules.reduce((acc: Record<string, boolean>, module) => {
+            acc[module.id] = currentVisibilityById[module.id] !== false;
+            return acc;
+        }, bundledVisibility);
     }
 
     private _handleToggleOwnScriptVisibility(moduleId: string): void {
@@ -564,8 +632,10 @@ class App extends Component<any, AppState> {
 
     private _handleToggleSubscribedScriptVisibility(moduleId: string): void {
         this.setState((prev): Pick<AppState, "subscribedScriptsVisibilityById" | "modulesNotice" | "modulesError"> => {
-            const module = prev.subscribedModules.find((entry) => entry.id === moduleId);
-            if (!module) {
+            const module = prev.subscribedModules.find((entry) => entry.id === moduleId) || null;
+            const bundledScript = this._findBundledScriptBySubscribedEntryId(moduleId);
+
+            if (!module && !bundledScript) {
                 return {
                     subscribedScriptsVisibilityById: prev.subscribedScriptsVisibilityById,
                     modulesNotice: prev.modulesNotice,
@@ -579,11 +649,13 @@ class App extends Component<any, AppState> {
                 [moduleId]: nextValue,
             };
             persistSubscribedScriptsVisibility(nextVisibilityById);
+
+            const entryTitle = module?.title || bundledScript?.label || "This script";
             return {
                 subscribedScriptsVisibilityById: nextVisibilityById,
                 modulesNotice: nextValue
-                    ? `"${module.title}" now appears in the script dropdown.`
-                    : `"${module.title}" hidden from the script dropdown.`,
+                    ? `"${entryTitle}" now appears in the script dropdown.`
+                    : `"${entryTitle}" hidden from the script dropdown.`,
                 modulesError: null,
             };
         });
@@ -1579,6 +1651,39 @@ class App extends Component<any, AppState> {
         });
     }
 
+    private _handleBundledSubscribedScriptLoad(entryId: string): void {
+        const bundledScript = this._findBundledScriptBySubscribedEntryId(entryId);
+        if (!bundledScript) {
+            return;
+        }
+
+        this._handleScriptSelect(bundledScript);
+        this.setState({
+            modulesNotice: `Loaded "${bundledScript.label}".`,
+            modulesError: null,
+        });
+    }
+
+    private async _handleCopyBundledLibraryLink(entryId: string): Promise<void> {
+        const bundledScript = this._findBundledScriptBySubscribedEntryId(entryId);
+        if (!bundledScript) {
+            return;
+        }
+
+        const libraryUrl = getModulesBrowserUrl({ q: bundledScript.label });
+        try {
+            await navigator.clipboard.writeText(libraryUrl);
+            this.setState({
+                modulesNotice: "Library link copied to clipboard.",
+                modulesError: null,
+            });
+        } catch {
+            this.setState({
+                modulesError: `Could not copy automatically. Share this URL manually: ${libraryUrl}`,
+            });
+        }
+    }
+
     private async _handleModuleSubscribe(module: ModuleRecord): Promise<void> {
         const userId = this._getSessionUserId();
         if (!userId) {
@@ -1663,6 +1768,78 @@ class App extends Component<any, AppState> {
             this.setState({
                 modulesBusy: false,
                 modulesError: error?.message || "Could not subscribe to the module.",
+            });
+        }
+    }
+
+    private async _handleModuleUnsubscribe(module: ModuleRecord): Promise<void> {
+        const userId = this._getSessionUserId();
+        if (!userId) {
+            this.setState({ modulesError: "Sign in before unsubscribing from a module." });
+            return;
+        }
+
+        if (!this.state.subscribedModules.some((entry) => entry.id === module.id)) {
+            this.setState({
+                modulesNotice: `Already unsubscribed from "${module.title}".`,
+                modulesError: null,
+            });
+            return;
+        }
+
+        this.setState({
+            modulesBusy: true,
+            modulesError: null,
+            modulesNotice: null,
+        });
+
+        try {
+            await unsubscribeFromModule(module.id, userId);
+            const [myModules, subscribedModules] = await Promise.all([
+                listOwnModules(userId),
+                listSubscribedModules(userId),
+            ]);
+
+            this.setState((prev): Pick<AppState,
+                "myModules"
+                | "ownScriptsVisibilityById"
+                | "subscribedModules"
+                | "subscribedScriptsVisibilityById"
+                | "activeModule"
+                | "modulesBusy"
+                | "modulesNotice"
+                | "modulesError"
+            > => {
+                const knownModules = [...myModules, ...subscribedModules];
+                const refreshedActiveModule = prev.activeModule
+                    ? knownModules.find((entry) => entry.id === prev.activeModule!.id) || prev.activeModule
+                    : null;
+                const ownScriptsVisibilityById = this._buildOwnScriptVisibility(
+                    myModules,
+                    prev.ownScriptsVisibilityById
+                );
+                const subscribedScriptsVisibilityById = this._buildSubscribedScriptVisibility(
+                    subscribedModules,
+                    prev.subscribedScriptsVisibilityById
+                );
+                persistOwnScriptsVisibility(ownScriptsVisibilityById);
+                persistSubscribedScriptsVisibility(subscribedScriptsVisibilityById);
+
+                return {
+                    myModules,
+                    ownScriptsVisibilityById,
+                    subscribedModules,
+                    subscribedScriptsVisibilityById,
+                    activeModule: refreshedActiveModule,
+                    modulesBusy: false,
+                    modulesNotice: `Unsubscribed from "${module.title}".`,
+                    modulesError: null,
+                };
+            });
+        } catch (error: any) {
+            this.setState({
+                modulesBusy: false,
+                modulesError: error?.message || "Could not unsubscribe from the module.",
             });
         }
     }
@@ -1804,6 +1981,257 @@ class App extends Component<any, AppState> {
         }
     }
 
+    private async _handleModuleUpdateDetails(
+        module: ModuleRecord,
+        payload: {
+            title: string;
+            summary: string;
+        }
+    ): Promise<boolean> {
+        const userId = this._getSessionUserId();
+        if (!userId || module.owner_id !== userId) {
+            this.setState({ modulesError: "Only the owner can edit this module.", modulesNotice: null });
+            return false;
+        }
+
+        const nextTitle = payload.title.trim();
+        if (!nextTitle.length) {
+            this.setState({ modulesError: "Add a title before saving.", modulesNotice: null });
+            return false;
+        }
+
+        this.setState({
+            modulesBusy: true,
+            modulesError: null,
+            modulesNotice: null,
+        });
+
+        try {
+            const updatedModule = await updateModuleMetadata({
+                id: module.id,
+                ownerId: userId,
+                title: nextTitle,
+                summary: payload.summary.trim(),
+                visibility: module.visibility,
+            });
+            const [myModules, subscribedModules] = await Promise.all([
+                listOwnModules(userId),
+                listSubscribedModules(userId),
+            ]);
+
+            this.setState((prev): Pick<AppState,
+                "myModules"
+                | "ownScriptsVisibilityById"
+                | "subscribedModules"
+                | "subscribedScriptsVisibilityById"
+                | "activeModule"
+                | "modulesBusy"
+                | "modulesNotice"
+                | "modulesError"
+            > => {
+                const knownModules = [...myModules, ...subscribedModules];
+                const refreshedActiveModule = prev.activeModule?.id === updatedModule.id
+                    ? updatedModule
+                    : (prev.activeModule
+                        ? knownModules.find((entry) => entry.id === prev.activeModule!.id) || prev.activeModule
+                        : null);
+                const ownScriptsVisibilityById = this._buildOwnScriptVisibility(
+                    myModules,
+                    prev.ownScriptsVisibilityById
+                );
+                const subscribedScriptsVisibilityById = this._buildSubscribedScriptVisibility(
+                    subscribedModules,
+                    prev.subscribedScriptsVisibilityById
+                );
+                persistOwnScriptsVisibility(ownScriptsVisibilityById);
+                persistSubscribedScriptsVisibility(subscribedScriptsVisibilityById);
+
+                return {
+                    myModules,
+                    ownScriptsVisibilityById,
+                    subscribedModules,
+                    subscribedScriptsVisibilityById,
+                    activeModule: refreshedActiveModule,
+                    modulesBusy: false,
+                    modulesNotice: `Updated "${updatedModule.title}".`,
+                    modulesError: null,
+                };
+            });
+
+            return true;
+        } catch (error: any) {
+            this.setState({
+                modulesBusy: false,
+                modulesError: error?.message || "Could not update the module.",
+                modulesNotice: null,
+            });
+            return false;
+        }
+    }
+
+    private async _handleModuleSetVisibility(
+        module: ModuleRecord,
+        nextVisibility: ModuleVisibility
+    ): Promise<boolean> {
+        const userId = this._getSessionUserId();
+        if (!userId || module.owner_id !== userId) {
+            this.setState({ modulesError: "Only the owner can change module visibility.", modulesNotice: null });
+            return false;
+        }
+
+        if (module.visibility === nextVisibility) {
+            return true;
+        }
+
+        this.setState({
+            modulesBusy: true,
+            modulesError: null,
+            modulesNotice: null,
+        });
+
+        try {
+            const updatedModule = await updateModuleMetadata({
+                id: module.id,
+                ownerId: userId,
+                title: module.title,
+                summary: module.summary,
+                visibility: nextVisibility,
+            });
+            const [myModules, subscribedModules] = await Promise.all([
+                listOwnModules(userId),
+                listSubscribedModules(userId),
+            ]);
+
+            this.setState((prev): Pick<AppState,
+                "myModules"
+                | "ownScriptsVisibilityById"
+                | "subscribedModules"
+                | "subscribedScriptsVisibilityById"
+                | "activeModule"
+                | "modulesBusy"
+                | "modulesNotice"
+                | "modulesError"
+            > => {
+                const knownModules = [...myModules, ...subscribedModules];
+                const refreshedActiveModule = prev.activeModule?.id === updatedModule.id
+                    ? updatedModule
+                    : (prev.activeModule
+                        ? knownModules.find((entry) => entry.id === prev.activeModule!.id) || prev.activeModule
+                        : null);
+                const ownScriptsVisibilityById = this._buildOwnScriptVisibility(
+                    myModules,
+                    prev.ownScriptsVisibilityById
+                );
+                const subscribedScriptsVisibilityById = this._buildSubscribedScriptVisibility(
+                    subscribedModules,
+                    prev.subscribedScriptsVisibilityById
+                );
+                persistOwnScriptsVisibility(ownScriptsVisibilityById);
+                persistSubscribedScriptsVisibility(subscribedScriptsVisibilityById);
+
+                return {
+                    myModules,
+                    ownScriptsVisibilityById,
+                    subscribedModules,
+                    subscribedScriptsVisibilityById,
+                    activeModule: refreshedActiveModule,
+                    modulesBusy: false,
+                    modulesNotice: `"${updatedModule.title}" is now ${nextVisibility}.`,
+                    modulesError: null,
+                };
+            });
+
+            if (this.state.activeModule?.id === updatedModule.id) {
+                if (isModuleLinkShareable(updatedModule.visibility)) {
+                    this._setModuleQueryParam(updatedModule.id);
+                } else {
+                    this._setModuleQueryParam(null);
+                }
+            }
+
+            return true;
+        } catch (error: any) {
+            this.setState({
+                modulesBusy: false,
+                modulesError: error?.message || "Could not update module visibility.",
+                modulesNotice: null,
+            });
+            return false;
+        }
+    }
+
+    private async _handleModuleDelete(module: ModuleRecord): Promise<boolean> {
+        const userId = this._getSessionUserId();
+        if (!userId || module.owner_id !== userId) {
+            this.setState({ modulesError: "Only the owner can delete this module.", modulesNotice: null });
+            return false;
+        }
+
+        if (!window.confirm(`Delete "${module.title}"? This cannot be undone.`)) {
+            return false;
+        }
+
+        this.setState({
+            modulesBusy: true,
+            modulesError: null,
+            modulesNotice: null,
+        });
+
+        try {
+            await deleteModule(module.id, userId);
+            const [myModules, subscribedModules] = await Promise.all([
+                listOwnModules(userId),
+                listSubscribedModules(userId),
+            ]);
+
+            this.setState((prev): Pick<AppState,
+                "myModules"
+                | "ownScriptsVisibilityById"
+                | "subscribedModules"
+                | "subscribedScriptsVisibilityById"
+                | "activeModule"
+                | "modulesBusy"
+                | "modulesNotice"
+                | "modulesError"
+            > => {
+                const ownScriptsVisibilityById = this._buildOwnScriptVisibility(
+                    myModules,
+                    prev.ownScriptsVisibilityById
+                );
+                const subscribedScriptsVisibilityById = this._buildSubscribedScriptVisibility(
+                    subscribedModules,
+                    prev.subscribedScriptsVisibilityById
+                );
+                persistOwnScriptsVisibility(ownScriptsVisibilityById);
+                persistSubscribedScriptsVisibility(subscribedScriptsVisibilityById);
+
+                return {
+                    myModules,
+                    ownScriptsVisibilityById,
+                    subscribedModules,
+                    subscribedScriptsVisibilityById,
+                    activeModule: prev.activeModule?.id === module.id ? null : prev.activeModule,
+                    modulesBusy: false,
+                    modulesNotice: `Deleted "${module.title}".`,
+                    modulesError: null,
+                };
+            });
+
+            if (this.state.activeModule?.id === module.id) {
+                this._setModuleQueryParam(null);
+            }
+
+            return true;
+        } catch (error: any) {
+            this.setState({
+                modulesBusy: false,
+                modulesError: error?.message || "Could not delete the module.",
+                modulesNotice: null,
+            });
+            return false;
+        }
+    }
+
     public render(): ReactElement {
         const {
             activeScript,
@@ -1839,6 +2267,8 @@ class App extends Component<any, AppState> {
         const sessionEmail = authSession?.user?.email || null;
         const sessionUserId = authSession?.user?.id || null;
         const ownedActiveModule = this._getOwnedActiveModule(sessionUserId);
+        const bundledSubscribedModules = this._buildBundledSubscribedModules();
+        const subscribedModulesForPanel = [...subscribedModules, ...bundledSubscribedModules];
         const ownScripts: CreatorScriptOption[] = myModules
             .filter((module) => ownScriptsVisibilityById[module.id] !== false)
             .map((module) => ({
@@ -1851,10 +2281,19 @@ class App extends Component<any, AppState> {
                 ...this._buildModuleScript(module),
                 canSaveModule: false,
             }));
-        const bundledScripts: CreatorScriptOption[] = BUNDLED_SCRIPTS.map((script) => ({
-            ...script,
-            canSaveModule: false,
-        }));
+        const bundledScripts: CreatorScriptOption[] = BUNDLED_SCRIPTS
+            .filter((script) => {
+                const visibilityEntryId = this._toBundledSubscribedEntryId(script.id);
+                if (!visibilityEntryId) {
+                    return true;
+                }
+
+                return subscribedScriptsVisibilityById[visibilityEntryId] !== false;
+            })
+            .map((script) => ({
+                ...script,
+                canSaveModule: false,
+            }));
         const customScriptsWithFlags: CreatorScriptOption[] = customScripts.map((script) => ({
             ...script,
             canSaveModule: false,
@@ -2559,7 +2998,7 @@ class App extends Component<any, AppState> {
                     activeModule={activeModule}
                     myModules={myModules}
                     ownScriptsVisibilityById={ownScriptsVisibilityById}
-                    subscribedModules={subscribedModules}
+                    subscribedModules={subscribedModulesForPanel}
                     subscribedScriptsVisibilityById={subscribedScriptsVisibilityById}
                     errorMessage={modulesError}
                     noticeMessage={modulesNotice}
@@ -2569,10 +3008,16 @@ class App extends Component<any, AppState> {
                     onDismissNotice={this._handleModulesDismissNotice}
                     onRefresh={this._handleRefreshModules}
                     onLoadModule={this._handleModuleLoad}
+                    onLoadBundledScript={this._handleBundledSubscribedScriptLoad}
+                    onCopyBundledLibraryLink={this._handleCopyBundledLibraryLink}
                     onToggleOwnScriptVisibility={this._handleToggleOwnScriptVisibility}
                     onSubscribeToModule={this._handleModuleSubscribe}
+                    onUnsubscribeFromModule={this._handleModuleUnsubscribe}
                     onSaveModule={this._handleModuleSave}
                     onCopyShareLink={this._handleModuleCopyLink}
+                    onUpdateModuleDetails={this._handleModuleUpdateDetails}
+                    onSetModuleVisibility={this._handleModuleSetVisibility}
+                    onDeleteModule={this._handleModuleDelete}
                     onToggleSubscribedScriptVisibility={this._handleToggleSubscribedScriptVisibility}
                 />
             </>

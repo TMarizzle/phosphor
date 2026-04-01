@@ -24,14 +24,23 @@ interface ModulesPanelProps {
     onDismissNotice: () => void;
     onRefresh: () => void;
     onLoadModule: (module: ModuleRecord) => void;
+    onLoadBundledScript: (entryId: string) => void;
+    onCopyBundledLibraryLink: (entryId: string) => void;
     onToggleOwnScriptVisibility: (moduleId: string) => void;
     onSubscribeToModule: (module: ModuleRecord) => void;
+    onUnsubscribeFromModule: (module: ModuleRecord) => void;
     onSaveModule: (payload: {
         title: string;
         summary: string;
         visibility: ModuleVisibility;
     }) => Promise<boolean> | void;
     onCopyShareLink: (module: ModuleRecord) => void;
+    onUpdateModuleDetails: (module: ModuleRecord, payload: {
+        title: string;
+        summary: string;
+    }) => Promise<boolean> | void;
+    onSetModuleVisibility: (module: ModuleRecord, nextVisibility: ModuleVisibility) => Promise<boolean> | void;
+    onDeleteModule: (module: ModuleRecord) => Promise<boolean> | void;
     onToggleSubscribedScriptVisibility: (moduleId: string) => void;
 }
 
@@ -49,6 +58,7 @@ const VISIBILITY_OPTIONS: CreatorSelectOption[] = [
     { value: "unlisted", label: "Unlisted" },
     { value: "public", label: "Public" },
 ];
+const BUNDLED_SUBSCRIBED_ENTRY_PREFIX = "bundled:";
 
 const ModulesPanel: FC<ModulesPanelProps> = ({
     open,
@@ -70,16 +80,26 @@ const ModulesPanel: FC<ModulesPanelProps> = ({
     onDismissNotice,
     onRefresh,
     onLoadModule,
+    onLoadBundledScript,
+    onCopyBundledLibraryLink,
     onToggleOwnScriptVisibility,
     onSubscribeToModule,
+    onUnsubscribeFromModule,
     onSaveModule,
     onCopyShareLink,
+    onUpdateModuleDetails,
+    onSetModuleVisibility,
+    onDeleteModule,
     onToggleSubscribedScriptVisibility,
 }) => {
     const [title, setTitle] = useState<string>("");
     const [summary, setSummary] = useState<string>("");
     const [visibility, setVisibility] = useState<ModuleVisibility>("private");
     const [composerOpen, setComposerOpen] = useState<boolean>(false);
+    const [manageOpenModuleId, setManageOpenModuleId] = useState<string | null>(null);
+    const [editingModuleId, setEditingModuleId] = useState<string | null>(null);
+    const [editTitle, setEditTitle] = useState<string>("");
+    const [editSummary, setEditSummary] = useState<string>("");
 
     const currentScriptName = useMemo(() => {
         const configName = currentScript?.config?.name;
@@ -99,6 +119,16 @@ const ModulesPanel: FC<ModulesPanelProps> = ({
         } catch {
             const joiner = libraryUrl.includes("?") ? "&" : "?";
             return `${libraryUrl}${joiner}module=${encodeURIComponent(moduleId)}`;
+        }
+    };
+    const getBundledLibrarySearchUrl = (scriptLabel: string): string => {
+        try {
+            const url = new URL(libraryUrl);
+            url.searchParams.set("q", scriptLabel);
+            return url.toString();
+        } catch {
+            const joiner = libraryUrl.includes("?") ? "&" : "?";
+            return `${libraryUrl}${joiner}q=${encodeURIComponent(scriptLabel)}`;
         }
     };
     const visibleSubscribedCount = useMemo(() => {
@@ -128,6 +158,10 @@ const ModulesPanel: FC<ModulesPanelProps> = ({
     useEffect(() => {
         if (!open) {
             setComposerOpen(false);
+            setManageOpenModuleId(null);
+            setEditingModuleId(null);
+            setEditTitle("");
+            setEditSummary("");
             return;
         }
 
@@ -135,6 +169,30 @@ const ModulesPanel: FC<ModulesPanelProps> = ({
             setComposerOpen(true);
         }
     }, [activeModuleIsOwned, open]);
+
+    useEffect(() => {
+        if (!manageOpenModuleId) {
+            return;
+        }
+
+        const moduleStillVisible = myModules.some((module) => module.id === manageOpenModuleId);
+        if (!moduleStillVisible) {
+            setManageOpenModuleId(null);
+        }
+    }, [manageOpenModuleId, myModules]);
+
+    useEffect(() => {
+        if (!editingModuleId) {
+            return;
+        }
+
+        const editingModule = myModules.find((module) => module.id === editingModuleId);
+        if (!editingModule) {
+            setEditingModuleId(null);
+            setEditTitle("");
+            setEditSummary("");
+        }
+    }, [editingModuleId, myModules]);
 
     useEffect(() => {
         if (!open) {
@@ -152,6 +210,78 @@ const ModulesPanel: FC<ModulesPanelProps> = ({
             document.removeEventListener("keydown", handleKeyDown);
         };
     }, [open, onClose]);
+
+    useEffect(() => {
+        if (!open || !manageOpenModuleId) {
+            return;
+        }
+
+        const handleDocumentMouseDown = (event: MouseEvent) => {
+            const target = event.target as Element | null;
+            if (!target) {
+                return;
+            }
+
+            if (!target.closest(".modules-panel__manage")) {
+                setManageOpenModuleId(null);
+            }
+        };
+
+        document.addEventListener("mousedown", handleDocumentMouseDown);
+        return () => {
+            document.removeEventListener("mousedown", handleDocumentMouseDown);
+        };
+    }, [open, manageOpenModuleId]);
+
+    const handleStartEdit = (module: ModuleRecord): void => {
+        setManageOpenModuleId(null);
+        setEditingModuleId(module.id);
+        setEditTitle(module.title);
+        setEditSummary(module.summary || "");
+    };
+
+    const handleCancelEdit = (): void => {
+        setEditingModuleId(null);
+        setEditTitle("");
+        setEditSummary("");
+    };
+
+    const handleSaveEdit = async (module: ModuleRecord): Promise<void> => {
+        const nextTitle = editTitle.trim();
+        if (!nextTitle.length) {
+            return;
+        }
+
+        const updated = await Promise.resolve(onUpdateModuleDetails(module, {
+            title: nextTitle,
+            summary: editSummary.trim(),
+        }));
+        if (updated === false) {
+            return;
+        }
+
+        setEditingModuleId(null);
+        setEditTitle("");
+        setEditSummary("");
+    };
+
+    const handleSetVisibility = async (
+        module: ModuleRecord,
+        nextVisibility: ModuleVisibility
+    ): Promise<void> => {
+        setManageOpenModuleId(null);
+        await Promise.resolve(onSetModuleVisibility(module, nextVisibility));
+    };
+
+    const handleDeleteModule = async (module: ModuleRecord): Promise<void> => {
+        setManageOpenModuleId(null);
+        const deleted = await Promise.resolve(onDeleteModule(module));
+        if (deleted !== false && editingModuleId === module.id) {
+            setEditingModuleId(null);
+            setEditTitle("");
+            setEditSummary("");
+        }
+    };
 
     if (!open) {
         return null;
@@ -351,6 +481,8 @@ const ModulesPanel: FC<ModulesPanelProps> = ({
                                         {myModules.map((module) => {
                                             const isActive = activeModule?.id === module.id;
                                             const showInScripts = ownScriptsVisibilityById[module.id] !== false;
+                                            const isManageOpen = manageOpenModuleId === module.id;
+                                            const isEditing = editingModuleId === module.id;
                                             return (
                                                 <article
                                                     key={module.id}
@@ -366,6 +498,48 @@ const ModulesPanel: FC<ModulesPanelProps> = ({
                                                         <small className="modules-panel__muted">
                                                             Updated {toLocalTimestamp(module.updated_at)}
                                                         </small>
+
+                                                        {isEditing && (
+                                                            <div className="modules-panel__inline-editor">
+                                                                <label className="modules-panel__field">
+                                                                    <span>Title</span>
+                                                                    <input
+                                                                        value={editTitle}
+                                                                        onChange={(event) => setEditTitle(event.target.value)}
+                                                                        maxLength={MAX_MODULE_TITLE_LENGTH}
+                                                                        placeholder="Module title"
+                                                                    />
+                                                                </label>
+
+                                                                <label className="modules-panel__field">
+                                                                    <span>Summary</span>
+                                                                    <textarea
+                                                                        value={editSummary}
+                                                                        onChange={(event) => setEditSummary(event.target.value)}
+                                                                        maxLength={MAX_MODULE_SUMMARY_LENGTH}
+                                                                        rows={3}
+                                                                        placeholder="Short summary for the module listing"
+                                                                    />
+                                                                </label>
+
+                                                                <div className="modules-panel__actions">
+                                                                    <button
+                                                                        className="modules-panel__button"
+                                                                        disabled={busy || !editTitle.trim().length}
+                                                                        onClick={() => void handleSaveEdit(module)}
+                                                                    >
+                                                                        Save Details
+                                                                    </button>
+                                                                    <button
+                                                                        className="modules-panel__button modules-panel__button--ghost"
+                                                                        disabled={busy}
+                                                                        onClick={handleCancelEdit}
+                                                                    >
+                                                                        Cancel
+                                                                    </button>
+                                                                </div>
+                                                            </div>
+                                                        )}
                                                     </div>
 
                                                     <div className="modules-panel__actions">
@@ -401,6 +575,63 @@ const ModulesPanel: FC<ModulesPanelProps> = ({
                                                                 Copy Link
                                                             </button>
                                                         )}
+
+                                                        <div className="modules-panel__manage">
+                                                            <button
+                                                                className="modules-panel__button modules-panel__button--ghost"
+                                                                disabled={busy}
+                                                                onClick={() => setManageOpenModuleId((prev) => prev === module.id ? null : module.id)}
+                                                                aria-haspopup="menu"
+                                                                aria-expanded={isManageOpen}
+                                                            >
+                                                                {isManageOpen ? "Manage ▲" : "Manage ▼"}
+                                                            </button>
+
+                                                            {isManageOpen && (
+                                                                <div className="modules-panel__manage-menu" role="menu">
+                                                                    <button
+                                                                        className="modules-panel__manage-item"
+                                                                        role="menuitem"
+                                                                        disabled={busy}
+                                                                        onClick={() => handleStartEdit(module)}
+                                                                    >
+                                                                        Edit Details
+                                                                    </button>
+                                                                    <button
+                                                                        className="modules-panel__manage-item"
+                                                                        role="menuitem"
+                                                                        disabled={busy}
+                                                                        onClick={() => void handleSetVisibility(module, "public")}
+                                                                    >
+                                                                        {module.visibility === "public" ? "Visibility: Public" : "Set Public"}
+                                                                    </button>
+                                                                    <button
+                                                                        className="modules-panel__manage-item"
+                                                                        role="menuitem"
+                                                                        disabled={busy}
+                                                                        onClick={() => void handleSetVisibility(module, "unlisted")}
+                                                                    >
+                                                                        {module.visibility === "unlisted" ? "Visibility: Unlisted" : "Set Unlisted"}
+                                                                    </button>
+                                                                    <button
+                                                                        className="modules-panel__manage-item"
+                                                                        role="menuitem"
+                                                                        disabled={busy}
+                                                                        onClick={() => void handleSetVisibility(module, "private")}
+                                                                    >
+                                                                        {module.visibility === "private" ? "Visibility: Private" : "Set Private"}
+                                                                    </button>
+                                                                    <button
+                                                                        className="modules-panel__manage-item modules-panel__manage-item--danger"
+                                                                        role="menuitem"
+                                                                        disabled={busy}
+                                                                        onClick={() => void handleDeleteModule(module)}
+                                                                    >
+                                                                        Delete Module
+                                                                    </button>
+                                                                </div>
+                                                            )}
+                                                        </div>
                                                     </div>
                                                 </article>
                                             );
@@ -413,7 +644,7 @@ const ModulesPanel: FC<ModulesPanelProps> = ({
                         <section className="modules-panel__section modules-panel__section--wide">
                             <h3>Subscribed Modules</h3>
 
-                            {!sessionUserId && (
+                            {!sessionUserId && !subscribedModules.length && (
                                 <p className="modules-panel__muted">Sign in to see your subscribed modules.</p>
                             )}
 
@@ -421,7 +652,7 @@ const ModulesPanel: FC<ModulesPanelProps> = ({
                                 <p className="modules-panel__muted">No subscriptions yet.</p>
                             )}
 
-                            {!!sessionUserId && !!subscribedModules.length && (
+                            {!!subscribedModules.length && (
                                 <>
                                     <p className="modules-panel__muted">
                                         {visibleSubscribedCount} of {subscribedModules.length} subscribed modules are shown in the script dropdown.
@@ -430,6 +661,7 @@ const ModulesPanel: FC<ModulesPanelProps> = ({
                                         {subscribedModules.map((module) => {
                                             const isActive = activeModule?.id === module.id;
                                             const showInScripts = subscribedScriptsVisibilityById[module.id] !== false;
+                                            const isBundledEntry = module.id.startsWith(BUNDLED_SUBSCRIBED_ENTRY_PREFIX);
                                             return (
                                                 <article
                                                     key={module.id}
@@ -437,27 +669,40 @@ const ModulesPanel: FC<ModulesPanelProps> = ({
                                                 >
                                                     <div className="modules-panel__list-main">
                                                         <strong>{module.title}</strong>
-                                                        <span className="modules-panel__pill">{module.visibility}</span>
+                                                        <span className="modules-panel__pill">
+                                                            {isBundledEntry ? "bundled" : module.visibility}
+                                                        </span>
                                                         <span className="modules-panel__pill">
                                                             {showInScripts ? "Scripts: On" : "Scripts: Off"}
                                                         </span>
                                                         <p>{module.summary || "No summary provided."}</p>
                                                         <small className="modules-panel__muted">
-                                                            Updated {toLocalTimestamp(module.updated_at)}
+                                                            {isBundledEntry
+                                                                ? "Bundled script"
+                                                                : `Updated ${toLocalTimestamp(module.updated_at)}`}
                                                         </small>
                                                     </div>
 
                                                     <div className="modules-panel__actions">
                                                         <button
                                                             className="modules-panel__button"
-                                                            onClick={() => onLoadModule(module)}
+                                                            onClick={() => {
+                                                                if (isBundledEntry) {
+                                                                    onLoadBundledScript(module.id);
+                                                                    return;
+                                                                }
+
+                                                                onLoadModule(module);
+                                                            }}
                                                             disabled={busy}
                                                         >
                                                             Load
                                                         </button>
                                                         <a
                                                             className="modules-panel__button modules-panel__button--ghost"
-                                                            href={getLibraryModuleUrl(module.id)}
+                                                            href={isBundledEntry
+                                                                ? getBundledLibrarySearchUrl(module.title)
+                                                                : getLibraryModuleUrl(module.id)}
                                                         >
                                                             View In Library
                                                         </a>
@@ -470,10 +715,26 @@ const ModulesPanel: FC<ModulesPanelProps> = ({
                                                             />
                                                             <span>Show in SCRIPT</span>
                                                         </label>
-                                                        {isModuleLinkShareable(module.visibility) && (
+                                                        {!isBundledEntry && (
                                                             <button
                                                                 className="modules-panel__button modules-panel__button--ghost"
-                                                                onClick={() => onCopyShareLink(module)}
+                                                                onClick={() => onUnsubscribeFromModule(module)}
+                                                                disabled={busy}
+                                                            >
+                                                                Unsubscribe
+                                                            </button>
+                                                        )}
+                                                        {(isBundledEntry || isModuleLinkShareable(module.visibility)) && (
+                                                            <button
+                                                                className="modules-panel__button modules-panel__button--ghost"
+                                                                onClick={() => {
+                                                                    if (isBundledEntry) {
+                                                                        onCopyBundledLibraryLink(module.id);
+                                                                        return;
+                                                                    }
+
+                                                                    onCopyShareLink(module);
+                                                                }}
                                                                 disabled={busy}
                                                             >
                                                                 Copy Link
