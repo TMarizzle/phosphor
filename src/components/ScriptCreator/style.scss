@@ -406,6 +406,12 @@ $creator-dark-control-bg: rgba($creator-dark-bg, 0.92);
             padding: 0.1rem 0.25rem;
             font-size: inherit;
             text-shadow: none;
+
+            &::placeholder {
+                color: currentColor;
+                -webkit-text-fill-color: currentColor;
+                opacity: 0.5;
+            }
         }
 
         textarea {
