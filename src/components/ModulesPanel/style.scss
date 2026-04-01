@@ -271,6 +271,21 @@ $modules-meta-size: 14pt;
         background: var(--modules-selected-bg);
         color: var(--modules-selected-fg);
         text-shadow: none;
+
+        .modules-panel__button,
+        .modules-panel__toggle {
+            border-color: var(--modules-selected-fg);
+            color: var(--modules-selected-fg);
+        }
+
+        .modules-panel__toggle input {
+            accent-color: var(--modules-selected-fg);
+        }
+
+        .modules-panel__button:hover:not(:disabled) {
+            background: var(--modules-selected-fg);
+            color: var(--modules-selected-bg);
+        }
     }
 
     &__list-main {
