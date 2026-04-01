@@ -170,6 +170,7 @@ class App extends Component<any, AppState> {
         this._handleCreatorApply    = this._handleCreatorApply.bind(this);
         this._handleCreatorPreview  = this._handleCreatorPreview.bind(this);
         this._handleClearLocalModules = this._handleClearLocalModules.bind(this);
+        this._handleDeleteLocalScript = this._handleDeleteLocalScript.bind(this);
         this._handleCreatorSaveModule = this._handleCreatorSaveModule.bind(this);
         this._handlePreviewReturn   = this._handlePreviewReturn.bind(this);
         this._handlePhosphorScreenChanged = this._handlePhosphorScreenChanged.bind(this);
@@ -1264,6 +1265,58 @@ class App extends Component<any, AppState> {
         if (shouldResetActiveScript) {
             this._setModuleQueryParam(null);
         }
+    }
+
+    private _handleDeleteLocalScript(scriptId: string): boolean {
+        const isLocalScript = scriptId.startsWith("custom:") && !scriptId.startsWith("custom:preview:");
+        if (!isLocalScript) {
+            return false;
+        }
+
+        const exists = this.state.customScripts.some((script) => script.id === scriptId);
+        if (!exists) {
+            return false;
+        }
+
+        const shouldResetActiveScript = this.state.activeScript.id === scriptId;
+        const nextThemeState = shouldResetActiveScript
+            ? this._applyScriptThemePreset(DEFAULT_SCRIPT.json)
+            : null;
+
+        this.setState((prev): Pick<AppState,
+            "customScripts"
+            | "activeScript"
+            | "activeScriptRevision"
+            | "activeTerminalScreenId"
+            | "activeModule"
+            | "activeTheme"
+            | "customTheme"
+            | "creatorInitialScript"
+            | "previewMode"
+            | "uploadError"
+        > => {
+            const customScripts = prev.customScripts.filter((script) => script.id !== scriptId);
+            this._persistCustomScripts(customScripts);
+            return {
+                customScripts,
+                activeScript: shouldResetActiveScript ? DEFAULT_SCRIPT : prev.activeScript,
+                activeScriptRevision: shouldResetActiveScript
+                    ? prev.activeScriptRevision + 1
+                    : prev.activeScriptRevision,
+                activeTerminalScreenId: shouldResetActiveScript ? null : prev.activeTerminalScreenId,
+                activeModule: shouldResetActiveScript ? null : prev.activeModule,
+                ...(nextThemeState || {}),
+                creatorInitialScript: null,
+                previewMode: false,
+                uploadError: null as string | null,
+            };
+        });
+
+        if (shouldResetActiveScript) {
+            this._setModuleQueryParam(null);
+        }
+
+        return true;
     }
 
     private _handleReloadCurrentScript(): void {
@@ -2524,7 +2577,7 @@ class App extends Component<any, AppState> {
                                             onClick={this._handleClearLocalModules}
                                             title="Remove local uploaded scripts from this browser only"
                                         >
-                                            Clear Local Modules
+                                            [CLEAR LOCAL]
                                         </button>
                                     )}
 
@@ -2763,7 +2816,7 @@ class App extends Component<any, AppState> {
                                                             onClick={this._handleClearLocalModules}
                                                             title="Remove local uploaded scripts from this browser only"
                                                         >
-                                                            Clear Local Modules
+                                                            [CLEAR LOCAL]
                                                         </button>
                                                     )}
 
@@ -3064,6 +3117,7 @@ class App extends Component<any, AppState> {
                     onApply={this._handleCreatorApply}
                     onPreview={this._handleCreatorPreview}
                     onClose={this._handleCreatorClose}
+                    onDeleteLocalScript={this._handleDeleteLocalScript}
                     onSaveModule={ownedActiveModule ? this._handleCreatorSaveModule : undefined}
                 />
 

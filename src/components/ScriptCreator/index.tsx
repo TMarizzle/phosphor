@@ -27,6 +27,7 @@ interface ScriptCreatorProps {
         sidebarListMode: "screens" | "dialogs"
     ) => void;
     onClose: () => void;
+    onDeleteLocalScript?: (scriptId: string) => Promise<boolean> | boolean;
     onSaveModule?: (scriptJson: any) => Promise<boolean> | boolean;
 }
 
@@ -1574,6 +1575,7 @@ const ScriptCreator: FC<ScriptCreatorProps> = ({
     onApply,
     onPreview,
     onClose,
+    onDeleteLocalScript,
     onSaveModule,
 }) => {
     const initialSelectedScreenId = getInitialSelectedScreenId(initialScript);
@@ -3400,6 +3402,8 @@ const ScriptCreator: FC<ScriptCreatorProps> = ({
             : moduleSaveState === "error"
                 ? "[SAVE FAILED]"
                 : null;
+    const selectedScriptIsLocal = selectedScriptId.startsWith("custom:")
+        && !selectedScriptId.startsWith("custom:preview:");
 
     const previewScript = () => {
         if (!selectedScreenId) {
@@ -3416,6 +3420,35 @@ const ScriptCreator: FC<ScriptCreatorProps> = ({
             String(freshScript.config?.name || "CUSTOM SCRIPT").toUpperCase(),
             false
         );
+    };
+
+    const deleteSelectedLocalScript = async (): Promise<void> => {
+        if (!onDeleteLocalScript || !selectedScriptIsLocal) {
+            return;
+        }
+
+        if (!window.confirm(`Delete local script "${selectedScriptLabel}"?`)) {
+            return;
+        }
+
+        const deleted = await Promise.resolve(onDeleteLocalScript(selectedScriptId));
+        if (deleted === false) {
+            return;
+        }
+
+        delete scriptSnapshotsRef.current[selectedScriptId];
+        const fallbackScript = availableScripts.find((scriptOption) => scriptOption.id !== selectedScriptId);
+        if (fallbackScript) {
+            loadScriptIntoCreator(
+                fallbackScript.json,
+                fallbackScript.id,
+                fallbackScript.label,
+                !!fallbackScript.canSaveModule
+            );
+            return;
+        }
+
+        startNewScript();
     };
 
     const copyJson = async () => {
@@ -5521,6 +5554,14 @@ const ScriptCreator: FC<ScriptCreatorProps> = ({
                 )}
 
                 <div className="script-creator__footer">
+                    {selectedScriptIsLocal && !!onDeleteLocalScript && (
+                        <button
+                            className="script-creator__btn"
+                            onClick={() => void deleteSelectedLocalScript()}
+                        >
+                            [DELETE]
+                        </button>
+                    )}
                     <button className="script-creator__btn" onClick={applyScript}>[APPLY TO APP]</button>
                     {selectedScriptCanSaveModule && onSaveModule && (
                         <button
