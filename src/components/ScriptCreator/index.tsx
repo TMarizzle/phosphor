@@ -2650,17 +2650,19 @@ const ScriptCreator: FC<ScriptCreatorProps> = ({
 
     const addScreen = () => {
         const newId = nextScreenId(script.screens);
-        updateScript((prev) => ({
-            ...prev,
-            screens: [
-                ...prev.screens,
-                {
-                    id: newId,
-                    type: "screen",
-                    content: [""],
-                },
-            ],
-        }));
+        updateScript((prev) => {
+            const insertIndex = prev.screens.findIndex((screen: any) => screen.id === selectedScreenId);
+            const newScreens = [...prev.screens];
+            newScreens.splice(insertIndex + 1, 0, {
+                id: newId,
+                type: "screen",
+                content: [""],
+            });
+            return {
+                ...prev,
+                screens: newScreens,
+            };
+        });
         setSidebarListMode("screens");
         setSelectedScreenId(newId);
         setSelectedElementIndex(0);
@@ -2699,17 +2701,19 @@ const ScriptCreator: FC<ScriptCreatorProps> = ({
 
     const addDialog = () => {
         const newDialogId = nextDialogId(script.dialogs);
-        updateScript((prev) => ({
-            ...prev,
-            dialogs: [
-                ...prev.dialogs,
-                {
-                    id: newDialogId,
-                    type: "alert",
-                    content: ["New dialog"],
-                },
-            ],
-        }));
+        updateScript((prev) => {
+            const insertIndex = prev.dialogs.findIndex((dialog: any) => dialog.id === selectedDialogFocusId);
+            const newDialogs = [...prev.dialogs];
+            newDialogs.splice(insertIndex + 1, 0, {
+                id: newDialogId,
+                type: "alert",
+                content: ["New dialog"],
+            });
+            return {
+                ...prev,
+                dialogs: newDialogs,
+            };
+        });
         setSidebarListMode("dialogs");
         setSelectedDialogFocusId(newDialogId);
         setSelectedDialogContentIndex(0);
@@ -3097,7 +3101,7 @@ const ScriptCreator: FC<ScriptCreatorProps> = ({
                 break;
         }
 
-        const nextIndex = selectedScreen.content.length;
+        const nextIndex = selectedElementIndex + 1;
         updateScript((prev) => ({
             ...prev,
             dialogs: nextDialogs,
@@ -3105,9 +3109,11 @@ const ScriptCreator: FC<ScriptCreatorProps> = ({
                 if (screen.id !== selectedScreen.id) {
                     return screen;
                 }
+                const newContent = [...selectedScreen.content];
+                newContent.splice(nextIndex, 0, element);
                 return {
                     ...screen,
-                    content: [...selectedScreen.content, element],
+                    content: newContent,
                 };
             }),
         }));
