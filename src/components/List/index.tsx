@@ -1,4 +1,4 @@
-import React, { FC, useCallback, useEffect, useMemo, useState } from "react";
+import React, { FC, useCallback, useEffect, useMemo, useRef, useState } from "react";
 
 import "./style.scss";
 
@@ -58,30 +58,72 @@ const List: FC<ListProps> = (props) => {
     }, [normalized]);
 
     const [index, setIndex] = useState(initialIndex);
+    const longPressTimerRef = useRef<number | null>(null);
+    const lastLongPressAtRef = useRef<number>(0);
 
     useEffect(() => {
         setIndex(initialIndex);
     }, [initialIndex]);
 
+    useEffect(() => {
+        return () => {
+            if (longPressTimerRef.current !== null) {
+                window.clearTimeout(longPressTimerRef.current);
+            }
+        };
+    }, []);
+
+    const hasRequireShiftState = normalized.some((s) => s.dialog && s.requireShift);
+
     const handleRendered = () => (onRendered && onRendered());
-    const handleClick = useCallback((e: React.MouseEvent) => {
+
+    const clearLongPressTimer = () => {
+        if (longPressTimerRef.current !== null) {
+            window.clearTimeout(longPressTimerRef.current);
+            longPressTimerRef.current = null;
+        }
+    };
+
+    const advanceAndNotify = useCallback((effectiveShiftKey: boolean) => {
         if (!normalized.length) {
-            onClick && onClick(undefined, e.shiftKey);
+            onClick && onClick(undefined, effectiveShiftKey);
             return;
         }
 
         const nextIndex = ((index + 1) % normalized.length);
         const nextState = normalized[nextIndex];
 
-        // If next state requires shift to cycle and shift wasn't held, don't advance
-        if (nextState.dialog && nextState.requireShift && !e.shiftKey) {
-            onClick && onClick(nextState, e.shiftKey);
+        if (nextState.dialog && nextState.requireShift && !effectiveShiftKey) {
+            onClick && onClick(nextState, effectiveShiftKey);
             return;
         }
 
         setIndex(nextIndex);
-        onClick && onClick(nextState, e.shiftKey);
+        onClick && onClick(nextState, effectiveShiftKey);
     }, [normalized, onClick, index]);
+
+    const handlePointerDown = (e: React.PointerEvent<HTMLDivElement>) => {
+        if (e.button !== 0 || !hasRequireShiftState) {
+            return;
+        }
+        clearLongPressTimer();
+        longPressTimerRef.current = window.setTimeout(() => {
+            lastLongPressAtRef.current = Date.now();
+            advanceAndNotify(true);
+            clearLongPressTimer();
+        }, 500);
+    };
+
+    const handlePointerUp = () => clearLongPressTimer();
+    const handlePointerCancel = () => clearLongPressTimer();
+
+    const handleClick = useCallback((e: React.MouseEvent) => {
+        clearLongPressTimer();
+        if (Date.now() - lastLongPressAtRef.current < 750) {
+            return;
+        }
+        advanceAndNotify(e.shiftKey);
+    }, [advanceAndNotify]);
 
     useEffect(() => handleRendered());
 
@@ -92,7 +134,19 @@ const List: FC<ListProps> = (props) => {
         active.className ? active.className : null,
     ].join(" ").trim();
 
-    return <div className={css} onClick={handleClick}>{active.text}</div>;
+    return (
+        <div
+            className={css}
+            title={hasRequireShiftState ? "Shift-click or press and hold to bypass" : undefined}
+            onClick={handleClick}
+            onPointerDown={handlePointerDown}
+            onPointerUp={handlePointerUp}
+            onPointerLeave={handlePointerCancel}
+            onPointerCancel={handlePointerCancel}
+        >
+            {active.text}
+        </div>
+    );
 };
 
 export default List;

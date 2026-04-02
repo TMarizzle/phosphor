@@ -5099,10 +5099,9 @@ const ScriptCreator: FC<ScriptCreatorProps> = ({
                                                                             />
                                                                         </label>
 
-                                                                        <div className="script-creator__cycler-state-row">
-                                                                            <label className="script-creator__field">
-                                                                                <span>Behavior</span>
-                                                                                <CreatorSelect
+                                                                        <label className="script-creator__field">
+                                                                            <span>Behavior</span>
+                                                                            <CreatorSelect
                                                                                     value={behavior}
                                                                                     options={CYCLER_STATE_BEHAVIOR_OPTIONS}
                                                                                     onChange={(nextBehaviorRaw) => {
@@ -5152,37 +5151,36 @@ const ScriptCreator: FC<ScriptCreatorProps> = ({
                                                                                         });
                                                                                     }}
                                                                                 />
-                                                                            </label>
+                                                                        </label>
 
-                                                                            <label className="script-creator__field">
-                                                                                <span>Class Name</span>
-                                                                                <CreatorSelect
-                                                                                    value={state.className || ""}
-                                                                                    options={cyclerStateClassNameSelectOptions}
-                                                                                    searchable
-                                                                                    onChange={(nextClassName) => {
-                                                                                        updateCyclerStates((prevStates) => {
-                                                                                            return prevStates.map((entry: any, index: number) => {
-                                                                                                if (index !== stateIndex) {
-                                                                                                    return entry;
-                                                                                                }
+                                                                        <label className="script-creator__field">
+                                                                            <span>Class Name</span>
+                                                                            <CreatorSelect
+                                                                                value={state.className || ""}
+                                                                                options={cyclerStateClassNameSelectOptions}
+                                                                                searchable
+                                                                                onChange={(nextClassName) => {
+                                                                                    updateCyclerStates((prevStates) => {
+                                                                                        return prevStates.map((entry: any, index: number) => {
+                                                                                            if (index !== stateIndex) {
+                                                                                                return entry;
+                                                                                            }
 
-                                                                                                if (!nextClassName.length) {
-                                                                                                    const nextState = { ...entry };
-                                                                                                    delete nextState.className;
-                                                                                                    return nextState;
-                                                                                                }
+                                                                                            if (!nextClassName.length) {
+                                                                                                const nextState = { ...entry };
+                                                                                                delete nextState.className;
+                                                                                                return nextState;
+                                                                                            }
 
-                                                                                                return {
-                                                                                                    ...entry,
-                                                                                                    className: nextClassName,
-                                                                                                };
-                                                                                            });
+                                                                                            return {
+                                                                                                ...entry,
+                                                                                                className: nextClassName,
+                                                                                            };
                                                                                         });
-                                                                                    }}
-                                                                                />
-                                                                            </label>
-                                                                        </div>
+                                                                                    });
+                                                                                }}
+                                                                            />
+                                                                        </label>
 
                                                                         {behavior === "dialog" && (
                                                                             <>
