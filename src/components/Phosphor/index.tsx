@@ -512,7 +512,7 @@ class Phosphor extends Component<PhosphorProps, AppState> {
         void this._playCharEnter();
     }
 
-    private _handleToggleClick(state?: any): void {
+    private _handleToggleClick(state?: any, shiftKey?: boolean): void {
         void this._playCharEnter();
 
         if (!state) {
@@ -524,6 +524,19 @@ class Phosphor extends Component<PhosphorProps, AppState> {
             if (handled) {
                 return;
             }
+        }
+
+        if (state.dialog) {
+            if (state.requireShift) {
+                // requireShift: no shift = show dialog (no cycle); shift = cycle (no dialog)
+                if (!shiftKey) {
+                    this._toggleDialog(state.dialog);
+                }
+            } else {
+                // no requireShift: always show dialog (cycle already happened in component)
+                this._toggleDialog(state.dialog);
+            }
+            return;
         }
 
         if (state.action) {

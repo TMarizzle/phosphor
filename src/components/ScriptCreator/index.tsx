@@ -85,7 +85,7 @@ interface CreatorSelectProps {
 }
 
 type CreatorColorMode = "theme" | "dark" | "light";
-type CyclerStateBehavior = "none" | "link" | "action";
+type CyclerStateBehavior = "none" | "link" | "action" | "dialog";
 type LinkTargetType = "link" | "dialog" | "action" | "href";
 type PromptActionType = "link" | "dialog" | "action" | "console" | "logEntry" | "input";
 
@@ -156,6 +156,7 @@ const CYCLER_STATE_BEHAVIOR_OPTIONS: CreatorSelectOption[] = [
     { value: "none", label: "none" },
     { value: "link", label: "link" },
     { value: "action", label: "action" },
+    { value: "dialog", label: "dialog" },
 ];
 
 const LINK_TARGET_TYPE_OPTIONS: CreatorSelectOption[] = [
@@ -210,6 +211,9 @@ const getCyclerStateBehavior = (state: any): CyclerStateBehavior => {
     if (typeof state?.action === "string" && state.action.trim().length) {
         return "action";
     }
+    if (typeof state?.dialog === "string" && state.dialog.trim().length) {
+        return "dialog";
+    }
     if (typeof state?.target === "string" && state.target.trim().length) {
         return "link";
     }
@@ -246,6 +250,12 @@ const normalizeCyclerStates = (states: any[], fallbackLabel: string): any[] => {
         }
         if (typeof entry.action === "string") {
             next.action = entry.action;
+        }
+        if (typeof entry.dialog === "string") {
+            next.dialog = entry.dialog;
+        }
+        if (entry.requireShift === true) {
+            next.requireShift = true;
         }
 
         return next;
@@ -5107,8 +5117,22 @@ const ScriptCreator: FC<ScriptCreatorProps> = ({
                                                                                                 if (nextBehavior === "none") {
                                                                                                     delete nextState.target;
                                                                                                     delete nextState.action;
+                                                                                                    delete nextState.dialog;
+                                                                                                    delete nextState.requireShift;
                                                                                                     return nextState;
                                                                                                 }
+
+                                                                                                if (nextBehavior === "dialog") {
+                                                                                                    delete nextState.target;
+                                                                                                    delete nextState.action;
+                                                                                                    if (typeof nextState.dialog !== "string" || !nextState.dialog.trim().length) {
+                                                                                                        nextState.dialog = (script.dialogs?.[0]?.id || "").toString();
+                                                                                                    }
+                                                                                                    return nextState;
+                                                                                                }
+
+                                                                                                delete nextState.dialog;
+                                                                                                delete nextState.requireShift;
 
                                                                                                 if (typeof nextState.target !== "string") {
                                                                                                     nextState.target = selectedScreen?.id || "";
@@ -5159,6 +5183,69 @@ const ScriptCreator: FC<ScriptCreatorProps> = ({
                                                                                 />
                                                                             </label>
                                                                         </div>
+
+                                                                        {behavior === "dialog" && (
+                                                                            <>
+                                                                                <label className="script-creator__field">
+                                                                                    <span>Dialog ID</span>
+                                                                                    {dialogIdSelectOptions.length > 0 ? (
+                                                                                        <CreatorSelect
+                                                                                            value={state.dialog || ""}
+                                                                                            options={dialogIdSelectOptions}
+                                                                                            fallbackLabel={state.dialog || "(dialog id)"}
+                                                                                            searchable
+                                                                                            onChange={(nextDialog) => {
+                                                                                                updateCyclerStates((prevStates) => {
+                                                                                                    return prevStates.map((entry: any, index: number) => {
+                                                                                                        return index === stateIndex
+                                                                                                            ? { ...entry, dialog: nextDialog }
+                                                                                                            : entry;
+                                                                                                    });
+                                                                                                });
+                                                                                            }}
+                                                                                        />
+                                                                                    ) : (
+                                                                                        <input
+                                                                                            value={state.dialog || ""}
+                                                                                            onChange={(e) => {
+                                                                                                const nextDialog = e.target.value;
+                                                                                                updateCyclerStates((prevStates) => {
+                                                                                                    return prevStates.map((entry: any, index: number) => {
+                                                                                                        return index === stateIndex
+                                                                                                            ? { ...entry, dialog: nextDialog }
+                                                                                                            : entry;
+                                                                                                    });
+                                                                                                });
+                                                                                            }}
+                                                                                        />
+                                                                                    )}
+                                                                                </label>
+
+                                                                                <label className="script-creator__field">
+                                                                                    <span>Require Shift</span>
+                                                                                    <CreatorSelect
+                                                                                        value={state.requireShift ? "true" : "false"}
+                                                                                        options={BOOLEAN_OPTIONS}
+                                                                                        onChange={(nextValue) => {
+                                                                                            const nextRequireShift = nextValue === "true";
+                                                                                            updateCyclerStates((prevStates) => {
+                                                                                                return prevStates.map((entry: any, index: number) => {
+                                                                                                    if (index !== stateIndex) {
+                                                                                                        return entry;
+                                                                                                    }
+                                                                                                    if (!nextRequireShift) {
+                                                                                                        const nextState = { ...entry };
+                                                                                                        delete nextState.requireShift;
+                                                                                                        return nextState;
+                                                                                                    }
+                                                                                                    return { ...entry, requireShift: true };
+                                                                                                });
+                                                                                            });
+                                                                                        }}
+                                                                                    />
+                                                                                </label>
+                                                                            </>
+                                                                        )}
 
                                                                         {(behavior === "link" || behavior === "action") && (
                                                                             <label className="script-creator__field">

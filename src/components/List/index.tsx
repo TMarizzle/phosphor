@@ -7,6 +7,8 @@ export interface ListState {
     active?: boolean;
     target?: string;
     action?: string;
+    dialog?: string;
+    requireShift?: boolean;
     className?: string;
 }
 
@@ -14,7 +16,7 @@ export interface ListProps {
     states: Array<ListState | string>;
     className?: string;
     onRendered?: () => void;
-    onClick?: (state?: ListState) => void;
+    onClick?: (state: ListState | undefined, shiftKey: boolean) => void;
 }
 
 const List: FC<ListProps> = (props) => {
@@ -36,6 +38,12 @@ const List: FC<ListProps> = (props) => {
             if (typeof state.action === "string") {
                 normalizedState.action = state.action;
             }
+            if (typeof state.dialog === "string") {
+                normalizedState.dialog = state.dialog;
+            }
+            if (state.requireShift === true) {
+                normalizedState.requireShift = true;
+            }
             if (typeof state.className === "string") {
                 normalizedState.className = state.className;
             }
@@ -56,16 +64,23 @@ const List: FC<ListProps> = (props) => {
     }, [initialIndex]);
 
     const handleRendered = () => (onRendered && onRendered());
-    const handleClick = useCallback(() => {
+    const handleClick = useCallback((e: React.MouseEvent) => {
         if (!normalized.length) {
-            onClick && onClick();
+            onClick && onClick(undefined, e.shiftKey);
             return;
         }
 
         const nextIndex = ((index + 1) % normalized.length);
         const nextState = normalized[nextIndex];
+
+        // If next state requires shift to cycle and shift wasn't held, don't advance
+        if (nextState.dialog && nextState.requireShift && !e.shiftKey) {
+            onClick && onClick(nextState, e.shiftKey);
+            return;
+        }
+
         setIndex(nextIndex);
-        onClick && onClick(nextState);
+        onClick && onClick(nextState, e.shiftKey);
     }, [normalized, onClick, index]);
 
     useEffect(() => handleRendered());

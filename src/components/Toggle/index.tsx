@@ -7,6 +7,8 @@ export interface ToggleState {
     active?: boolean;
     target?: string;
     action?: string;
+    dialog?: string;
+    requireShift?: boolean;
     className?: string;
 }
 
@@ -14,7 +16,7 @@ export interface ToggleProps {
     states: ToggleState[];
     className?: string;
     onRendered?: () => void;
-    onClick?: (state?: ToggleState) => void;
+    onClick?: (state: ToggleState | undefined, shiftKey: boolean) => void;
 }
 
 const Toggle: FC<ToggleProps> = (props) => {
@@ -38,21 +40,27 @@ const Toggle: FC<ToggleProps> = (props) => {
 
     // events
     const handleRendered = () => (onRendered && onRendered());
-    const handleClick = useCallback(() => {
+    const handleClick = useCallback((e: React.MouseEvent) => {
         if (!states || !states.length) {
-            onClick && onClick();
+            onClick && onClick(undefined, e.shiftKey);
             return;
         }
 
         const current = active || states.find((element) => element.active === true) || states[0];
         const index = states.findIndex((element) => element === current);
         const safeIndex = index > -1 ? index : 0;
+        const next = states[(safeIndex + 1) % states.length];
+
+        // If next state requires shift to cycle and shift wasn't held, don't advance
+        if (next.dialog && next.requireShift && !e.shiftKey) {
+            onClick && onClick(next, e.shiftKey);
+            return;
+        }
 
         states.forEach((element) => element.active = false);
-        const next = states[(safeIndex + 1) % states.length];
         next.active = true;
         setActive(next);
-        onClick && onClick(next);
+        onClick && onClick(next, e.shiftKey);
     }, [states, active, setActive, onClick]);
 
     // this should fire on mount/update
