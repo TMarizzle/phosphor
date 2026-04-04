@@ -440,23 +440,22 @@ class App extends Component<any, AppState> {
 
     private _buildCreatorInitialScript(scriptJson: any, screenId?: string | null): any {
         const seededJson = JSON.parse(JSON.stringify(scriptJson || {}));
-        if (!screenId || !Array.isArray(seededJson?.screens)) {
-            return seededJson;
+
+        // Only override previewStartScreen if screenId is explicitly provided (not null)
+        if (screenId && Array.isArray(seededJson?.screens)) {
+            const screenExists = seededJson.screens.some((screen: any) => {
+                return screen && typeof screen.id === "string" && screen.id === screenId;
+            });
+            if (screenExists) {
+                seededJson.config = {
+                    ...(seededJson.config || {}),
+                    previewStartScreen: screenId,
+                    previewSidebarListMode: "screens",
+                };
+                delete seededJson.config.previewSelectedElementIndex;
+            }
         }
 
-        const screenExists = seededJson.screens.some((screen: any) => {
-            return screen && typeof screen.id === "string" && screen.id === screenId;
-        });
-        if (!screenExists) {
-            return seededJson;
-        }
-
-        seededJson.config = {
-            ...(seededJson.config || {}),
-            previewStartScreen: screenId,
-            previewSidebarListMode: "screens",
-        };
-        delete seededJson.config.previewSelectedElementIndex;
         return seededJson;
     }
 
@@ -1359,7 +1358,7 @@ class App extends Component<any, AppState> {
     }
 
     private _handleCreatorOpen(event?: React.MouseEvent<HTMLButtonElement>): void {
-        const forceSyncToCurrentView = !!event?.shiftKey;
+        const shouldPreserveSavedState = !!event?.shiftKey;
         this.setState((prev): Pick<AppState,
             | "creatorOpen"
             | "creatorInitialScript"
@@ -1375,11 +1374,11 @@ class App extends Component<any, AppState> {
             creatorOpen: true,
             creatorInitialScript: this._buildCreatorInitialScript(
                 prev.activeScript.json,
-                prev.activeTerminalScreenId
+                shouldPreserveSavedState ? null : prev.activeTerminalScreenId
             ),
-            creatorRemountVersion: forceSyncToCurrentView
-                ? prev.creatorRemountVersion + 1
-                : prev.creatorRemountVersion,
+            creatorRemountVersion: shouldPreserveSavedState
+                ? prev.creatorRemountVersion
+                : prev.creatorRemountVersion + 1,
             scriptDropdownOpen: false,
             optionsDropdownOpen: false,
             profileDropdownOpen: false,
@@ -1390,11 +1389,29 @@ class App extends Component<any, AppState> {
         }));
     }
 
-    private _handleCreatorClose(): void {
-        this.setState({
-            creatorOpen: false,
-            creatorInitialScript: null,
-        });
+    private _handleCreatorClose(scriptJson?: any): void {
+        // Save the script state if provided, so shift-click can restore to this state
+        if (scriptJson && Array.isArray(scriptJson?.screens)) {
+            this.setState((prev) => {
+                const nextScript: BundledScript = {
+                    ...prev.activeScript,
+                    json: this._sanitizeScriptJson(scriptJson),
+                };
+                return {
+                    creatorOpen: false,
+                    creatorInitialScript: null,
+                    activeScript: nextScript,
+                    customScripts: prev.customScripts.map((s) =>
+                        s.id === nextScript.id ? nextScript : s
+                    ),
+                };
+            });
+        } else {
+            this.setState({
+                creatorOpen: false,
+                creatorInitialScript: null,
+            });
+        }
     }
 
     private _handleCreatorApply(scriptJson: any): void {

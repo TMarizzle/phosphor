@@ -26,7 +26,7 @@ interface ScriptCreatorProps {
         elementIndex: number,
         sidebarListMode: "screens" | "dialogs"
     ) => void;
-    onClose: () => void;
+    onClose: (scriptJson?: any) => void;
     onDeleteLocalScript?: (scriptId: string) => Promise<boolean> | boolean;
     onSaveModule?: (scriptJson: any) => Promise<boolean> | boolean;
 }
@@ -3482,8 +3482,23 @@ const ScriptCreator: FC<ScriptCreatorProps> = ({
         setScreenIdDraft(selectedScreen?.id || "");
     };
 
+    const getScriptWithSavedState = (scriptToSave: any) => {
+        const saved = cloneJson(scriptToSave);
+        saved.config = {
+            ...(saved.config || {}),
+            previewStartScreen: selectedScreenId,
+            previewSelectedElementIndex: selectedElementIndex,
+            previewSidebarListMode: sidebarListMode,
+        };
+        return saved;
+    };
+
     const applyScript = () => {
-        onApply(cloneJson(script));
+        onApply(getScriptWithSavedState(script));
+    };
+
+    const closeCreator = () => {
+        onClose(getScriptWithSavedState(script));
     };
 
     const saveModule = async (): Promise<void> => {
@@ -3745,7 +3760,7 @@ const ScriptCreator: FC<ScriptCreatorProps> = ({
             className={`script-creator script-creator--${creatorColorMode}${isResizingSidebar ? " script-creator--resizing" : ""}`}
             style={open ? undefined : { display: "none" }}
             onKeyDown={handleEditorMarkdownShortcut}
-            onClick={onClose}
+            onClick={closeCreator}
         >
             <div className="script-creator__panel" onClick={(e) => e.stopPropagation()}>
                 <div className="script-creator__header">
@@ -3797,7 +3812,7 @@ const ScriptCreator: FC<ScriptCreatorProps> = ({
                         >
                             [CONFIG: {configPanelVisible ? "ON" : "OFF"}]
                         </button>
-                        <button className="script-creator__btn" onClick={onClose}>[CLOSE]</button>
+                        <button className="script-creator__btn" onClick={closeCreator}>[CLOSE]</button>
                     </div>
                 </div>
 
