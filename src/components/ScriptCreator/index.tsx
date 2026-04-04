@@ -26,7 +26,7 @@ interface ScriptCreatorProps {
         elementIndex: number,
         sidebarListMode: "screens" | "dialogs"
     ) => void;
-    onClose: () => void;
+    onClose: (scriptJson?: any) => void;
     onDeleteLocalScript?: (scriptId: string) => Promise<boolean> | boolean;
     onSaveModule?: (scriptJson: any) => Promise<boolean> | boolean;
 }
@@ -85,7 +85,7 @@ interface CreatorSelectProps {
 }
 
 type CreatorColorMode = "theme" | "dark" | "light";
-type CyclerStateBehavior = "none" | "link" | "action";
+type CyclerStateBehavior = "none" | "link" | "action" | "dialog";
 type LinkTargetType = "link" | "dialog" | "action" | "href";
 type PromptActionType = "link" | "dialog" | "action" | "console" | "logEntry" | "input";
 
@@ -156,6 +156,7 @@ const CYCLER_STATE_BEHAVIOR_OPTIONS: CreatorSelectOption[] = [
     { value: "none", label: "none" },
     { value: "link", label: "link" },
     { value: "action", label: "action" },
+    { value: "dialog", label: "dialog" },
 ];
 
 const LINK_TARGET_TYPE_OPTIONS: CreatorSelectOption[] = [
@@ -210,6 +211,9 @@ const getCyclerStateBehavior = (state: any): CyclerStateBehavior => {
     if (typeof state?.action === "string" && state.action.trim().length) {
         return "action";
     }
+    if (typeof state?.dialog === "string" && state.dialog.trim().length) {
+        return "dialog";
+    }
     if (typeof state?.target === "string" && state.target.trim().length) {
         return "link";
     }
@@ -246,6 +250,12 @@ const normalizeCyclerStates = (states: any[], fallbackLabel: string): any[] => {
         }
         if (typeof entry.action === "string") {
             next.action = entry.action;
+        }
+        if (typeof entry.dialog === "string") {
+            next.dialog = entry.dialog;
+        }
+        if (entry.requireShift === true) {
+            next.requireShift = true;
         }
 
         return next;
@@ -2640,17 +2650,19 @@ const ScriptCreator: FC<ScriptCreatorProps> = ({
 
     const addScreen = () => {
         const newId = nextScreenId(script.screens);
-        updateScript((prev) => ({
-            ...prev,
-            screens: [
-                ...prev.screens,
-                {
-                    id: newId,
-                    type: "screen",
-                    content: [""],
-                },
-            ],
-        }));
+        updateScript((prev) => {
+            const insertIndex = prev.screens.findIndex((screen: any) => screen.id === selectedScreenId);
+            const newScreens = [...prev.screens];
+            newScreens.splice(insertIndex + 1, 0, {
+                id: newId,
+                type: "screen",
+                content: [""],
+            });
+            return {
+                ...prev,
+                screens: newScreens,
+            };
+        });
         setSidebarListMode("screens");
         setSelectedScreenId(newId);
         setSelectedElementIndex(0);
@@ -2689,17 +2701,19 @@ const ScriptCreator: FC<ScriptCreatorProps> = ({
 
     const addDialog = () => {
         const newDialogId = nextDialogId(script.dialogs);
-        updateScript((prev) => ({
-            ...prev,
-            dialogs: [
-                ...prev.dialogs,
-                {
-                    id: newDialogId,
-                    type: "alert",
-                    content: ["New dialog"],
-                },
-            ],
-        }));
+        updateScript((prev) => {
+            const insertIndex = prev.dialogs.findIndex((dialog: any) => dialog.id === selectedDialogFocusId);
+            const newDialogs = [...prev.dialogs];
+            newDialogs.splice(insertIndex + 1, 0, {
+                id: newDialogId,
+                type: "alert",
+                content: ["New dialog"],
+            });
+            return {
+                ...prev,
+                dialogs: newDialogs,
+            };
+        });
         setSidebarListMode("dialogs");
         setSelectedDialogFocusId(newDialogId);
         setSelectedDialogContentIndex(0);
@@ -3087,7 +3101,7 @@ const ScriptCreator: FC<ScriptCreatorProps> = ({
                 break;
         }
 
-        const nextIndex = selectedScreen.content.length;
+        const nextIndex = selectedElementIndex + 1;
         updateScript((prev) => ({
             ...prev,
             dialogs: nextDialogs,
@@ -3095,9 +3109,11 @@ const ScriptCreator: FC<ScriptCreatorProps> = ({
                 if (screen.id !== selectedScreen.id) {
                     return screen;
                 }
+                const newContent = [...selectedScreen.content];
+                newContent.splice(nextIndex, 0, element);
                 return {
                     ...screen,
-                    content: [...selectedScreen.content, element],
+                    content: newContent,
                 };
             }),
         }));
@@ -3466,8 +3482,23 @@ const ScriptCreator: FC<ScriptCreatorProps> = ({
         setScreenIdDraft(selectedScreen?.id || "");
     };
 
+    const getScriptWithSavedState = (scriptToSave: any) => {
+        const saved = cloneJson(scriptToSave);
+        saved.config = {
+            ...(saved.config || {}),
+            previewStartScreen: selectedScreenId,
+            previewSelectedElementIndex: selectedElementIndex,
+            previewSidebarListMode: sidebarListMode,
+        };
+        return saved;
+    };
+
     const applyScript = () => {
-        onApply(cloneJson(script));
+        onApply(getScriptWithSavedState(script));
+    };
+
+    const closeCreator = () => {
+        onClose(getScriptWithSavedState(script));
     };
 
     const saveModule = async (): Promise<void> => {
@@ -3729,7 +3760,7 @@ const ScriptCreator: FC<ScriptCreatorProps> = ({
             className={`script-creator script-creator--${creatorColorMode}${isResizingSidebar ? " script-creator--resizing" : ""}`}
             style={open ? undefined : { display: "none" }}
             onKeyDown={handleEditorMarkdownShortcut}
-            onClick={onClose}
+            onClick={closeCreator}
         >
             <div className="script-creator__panel" onClick={(e) => e.stopPropagation()}>
                 <div className="script-creator__header">
@@ -3781,7 +3812,7 @@ const ScriptCreator: FC<ScriptCreatorProps> = ({
                         >
                             [CONFIG: {configPanelVisible ? "ON" : "OFF"}]
                         </button>
-                        <button className="script-creator__btn" onClick={onClose}>[CLOSE]</button>
+                        <button className="script-creator__btn" onClick={closeCreator}>[CLOSE]</button>
                     </div>
                 </div>
 
@@ -5089,10 +5120,9 @@ const ScriptCreator: FC<ScriptCreatorProps> = ({
                                                                             />
                                                                         </label>
 
-                                                                        <div className="script-creator__cycler-state-row">
-                                                                            <label className="script-creator__field">
-                                                                                <span>Behavior</span>
-                                                                                <CreatorSelect
+                                                                        <label className="script-creator__field">
+                                                                            <span>Behavior</span>
+                                                                            <CreatorSelect
                                                                                     value={behavior}
                                                                                     options={CYCLER_STATE_BEHAVIOR_OPTIONS}
                                                                                     onChange={(nextBehaviorRaw) => {
@@ -5107,8 +5137,22 @@ const ScriptCreator: FC<ScriptCreatorProps> = ({
                                                                                                 if (nextBehavior === "none") {
                                                                                                     delete nextState.target;
                                                                                                     delete nextState.action;
+                                                                                                    delete nextState.dialog;
+                                                                                                    delete nextState.requireShift;
                                                                                                     return nextState;
                                                                                                 }
+
+                                                                                                if (nextBehavior === "dialog") {
+                                                                                                    delete nextState.target;
+                                                                                                    delete nextState.action;
+                                                                                                    if (typeof nextState.dialog !== "string" || !nextState.dialog.trim().length) {
+                                                                                                        nextState.dialog = (script.dialogs?.[0]?.id || "").toString();
+                                                                                                    }
+                                                                                                    return nextState;
+                                                                                                }
+
+                                                                                                delete nextState.dialog;
+                                                                                                delete nextState.requireShift;
 
                                                                                                 if (typeof nextState.target !== "string") {
                                                                                                     nextState.target = selectedScreen?.id || "";
@@ -5128,37 +5172,99 @@ const ScriptCreator: FC<ScriptCreatorProps> = ({
                                                                                         });
                                                                                     }}
                                                                                 />
-                                                                            </label>
+                                                                        </label>
 
-                                                                            <label className="script-creator__field">
-                                                                                <span>Class Name</span>
-                                                                                <CreatorSelect
-                                                                                    value={state.className || ""}
-                                                                                    options={cyclerStateClassNameSelectOptions}
-                                                                                    searchable
-                                                                                    onChange={(nextClassName) => {
-                                                                                        updateCyclerStates((prevStates) => {
-                                                                                            return prevStates.map((entry: any, index: number) => {
-                                                                                                if (index !== stateIndex) {
-                                                                                                    return entry;
-                                                                                                }
+                                                                        <label className="script-creator__field">
+                                                                            <span>Class Name</span>
+                                                                            <CreatorSelect
+                                                                                value={state.className || ""}
+                                                                                options={cyclerStateClassNameSelectOptions}
+                                                                                searchable
+                                                                                onChange={(nextClassName) => {
+                                                                                    updateCyclerStates((prevStates) => {
+                                                                                        return prevStates.map((entry: any, index: number) => {
+                                                                                            if (index !== stateIndex) {
+                                                                                                return entry;
+                                                                                            }
 
-                                                                                                if (!nextClassName.length) {
-                                                                                                    const nextState = { ...entry };
-                                                                                                    delete nextState.className;
-                                                                                                    return nextState;
-                                                                                                }
+                                                                                            if (!nextClassName.length) {
+                                                                                                const nextState = { ...entry };
+                                                                                                delete nextState.className;
+                                                                                                return nextState;
+                                                                                            }
 
-                                                                                                return {
-                                                                                                    ...entry,
-                                                                                                    className: nextClassName,
-                                                                                                };
-                                                                                            });
+                                                                                            return {
+                                                                                                ...entry,
+                                                                                                className: nextClassName,
+                                                                                            };
                                                                                         });
-                                                                                    }}
-                                                                                />
-                                                                            </label>
-                                                                        </div>
+                                                                                    });
+                                                                                }}
+                                                                            />
+                                                                        </label>
+
+                                                                        {behavior === "dialog" && (
+                                                                            <>
+                                                                                <label className="script-creator__field">
+                                                                                    <span>Dialog ID</span>
+                                                                                    {dialogIdSelectOptions.length > 0 ? (
+                                                                                        <CreatorSelect
+                                                                                            value={state.dialog || ""}
+                                                                                            options={dialogIdSelectOptions}
+                                                                                            fallbackLabel={state.dialog || "(dialog id)"}
+                                                                                            searchable
+                                                                                            onChange={(nextDialog) => {
+                                                                                                updateCyclerStates((prevStates) => {
+                                                                                                    return prevStates.map((entry: any, index: number) => {
+                                                                                                        return index === stateIndex
+                                                                                                            ? { ...entry, dialog: nextDialog }
+                                                                                                            : entry;
+                                                                                                    });
+                                                                                                });
+                                                                                            }}
+                                                                                        />
+                                                                                    ) : (
+                                                                                        <input
+                                                                                            value={state.dialog || ""}
+                                                                                            onChange={(e) => {
+                                                                                                const nextDialog = e.target.value;
+                                                                                                updateCyclerStates((prevStates) => {
+                                                                                                    return prevStates.map((entry: any, index: number) => {
+                                                                                                        return index === stateIndex
+                                                                                                            ? { ...entry, dialog: nextDialog }
+                                                                                                            : entry;
+                                                                                                    });
+                                                                                                });
+                                                                                            }}
+                                                                                        />
+                                                                                    )}
+                                                                                </label>
+
+                                                                                <label className="script-creator__field">
+                                                                                    <span>Require Shift</span>
+                                                                                    <CreatorSelect
+                                                                                        value={state.requireShift ? "true" : "false"}
+                                                                                        options={BOOLEAN_OPTIONS}
+                                                                                        onChange={(nextValue) => {
+                                                                                            const nextRequireShift = nextValue === "true";
+                                                                                            updateCyclerStates((prevStates) => {
+                                                                                                return prevStates.map((entry: any, index: number) => {
+                                                                                                    if (index !== stateIndex) {
+                                                                                                        return entry;
+                                                                                                    }
+                                                                                                    if (!nextRequireShift) {
+                                                                                                        const nextState = { ...entry };
+                                                                                                        delete nextState.requireShift;
+                                                                                                        return nextState;
+                                                                                                    }
+                                                                                                    return { ...entry, requireShift: true };
+                                                                                                });
+                                                                                            });
+                                                                                        }}
+                                                                                    />
+                                                                                </label>
+                                                                            </>
+                                                                        )}
 
                                                                         {(behavior === "link" || behavior === "action") && (
                                                                             <label className="script-creator__field">

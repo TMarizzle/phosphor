@@ -440,23 +440,22 @@ class App extends Component<any, AppState> {
 
     private _buildCreatorInitialScript(scriptJson: any, screenId?: string | null): any {
         const seededJson = JSON.parse(JSON.stringify(scriptJson || {}));
-        if (!screenId || !Array.isArray(seededJson?.screens)) {
-            return seededJson;
+
+        // Only override previewStartScreen if screenId is explicitly provided (not null)
+        if (screenId && Array.isArray(seededJson?.screens)) {
+            const screenExists = seededJson.screens.some((screen: any) => {
+                return screen && typeof screen.id === "string" && screen.id === screenId;
+            });
+            if (screenExists) {
+                seededJson.config = {
+                    ...(seededJson.config || {}),
+                    previewStartScreen: screenId,
+                    previewSidebarListMode: "screens",
+                };
+                delete seededJson.config.previewSelectedElementIndex;
+            }
         }
 
-        const screenExists = seededJson.screens.some((screen: any) => {
-            return screen && typeof screen.id === "string" && screen.id === screenId;
-        });
-        if (!screenExists) {
-            return seededJson;
-        }
-
-        seededJson.config = {
-            ...(seededJson.config || {}),
-            previewStartScreen: screenId,
-            previewSidebarListMode: "screens",
-        };
-        delete seededJson.config.previewSelectedElementIndex;
         return seededJson;
     }
 
@@ -1359,7 +1358,7 @@ class App extends Component<any, AppState> {
     }
 
     private _handleCreatorOpen(event?: React.MouseEvent<HTMLButtonElement>): void {
-        const forceSyncToCurrentView = !!event?.shiftKey;
+        const shouldPreserveSavedState = !!event?.shiftKey;
         this.setState((prev): Pick<AppState,
             | "creatorOpen"
             | "creatorInitialScript"
@@ -1375,11 +1374,11 @@ class App extends Component<any, AppState> {
             creatorOpen: true,
             creatorInitialScript: this._buildCreatorInitialScript(
                 prev.activeScript.json,
-                prev.activeTerminalScreenId
+                shouldPreserveSavedState ? null : prev.activeTerminalScreenId
             ),
-            creatorRemountVersion: forceSyncToCurrentView
-                ? prev.creatorRemountVersion + 1
-                : prev.creatorRemountVersion,
+            creatorRemountVersion: shouldPreserveSavedState
+                ? prev.creatorRemountVersion
+                : prev.creatorRemountVersion + 1,
             scriptDropdownOpen: false,
             optionsDropdownOpen: false,
             profileDropdownOpen: false,
@@ -1390,11 +1389,29 @@ class App extends Component<any, AppState> {
         }));
     }
 
-    private _handleCreatorClose(): void {
-        this.setState({
-            creatorOpen: false,
-            creatorInitialScript: null,
-        });
+    private _handleCreatorClose(scriptJson?: any): void {
+        // Save the script state if provided, so shift-click can restore to this state
+        if (scriptJson && Array.isArray(scriptJson?.screens)) {
+            this.setState((prev) => {
+                const nextScript: BundledScript = {
+                    ...prev.activeScript,
+                    json: this._sanitizeScriptJson(scriptJson),
+                };
+                return {
+                    creatorOpen: false,
+                    creatorInitialScript: null,
+                    activeScript: nextScript,
+                    customScripts: prev.customScripts.map((s) =>
+                        s.id === nextScript.id ? nextScript : s
+                    ),
+                };
+            });
+        } else {
+            this.setState({
+                creatorOpen: false,
+                creatorInitialScript: null,
+            });
+        }
     }
 
     private _handleCreatorApply(scriptJson: any): void {
@@ -1405,13 +1422,19 @@ class App extends Component<any, AppState> {
 
         const cleanedJson = this._sanitizeScriptJson(scriptJson);
         const label = (cleanedJson?.config?.name || "CUSTOM").toString();
-        const editingActiveModule = !!this.state.activeModule;
-        const keepExistingId = editingActiveModule
-            || (this.state.activeScript.id.startsWith("custom:")
-                && !this.state.activeScript.id.startsWith("custom:preview:"));
+        const sessionUserId = this._getSessionUserId();
+        const ownedActiveModule = this._getOwnedActiveModule(sessionUserId);
+        // Only treat as "editing owned module" when user actually owns it
+        const editingOwnedModule = !!this.state.activeModule && !!ownedActiveModule;
+        const isExistingLocal = this.state.activeScript.id.startsWith("custom:")
+            && !this.state.activeScript.id.startsWith("custom:preview:");
+        const keepExistingId = editingOwnedModule || isExistingLocal;
         const nextScript: BundledScript = {
             id: keepExistingId ? this.state.activeScript.id : `custom:creator:${Date.now()}`,
-            label: label.toUpperCase().slice(0, 48),
+            // Owned modules keep their plain title; all local copies get [LOCAL] prefix
+            label: editingOwnedModule
+                ? label.toUpperCase().slice(0, 48)
+                : this._formatLocalUploadLabel(label),
             json: cleanedJson,
         };
         const nextThemeState = this._applyScriptThemePreset(cleanedJson);
@@ -1420,6 +1443,7 @@ class App extends Component<any, AppState> {
             "activeScript"
             | "activeScriptRevision"
             | "activeTerminalScreenId"
+            | "activeModule"
             | "customScripts"
             | "activeTheme"
             | "customTheme"
@@ -1433,16 +1457,18 @@ class App extends Component<any, AppState> {
             | "uploadError"
             | "modulesNotice"
         > => {
-            const customScripts = editingActiveModule
+            const customScripts = editingOwnedModule
                 ? prev.customScripts
                 : this._upsertCustomScripts(prev.customScripts, nextScript);
-            if (!editingActiveModule) {
+            if (!editingOwnedModule) {
                 this._persistCustomScripts(customScripts);
             }
             return {
                 activeScript: nextScript,
                 activeScriptRevision: prev.activeScriptRevision + 1,
                 activeTerminalScreenId: null,
+                // Clear the active module when creating a local copy from a non-owned module
+                activeModule: editingOwnedModule ? prev.activeModule : null,
                 customScripts,
                 ...nextThemeState,
                 creatorOpen: false,
@@ -1453,7 +1479,7 @@ class App extends Component<any, AppState> {
                 mobileMenuOpen: false,
                 previewMode: false,
                 uploadError: null as string | null,
-                modulesNotice: editingActiveModule ? "Local edits applied. Save the module to push them to Supabase." : prev.modulesNotice,
+                modulesNotice: editingOwnedModule ? "Local edits applied. Save the module to push them to Supabase." : prev.modulesNotice,
             };
         });
     }
