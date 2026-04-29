@@ -1096,7 +1096,7 @@ const ModulesBrowser: FC = () => {
     };
 
     const handleThemeColorChange = (
-        key: "fgHex" | "alertHex" | "emphasisHex" | "noticeHex" | "hyperlinkHex" | "systemHex",
+        key: "bgHex" | "fgHex" | "textHex" | "alertHex" | "emphasisHex" | "noticeHex" | "hyperlinkHex" | "systemHex",
         value: string
     ): void => {
         setCustomTheme((prevCustomTheme) => {
@@ -1432,6 +1432,24 @@ const ModulesBrowser: FC = () => {
                             aria-label="Custom foreground color"
                             value={customTheme.fgHex}
                             onChange={(event) => handleThemeColorChange("fgHex", event.target.value)}
+                        />
+                    </label>
+                    <label className="phosphor-header__theme-color-field">
+                        <span>TEXT</span>
+                        <input
+                            type="color"
+                            aria-label="Custom text color"
+                            value={customTheme.textHex}
+                            onChange={(event) => handleThemeColorChange("textHex", event.target.value)}
+                        />
+                    </label>
+                    <label className="phosphor-header__theme-color-field">
+                        <span>BG</span>
+                        <input
+                            type="color"
+                            aria-label="Custom background color"
+                            value={customTheme.bgHex}
+                            onChange={(event) => handleThemeColorChange("bgHex", event.target.value)}
                         />
                     </label>
                     <label className="phosphor-header__theme-color-field">

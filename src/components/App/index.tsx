@@ -1186,7 +1186,7 @@ class App extends Component<any, AppState> {
     }
 
     private _handleThemeColorChange(
-        key: "fgHex" | "alertHex" | "emphasisHex" | "noticeHex" | "hyperlinkHex" | "systemHex",
+        key: "bgHex" | "fgHex" | "textHex" | "alertHex" | "emphasisHex" | "noticeHex" | "hyperlinkHex" | "systemHex",
         value: string
     ): void {
         this.setState((prev): Pick<AppState, "customTheme" | "activeTheme"> => {
@@ -2667,6 +2667,24 @@ class App extends Component<any, AppState> {
                                                 />
                                             </label>
                                             <label className="phosphor-header__theme-color-field">
+                                                <span>TEXT</span>
+                                                <input
+                                                    type="color"
+                                                    aria-label="Custom text color"
+                                                    value={customTheme.textHex}
+                                                    onChange={(e) => this._handleThemeColorChange("textHex", e.target.value)}
+                                                />
+                                            </label>
+                                            <label className="phosphor-header__theme-color-field">
+                                                <span>BG</span>
+                                                <input
+                                                    type="color"
+                                                    aria-label="Custom background color"
+                                                    value={customTheme.bgHex}
+                                                    onChange={(e) => this._handleThemeColorChange("bgHex", e.target.value)}
+                                                />
+                                            </label>
+                                            <label className="phosphor-header__theme-color-field">
                                                 <span>ALERT</span>
                                                 <input
                                                     type="color"
@@ -2903,6 +2921,24 @@ class App extends Component<any, AppState> {
                                                                     aria-label="Custom foreground color"
                                                                     value={customTheme.fgHex}
                                                                     onChange={(e) => this._handleThemeColorChange("fgHex", e.target.value)}
+                                                                />
+                                                            </label>
+                                                            <label className="phosphor-header__theme-color-field">
+                                                                <span>TEXT</span>
+                                                                <input
+                                                                    type="color"
+                                                                    aria-label="Custom text color"
+                                                                    value={customTheme.textHex}
+                                                                    onChange={(e) => this._handleThemeColorChange("textHex", e.target.value)}
+                                                                />
+                                                            </label>
+                                                            <label className="phosphor-header__theme-color-field">
+                                                                <span>BG</span>
+                                                                <input
+                                                                    type="color"
+                                                                    aria-label="Custom background color"
+                                                                    value={customTheme.bgHex}
+                                                                    onChange={(e) => this._handleThemeColorChange("bgHex", e.target.value)}
                                                                 />
                                                             </label>
                                                             <label className="phosphor-header__theme-color-field">

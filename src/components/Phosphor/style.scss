@@ -31,6 +31,8 @@ body {
 
 
 .phosphor {
+    color: var(--theme-fg, var(--fg));
+    text-shadow: var(--theme-fg-glow, var(--fg-glow));
     padding-top: calc(max(env(safe-area-inset-top), #{$lineheight}) + var(--header-height, 0px));
     padding-bottom: max(env(safe-area-inset-bottom),$lineheight);
     padding-left: max(env(safe-area-inset-left),$lineheight);
@@ -143,7 +145,7 @@ body {
 
     .__md-heading--h1 {
         font-size: 1.45em;
-        border-bottom: 1px solid var(--fg);
+        border-bottom: 1px solid currentColor;
         padding-bottom: 0.12em;
     }
 
@@ -197,7 +199,7 @@ body {
 
     .__md-hr {
         border: none;
-        border-top: 1px solid var(--fg);
+        border-top: 1px solid currentColor;
         margin: 0.25em 0;
         opacity: 0.7;
     }
@@ -214,7 +216,7 @@ body {
 
         &:hover {
             color: var(--bg);
-            background: var(--fg);
+            background: var(--theme-fg, var(--fg));
             text-shadow: var(--bg-glow);
         }
     }

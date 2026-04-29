@@ -6,7 +6,9 @@ export interface Theme {
 
 export interface CustomThemeConfig {
     baseThemeId: string;
+    bgHex: string;
     fgHex: string;
+    textHex: string;
     alertHex: string;
     emphasisHex: string;
     noticeHex: string;
@@ -36,6 +38,16 @@ const hexToRgb = (hex: string): [number, number, number] => {
 
 const rgbToCssValue = (rgb: [number, number, number]): string => {
     return `${rgb[0]}, ${rgb[1]}, ${rgb[2]}`;
+};
+
+const rgbCssToHex = (value: string): string => {
+    const match = value.match(/(\d+)\D+(\d+)\D+(\d+)/);
+    if (!match) {
+        return "#000000";
+    }
+    return "#" + [match[1], match[2], match[3]]
+        .map((n) => Number(n).toString(16).padStart(2, "0"))
+        .join("");
 };
 
 const parseRgbCssValue = (value: string, fallback: [number, number, number]): [number, number, number] => {
@@ -117,6 +129,24 @@ const buildForegroundVars = (fgHex: string, bgRgb: [number, number, number]): Re
     };
 };
 
+const buildTextVars = (textHex: string): Record<string, string> => {
+    const textRgb = hexToRgb(textHex);
+    const textCss = rgbToCssValue(textRgb);
+    return {
+        "--theme-fg": `rgb(${textCss})`,
+        "--theme-fg-glow": `0 0 5px rgba(${textCss}, 0.5)`,
+    };
+};
+
+const buildChromeVars = (fgHex: string): Record<string, string> => {
+    const fgRgb = hexToRgb(fgHex);
+    const fgCss = rgbToCssValue(fgRgb);
+    return {
+        "--fg": `rgb(${fgCss})`,
+        "--fg-glow": `0 0 5px rgba(${fgCss}, 0.5)`,
+    };
+};
+
 const makeTheme = (
     id: string,
     name: string,
@@ -157,7 +187,9 @@ export const DEFAULT_THEME = THEMES[0];
 
 export const DEFAULT_CUSTOM_THEME: CustomThemeConfig = {
     baseThemeId: DEFAULT_THEME.id,
+    bgHex: "#00000c",
     fgHex: "#d4f9fa",
+    textHex: "#d4f9fa",
     ...DEFAULT_ACCENT_COLORS,
 };
 
@@ -170,9 +202,14 @@ const sanitizeBaseThemeId = (value: string): string => {
 
 export const sanitizeCustomTheme = (customTheme: Partial<CustomThemeConfig> | null | undefined): CustomThemeConfig => {
     const legacyTheme = (customTheme || {}) as Partial<CustomThemeConfig> & { aiHex?: string };
+    const baseThemeId = sanitizeBaseThemeId(legacyTheme.baseThemeId || DEFAULT_CUSTOM_THEME.baseThemeId);
+    const baseTheme = THEMES.find((t) => t.id === baseThemeId) || DEFAULT_THEME;
+    const baseBgHex = rgbCssToHex(baseTheme.vars["--bg"] || "#00000c");
     return {
-        baseThemeId: sanitizeBaseThemeId(legacyTheme.baseThemeId || DEFAULT_CUSTOM_THEME.baseThemeId),
+        baseThemeId,
+        bgHex: sanitizeHexColor(legacyTheme.bgHex || "", baseBgHex),
         fgHex: sanitizeHexColor(legacyTheme.fgHex || "", DEFAULT_CUSTOM_THEME.fgHex),
+        textHex: sanitizeHexColor(legacyTheme.textHex || legacyTheme.fgHex || "", DEFAULT_CUSTOM_THEME.textHex),
         alertHex: sanitizeHexColor(legacyTheme.alertHex || "", DEFAULT_CUSTOM_THEME.alertHex),
         emphasisHex: sanitizeHexColor(legacyTheme.emphasisHex || "", DEFAULT_CUSTOM_THEME.emphasisHex),
         noticeHex: sanitizeHexColor(legacyTheme.noticeHex || "", DEFAULT_CUSTOM_THEME.noticeHex),
@@ -184,15 +221,31 @@ export const sanitizeCustomTheme = (customTheme: Partial<CustomThemeConfig> | nu
 export const createCustomTheme = (customThemeInput: CustomThemeConfig): Theme => {
     const customTheme = sanitizeCustomTheme(customThemeInput);
     const baseTheme = THEMES.find((theme) => theme.id === customTheme.baseThemeId) || DEFAULT_THEME;
-    const baseBg = parseRgbCssValue(baseTheme.vars["--bg"], [0, 12, 12]);
+    const bgRgb = hexToRgb(customTheme.bgHex);
+    const [br, bg, bb] = bgRgb;
+    const bgCss = rgbToCssValue(bgRgb);
+    const fgRgb = hexToRgb(customTheme.fgHex);
+    const fgCss = rgbToCssValue(fgRgb);
     return {
         ...baseTheme,
         id: "custom",
         name: "CUSTOM",
         vars: {
             ...baseTheme.vars,
-            ...buildForegroundVars(customTheme.fgHex, baseBg),
+            ...buildTextVars(customTheme.textHex),
+            ...buildChromeVars(customTheme.fgHex),
             ...buildAccentVars(customTheme),
+            "--theme-bg":     `rgb(${bgCss})`,
+            "--theme-bg-glow": `0 0 2px rgba(${bgCss}, 0.5)`,
+            "--bg":           `rgb(${bgCss})`,
+            "--bg-glow":      `0 0 2px rgba(${bgCss}, 0.5)`,
+            "--bg-gradient":  `radial-gradient(rgba(${fgCss}, 0.15), rgba(${bgCss}, 1) 100%)`,
+            "--scanlines-fg": `rgba(${fgCss}, 0.1)`,
+            "--scanlines-bg": `rgba(${br}, ${bg}, ${bb}, 0.5)`,
+            "--bg-20":        `rgba(${br}, ${bg}, ${bb}, 0.2)`,
+            "--bg-75":        `rgba(${br}, ${bg}, ${bb}, 0.75)`,
+            "--bg-80":        `rgba(${br}, ${bg}, ${bb}, 0.8)`,
+            "--bg-92":        `rgba(${br}, ${bg}, ${bb}, 0.92)`,
         },
     };
 };

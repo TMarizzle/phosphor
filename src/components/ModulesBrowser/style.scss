@@ -787,7 +787,12 @@ $browser-normal-font-stack: "Trebuchet MS", Verdana, Geneva, sans-serif;
         font-size: calc(16pt * var(--browser-size-scale));
     }
 
-    .phosphor-header__dropdown,
+    .phosphor-header__dropdown {
+        background: var(--browser-bg);
+        border-color: var(--browser-border);
+        color: var(--browser-fg);
+    }
+
     .phosphor-header__dropdown-item,
     .phosphor-header__dropdown-label,
     .phosphor-header__theme-custom {
