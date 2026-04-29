@@ -160,7 +160,7 @@ const parseInitialSort = (): ModuleSort => {
         // ignore invalid URLs
     }
 
-    return "most-subscribed";
+    return "newest";
 };
 
 const parseInitialSearch = (): string => {
@@ -364,6 +364,21 @@ const ModulesBrowser: FC = () => {
             }
         });
     }, [catalogLoading]);
+
+    const playPowerOn = useCallback((): void => {
+        if (!soundEnabledRef.current) {
+            return;
+        }
+        const audio = powerOnAudioRef.current;
+        if (!audio) {
+            return;
+        }
+        audio.currentTime = 0;
+        audio.play().then(() => {
+            audioUnlockedRef.current = true;
+            audioAutoplayBlockedRef.current = false;
+        }).catch(() => {});
+    }, []);
 
     const playFromPool = useCallback((pool: HTMLAudioElement[]): void => {
         if (!soundEnabledRef.current || !pool.length) {
@@ -1771,7 +1786,10 @@ const ModulesBrowser: FC = () => {
                         <CreatorSelect
                             value={sort}
                             options={SORT_OPTIONS}
-                            onChange={(nextValue) => setSort(nextValue as ModuleSort)}
+                            onChange={(nextValue) => {
+                                setSort(nextValue as ModuleSort);
+                                playPowerOn();
+                            }}
                             fallbackLabel="Newest"
                         />
                     </label>
