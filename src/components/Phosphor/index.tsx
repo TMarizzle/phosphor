@@ -475,7 +475,8 @@ class Phosphor extends Component<PhosphorProps, AppState> {
             return;
         }
 
-        void this._playCharScroll();
+        this._handleFirstInteraction();
+        void this._playCharScroll(true);
     }
 
     private _handleVisibilityChange(): void {
@@ -509,11 +510,11 @@ class Phosphor extends Component<PhosphorProps, AppState> {
     }
 
     private _handlePromptEnter(): void {
-        void this._playCharEnter();
+        void this._playCharEnter(true);
     }
 
     private _handleToggleClick(state?: any, shiftKey?: boolean): void {
-        void this._playCharEnter();
+        void this._playCharEnter(true);
 
         if (!state) {
             return;
@@ -2289,7 +2290,7 @@ class Phosphor extends Component<PhosphorProps, AppState> {
     }
 
     private _handleLinkClick(target: string | any[], shiftKey: boolean): void {
-        void this._playCharEnter();
+        void this._playCharEnter(true);
 
         // if it's a string, it's a screen
         if (typeof target === "string") {

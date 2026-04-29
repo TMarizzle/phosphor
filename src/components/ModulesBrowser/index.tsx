@@ -1,4 +1,9 @@
 import React, { FC, useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
+import charEnter01Sfx from "../../assets/incr-ss-ark/sound effects/ui_hacking_charenter_01.wav";
+import charEnter02Sfx from "../../assets/incr-ss-ark/sound effects/ui_hacking_charenter_02.wav";
+import charEnter03Sfx from "../../assets/incr-ss-ark/sound effects/ui_hacking_charenter_03.wav";
+import charScrollSfx from "../../assets/incr-ss-ark/sound effects/ui_hacking_charscroll.wav";
+import charScrollLoopSfx from "../../assets/incr-ss-ark/sound effects/ui_hacking_charscroll_lp.wav";
 import type { Session } from "@supabase/supabase-js";
 import { createPortal } from "react-dom";
 import CreatorSelect, { CreatorSelectOption } from "../CreatorSelect";
@@ -305,6 +310,89 @@ const ModulesBrowser: FC = () => {
     const [editingModuleId, setEditingModuleId] = useState<string | null>(null);
     const [editTitle, setEditTitle] = useState<string>("");
     const [editSummary, setEditSummary] = useState<string>("");
+
+    const soundEnabledRef = useRef(soundEnabled);
+    useEffect(() => { soundEnabledRef.current = soundEnabled; }, [soundEnabled]);
+
+    const charEnterPoolRef = useRef<HTMLAudioElement[]>([]);
+    const charScrollPoolRef = useRef<HTMLAudioElement[]>([]);
+    const audioUnlockedRef = useRef(false);
+    const audioAutoplayBlockedRef = useRef(false);
+    const scrollLastPlayedAtRef = useRef(0);
+    const SCROLL_COOLDOWN_MS = 120;
+
+    useEffect(() => {
+        const buildPool = (srcs: string[], vol: number, voices = 2): HTMLAudioElement[] => {
+            const pool: HTMLAudioElement[] = [];
+            srcs.forEach((src) => {
+                for (let i = 0; i < voices; i++) {
+                    const a = new Audio(src);
+                    a.preload = "auto";
+                    a.volume = vol;
+                    pool.push(a);
+                }
+            });
+            return pool;
+        };
+        charEnterPoolRef.current = buildPool([charEnter01Sfx, charEnter02Sfx, charEnter03Sfx], 0.1, 2);
+        charScrollPoolRef.current = buildPool([charScrollSfx, charScrollLoopSfx], 0.1, 2);
+    }, []);
+
+    const playFromPool = useCallback((pool: HTMLAudioElement[]): void => {
+        if (!soundEnabledRef.current || !pool.length) {
+            return;
+        }
+        if (audioAutoplayBlockedRef.current && !audioUnlockedRef.current) {
+            return;
+        }
+        const available = pool.find((a) => a.paused || a.ended) || pool[Math.floor(Math.random() * pool.length)];
+        available.currentTime = 0;
+        available.play().then(() => {
+            audioUnlockedRef.current = true;
+            audioAutoplayBlockedRef.current = false;
+        }).catch((err: any) => {
+            if (err?.name === "NotAllowedError") {
+                audioAutoplayBlockedRef.current = true;
+            }
+        });
+    }, []);
+
+    useEffect(() => {
+        const handleClick = (e: MouseEvent): void => {
+            const target = e.target as Element | null;
+            if (!target) {
+                return;
+            }
+            const isInteractive = target.closest("button, a, input, select, textarea, [role='menuitem'], [role='menuitemradio']");
+            if (!isInteractive) {
+                return;
+            }
+            audioUnlockedRef.current = true;
+            audioAutoplayBlockedRef.current = false;
+            playFromPool(charEnterPoolRef.current);
+        };
+
+        const handleWheel = (e: WheelEvent): void => {
+            if (!e.deltaY || !soundEnabledRef.current) {
+                return;
+            }
+            const now = Date.now();
+            if (now - scrollLastPlayedAtRef.current < SCROLL_COOLDOWN_MS) {
+                return;
+            }
+            scrollLastPlayedAtRef.current = now;
+            audioUnlockedRef.current = true;
+            audioAutoplayBlockedRef.current = false;
+            playFromPool(charScrollPoolRef.current);
+        };
+
+        document.addEventListener("click", handleClick);
+        window.addEventListener("wheel", handleWheel, { passive: true });
+        return () => {
+            document.removeEventListener("click", handleClick);
+            window.removeEventListener("wheel", handleWheel);
+        };
+    }, [playFromPool]);
 
     const sessionUserId = session?.user?.id || null;
     const sessionEmail = session?.user?.email || null;
