@@ -26,10 +26,10 @@ $font-bump: 4pt;
 
     background: var(--bg);
     border-bottom: 1px solid var(--fg);
-    color: var(--fg);
+    color: var(--theme-fg, var(--fg));
     font-family: $font-family;
     font-size: calc(#{$smallfontsize * 0.55} + #{$font-bump});
-    text-shadow: var(--fg-glow);
+    text-shadow: var(--theme-fg-glow, var(--fg-glow));
     opacity: 0.95;
 
     &__title {
@@ -80,11 +80,11 @@ $font-bump: 4pt;
         box-sizing: border-box;
         background: none;
         border: 1px solid var(--fg);
-        color: var(--fg);
+        color: var(--theme-fg, var(--fg));
         font-family: $font-family;
         font-size: inherit;
         line-height: inherit;
-        text-shadow: var(--fg-glow);
+        text-shadow: var(--theme-fg-glow, var(--fg-glow));
         text-decoration: none;
         cursor: pointer;
         padding: 0.15em 0.25rem;
@@ -102,10 +102,10 @@ $font-bump: 4pt;
         // styled same as btn; wraps hidden file input
         background: none;
         border: 1px solid var(--fg);
-        color: var(--fg);
+        color: var(--theme-fg, var(--fg));
         font-family: $font-family;
         font-size: inherit;
-        text-shadow: var(--fg-glow);
+        text-shadow: var(--theme-fg-glow, var(--fg-glow));
         cursor: pointer;
         padding: 0.15em 0.25rem;
         letter-spacing: 0.08em;
@@ -172,10 +172,10 @@ $font-bump: 4pt;
         background: none;
         border: none;
         border-bottom: 1px solid rgba(255, 255, 255, 0.08);
-        color: var(--fg);
+        color: var(--theme-fg, var(--fg));
         font-family: $font-family;
         font-size: inherit;
-        text-shadow: var(--fg-glow);
+        text-shadow: var(--theme-fg-glow, var(--fg-glow));
         cursor: pointer;
         padding: 0.3em 0.6em;
         text-align: left;
@@ -197,8 +197,8 @@ $font-bump: 4pt;
             cursor: default;
             &:hover {
                 background: none;
-                color: var(--fg);
-                text-shadow: var(--fg-glow);
+                color: var(--theme-fg, var(--fg));
+                text-shadow: var(--theme-fg-glow, var(--fg-glow));
             }
         }
 
