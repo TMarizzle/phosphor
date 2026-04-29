@@ -4,6 +4,7 @@ import charEnter02Sfx from "../../assets/incr-ss-ark/sound effects/ui_hacking_ch
 import charEnter03Sfx from "../../assets/incr-ss-ark/sound effects/ui_hacking_charenter_03.wav";
 import charScrollSfx from "../../assets/incr-ss-ark/sound effects/ui_hacking_charscroll.wav";
 import charScrollLoopSfx from "../../assets/incr-ss-ark/sound effects/ui_hacking_charscroll_lp.wav";
+import powerOnSfx from "../../assets/incr-ss-ark/sound effects/poweron.mp3";
 import type { Session } from "@supabase/supabase-js";
 import { createPortal } from "react-dom";
 import CreatorSelect, { CreatorSelectOption } from "../CreatorSelect";
@@ -316,9 +317,11 @@ const ModulesBrowser: FC = () => {
 
     const charEnterPoolRef = useRef<HTMLAudioElement[]>([]);
     const charScrollPoolRef = useRef<HTMLAudioElement[]>([]);
+    const powerOnAudioRef = useRef<HTMLAudioElement | null>(null);
     const audioUnlockedRef = useRef(false);
     const audioAutoplayBlockedRef = useRef(false);
     const scrollLastPlayedAtRef = useRef(0);
+    const powerOnPlayedRef = useRef(false);
     const SCROLL_COOLDOWN_MS = 120;
 
     useEffect(() => {
@@ -336,7 +339,31 @@ const ModulesBrowser: FC = () => {
         };
         charEnterPoolRef.current = buildPool([charEnter01Sfx, charEnter02Sfx, charEnter03Sfx], 0.1, 2);
         charScrollPoolRef.current = buildPool([charScrollSfx, charScrollLoopSfx], 0.1, 2);
+        const powerOn = new Audio(powerOnSfx);
+        powerOn.preload = "auto";
+        powerOn.volume = 0.4;
+        powerOnAudioRef.current = powerOn;
     }, []);
+
+    useEffect(() => {
+        if (catalogLoading || powerOnPlayedRef.current || !soundEnabledRef.current) {
+            return;
+        }
+        powerOnPlayedRef.current = true;
+        const audio = powerOnAudioRef.current;
+        if (!audio) {
+            return;
+        }
+        audio.currentTime = 0;
+        audio.play().then(() => {
+            audioUnlockedRef.current = true;
+            audioAutoplayBlockedRef.current = false;
+        }).catch((err: any) => {
+            if (err?.name === "NotAllowedError") {
+                audioAutoplayBlockedRef.current = true;
+            }
+        });
+    }, [catalogLoading]);
 
     const playFromPool = useCallback((pool: HTMLAudioElement[]): void => {
         if (!soundEnabledRef.current || !pool.length) {
