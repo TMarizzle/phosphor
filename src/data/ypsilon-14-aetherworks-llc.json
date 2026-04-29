@@ -1,0 +1,878 @@
+{
+  "config": {
+    "name": "Ypsilon-14 - Aetherworks LLC",
+    "author": "Tyler, using @an0zama as a base",
+    "comment": "Phosphor content file for the 'Haunting of Ypsilon-14' module for the Mothership tabletop roleplaying game. Visit https://redhg.com/ypsilon14/ to see the compiled application.",
+    "previewStartScreen": "end_of_the_road",
+    "previewSidebarListMode": "screens"
+  },
+  "dialogs": [
+    {
+      "id": "lockedDialog",
+      "type": "alert",
+      "content": [
+        "Error! Authorization required."
+      ]
+    },
+    {
+      "id": "airlockError",
+      "type": "alert",
+      "content": [
+        "ERROR! Lock override in effect.",
+        "",
+        "Cannot unlock remotely. Manual intervention required."
+      ]
+    },
+    {
+      "id": "dialog2",
+      "type": "alert",
+      "content": [
+        "New dialog created from Script Creator.",
+        "Edit this content in raw JSON if needed."
+      ]
+    }
+  ],
+  "screens": [
+    {
+      "id": "screen0",
+      "type": "screen",
+      "content": [
+        "YPSILON-14",
+        "==========",
+        "",
+        "Welcome to the Ypsilon-14 Mining Station, a property of AETHERWORKS, LLC., where innovation is our top priority (tm).",
+        "==========",
+        "",
+        {
+          "text": "> ACCEPT EULA & LOG IN",
+          "type": "link",
+          "target": "menu"
+        }
+      ]
+    },
+    {
+      "id": "admin_login",
+      "type": "screen",
+      "content": [
+        "ADMIN LOGIN REQUIRED",
+        "",
+        "Please enter password:",
+        {
+          "type": "prompt",
+          "prompt": "> ",
+          "caseSensitive": true,
+          "cursor": true,
+          "commands": [
+            {
+              "command": "password123",
+              "action": {
+                "type": "link",
+                "target": "system"
+              }
+            }
+          ]
+        },
+        "",
+        "",
+        "",
+        {
+          "type": "link",
+          "text": "> BACK",
+          "target": "controls"
+        }
+      ]
+    },
+    {
+      "id": "menu",
+      "type": "screen",
+      "content": [
+        "Main Menu",
+        "=========",
+        "",
+        {
+          "text": "> STATION MAP",
+          "type": "link",
+          "target": "map"
+        },
+        {
+          "text": "> DIAGNOSTICS",
+          "type": "link",
+          "target": "diagnostics"
+        },
+        {
+          "text": "> SCHEDULE",
+          "type": "link",
+          "target": "schedule"
+        },
+        {
+          "text": "> ROSTER",
+          "type": "link",
+          "target": "roster"
+        },
+        {
+          "text": "> COMMS",
+          "type": "link",
+          "target": "comms"
+        },
+        {
+          "text": "> CONTROLS",
+          "type": "link",
+          "target": "controls"
+        },
+        "",
+        "=========",
+        {
+          "text": "> LOG OUT",
+          "type": "link",
+          "target": [
+            {
+              "type": "link",
+              "target": "screen0",
+              "shiftKey": false
+            },
+            {
+              "type": "action",
+              "action": "resetState",
+              "target": "screen0",
+              "shiftKey": true
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "map",
+      "type": "screen",
+      "content": [
+        "Station Map",
+        "===========",
+        "",
+        {
+          "alt": "",
+          "src": "https://snipboard.io/5Hx26L.jpg",
+          "type": "bitmap",
+          "className": "screen"
+        },
+        "",
+        "A copy of the map is now available via data tablet.",
+        "",
+        "======",
+        {
+          "text": "< BACK",
+          "type": "link",
+          "target": "menu"
+        }
+      ]
+    },
+    {
+      "id": "diagnostics",
+      "type": "screen",
+      "content": [
+        "Diagnostics",
+        "===========",
+        "",
+        "Checking life support.............................. Done.",
+        "Checking primary and backup generator.............. Done.",
+        "",
+        {
+          "text": "WARNING: Airflow 82.4%. Check crew quarters vents for blockage.",
+          "type": "text",
+          "className": "alert"
+        },
+        {
+          "text": "WARNING: Shower #5 non-functional as of 1 day(s).",
+          "type": "text",
+          "className": "alert"
+        },
+        {
+          "text": "WARNING: [Mine] Airlock was opened by worker 7709 outside of work hours on 2366-06-11.2135. Note that work-issued insurance for unpressurised areas only covers on agreed workhours. AETHERWORKS, LLC assumes no responsibilities or liabilities resulting from activities after hours outside pressurized areas, even if they are on company property.",
+          "type": "text",
+          "className": "alert"
+        },
+        "",
+        "NOTICE: Air filters replaced 455 day(s) ago.",
+        "NOTICE: Mineshaft lift maintained 455 day(s) ago.",
+        "",
+        "===========",
+        "",
+        "SUMMARY:",
+        "All systems operating within acceptible parameters.",
+        "",
+        "======",
+        {
+          "text": "< BACK",
+          "type": "link",
+          "target": "menu"
+        }
+      ]
+    },
+    {
+      "id": "schedule",
+      "type": "screen",
+      "content": [
+        "Schedule",
+        "========",
+        "",
+        "Docking bay activity (past 6 months):",
+        "",
+        "2366-06-12.0700 - Bay 2 : Arrive :: Tempest",
+        "2366-04-29.0834 - Bay 1 : Arrive :: Heracles",
+        "2366-03-02.1223 - Bay 2 : Depart :: Key Largo",
+        "2366-02-20.1604 - Bay 2 : Arrive :: Key Largo",
+        "",
+        "======",
+        {
+          "text": "< BACK",
+          "type": "link",
+          "target": "menu"
+        }
+      ]
+    },
+    {
+      "id": "roster",
+      "type": "screen",
+      "content": [
+        "Roster",
+        "======",
+        "",
+        "01. VERHOEVEN, Sonya     :: Admin",
+        "02. SINGH, Ashraf        :: Breaker",
+        "03. DE BEERS, Dana       :: Lead drill",
+        "04. CHATZKEL, Jerome     :: Asst. drill",
+        "05. RADIMIR, Mikhail     :: Lead Engineer",
+        "06. TOBIN, Rosa          :: Engineer",
+        "07. KANTARO, Kenji       :: Loader",
+        "08. BOWE, Morgan         :: Loader",
+        "09. NEKTARIOS, Rie       :: Loader",
+        "10. n/a",
+        "",
+        "======",
+        {
+          "text": "< BACK",
+          "type": "link",
+          "target": "menu"
+        }
+      ]
+    },
+    {
+      "id": "comms",
+      "type": "screen",
+      "content": [
+        "COMMS",
+        "=====",
+        "",
+        "2 vessels detected in proximity.",
+        "",
+        {
+          "text": "> HAIL TEMPEST",
+          "type": "link",
+          "target": "hailtempest"
+        },
+        {
+          "text": "> HAIL HERECLES",
+          "type": "link",
+          "target": "hailherecles"
+        },
+        "",
+        "======",
+        {
+          "text": "< BACK",
+          "type": "link",
+          "target": "menu"
+        }
+      ]
+    },
+    {
+      "id": "hailtempest",
+      "type": "screen",
+      "content": [
+        "Transmitting",
+        "============",
+        "",
+        "..........................................",
+        "..........................................",
+        "",
+        "COMMUNICATION CHANNEL OPENED",
+        "",
+        "======",
+        "",
+        {
+          "text": "< CLOSE CHANNEL",
+          "type": "link",
+          "target": "comms"
+        }
+      ]
+    },
+    {
+      "id": "hailherecles",
+      "type": "screen",
+      "content": [
+        "Transmitting",
+        "============",
+        "",
+        "..........................................",
+        "..........................................",
+        "..........................................",
+        "..........................................",
+        "",
+        {
+          "text": "NO RESPONSE",
+          "type": "text",
+          "className": "alert"
+        },
+        "",
+        "======",
+        {
+          "text": "< BACK",
+          "type": "link",
+          "target": "comms"
+        }
+      ]
+    },
+    {
+      "id": "controls",
+      "type": "screen",
+      "content": [
+        "Controls",
+        "========",
+        "",
+        {
+          "text": "> SHOWERS",
+          "type": "link",
+          "target": "showers"
+        },
+        {
+          "text": "> FIRE SUPPRESSION SYSTEM",
+          "type": "link",
+          "target": "firesuppresionsystem"
+        },
+        {
+          "text": "> AIRLOCKS",
+          "type": "link",
+          "target": "airlocks"
+        },
+        {
+          "text": "> ADMIN SYSTEMS ACCESS",
+          "type": "link",
+          "target": "admin_login"
+        },
+        "",
+        "======",
+        {
+          "text": "< BACK",
+          "type": "link",
+          "target": "menu"
+        }
+      ]
+    },
+    {
+      "id": "showers",
+      "type": "screen",
+      "content": [
+        "Showers",
+        "=======",
+        "",
+        {
+          "type": "toggle",
+          "states": [
+            {
+              "text": "> SHOWER 1 :: ON",
+              "active": true
+            },
+            {
+              "text": "> SHOWER 1 :: OFF",
+              "active": false
+            }
+          ]
+        },
+        {
+          "type": "toggle",
+          "states": [
+            {
+              "text": "> SHOWER 2 :: ON",
+              "active": true
+            },
+            {
+              "text": "> SHOWER 2 :: OFF",
+              "active": false
+            }
+          ]
+        },
+        {
+          "type": "toggle",
+          "states": [
+            {
+              "text": "> SHOWER 3 :: ON",
+              "active": true
+            },
+            {
+              "text": "> SHOWER 3 :: OFF",
+              "active": false
+            }
+          ]
+        },
+        {
+          "type": "toggle",
+          "states": [
+            {
+              "text": "> SHOWER 4 :: ON",
+              "active": true
+            },
+            {
+              "text": "> SHOWER 4 :: OFF",
+              "active": false
+            }
+          ]
+        },
+        {
+          "text": "WARNING: Shower #5 non-functional as of 1 day(s). Turning it back on without proper repairs might lead to further damaging of the unit. If this is the case, AETHERWORKS, LLC will deduct an appropriate fee from the account of the person responsible.",
+          "type": "text",
+          "className": "alert"
+        },
+        {
+          "type": "toggle",
+          "states": [
+            {
+              "text": "> SHOWER 5 :: OFF",
+              "active": true
+            },
+            {
+              "text": "> SHOWER 5 :: ON",
+              "active": false
+            }
+          ],
+          "className": "alert"
+        },
+        {
+          "type": "toggle",
+          "states": [
+            {
+              "text": "> SHOWER 6 :: ON",
+              "active": true
+            },
+            {
+              "text": "> SHOWER 6 :: OFF",
+              "active": false
+            }
+          ]
+        },
+        "",
+        "=======",
+        {
+          "text": "< BACK",
+          "type": "link",
+          "target": "controls"
+        }
+      ]
+    },
+    {
+      "id": "firesuppresionsystem",
+      "type": "screen",
+      "content": [
+        "Fire Suppression System",
+        "=========",
+        "",
+        {
+          "text": "WARNING: Turning on the Fixed Extinguishing System outside of an emergency is in violation of your contract. AETHERWORKS, LLC will deduct a fine of 10.000 credits from the account of the person responsible, on top of damage fees.",
+          "type": "text",
+          "className": "alert"
+        },
+        "",
+        {
+          "type": "toggle",
+          "states": [
+            {
+              "text": "> FIXED EXTINGUISHING SYSTEM :: DISABLED",
+              "active": true
+            },
+            {
+              "text": "> FIXED EXTINGUISHING SYSTEM :: ENABLED",
+              "active": false
+            }
+          ]
+        },
+        "",
+        "=======",
+        {
+          "text": "< BACK",
+          "type": "link",
+          "target": "controls"
+        }
+      ]
+    },
+    {
+      "id": "airlocks",
+      "type": "screen",
+      "content": [
+        "Airlocks",
+        "========",
+        "",
+        {
+          "text": "For the safety of our employees, airlocks are always able to be opened manually. (regulatory compliance to the Safety under Emergencies on Space stations Act)",
+          "type": "text",
+          "className": "notice"
+        },
+        "",
+        {
+          "text": "> DOCKING BAY 1 :: LOCKED — ERROR",
+          "type": "link",
+          "target": [
+            {
+              "type": "dialog",
+              "target": "airlockError",
+              "shiftKey": false
+            }
+          ],
+          "className": "alert"
+        },
+        {
+          "type": "toggle",
+          "states": [
+            {
+              "text": "> DOCKING BAY 2 :: UNLOCKED",
+              "active": true
+            },
+            {
+              "text": "> DOCKING BAY 2 :: LOCKED",
+              "active": false
+            }
+          ]
+        },
+        {
+          "type": "toggle",
+          "states": [
+            {
+              "text": "> MINE :: UNLOCKED",
+              "active": true
+            },
+            {
+              "text": "> MINE :: LOCKED",
+              "active": false
+            }
+          ]
+        },
+        "",
+        "======",
+        {
+          "text": "< BACK",
+          "type": "link",
+          "target": "controls"
+        }
+      ]
+    },
+    {
+      "id": "system",
+      "type": "screen",
+      "content": [
+        "Administrator Systems Access",
+        "============================",
+        "",
+        {
+          "text": "> REPORTS TO AETHERWORKS, LLC  !!NEW URGENT MESSAGE!!",
+          "type": "link",
+          "target": "report",
+          "className": "alert"
+        },
+        {
+          "text": "> LIFE SUPPORT",
+          "type": "link",
+          "target": "lifesupport"
+        },
+        {
+          "text": "> SELF-DESTRUCT",
+          "type": "link",
+          "target": "selfdestruct"
+        },
+        "",
+        "======",
+        {
+          "text": "< BACK",
+          "type": "link",
+          "target": "controls"
+        }
+      ]
+    },
+    {
+      "id": "report",
+      "type": "screen",
+      "content": [
+        "Reports to AETHERWORKS, LLC from the last 3 months",
+        "=======================================================",
+        "",
+        {
+          "text": "> 2366-06-12.0323  FROM: AETHERWORKS, LLC   TO: VERHOEVEN, Sonya         SUBJECT: [unopened] CONFIDENTIAL",
+          "type": "link",
+          "target": "report#549response",
+          "className": "alert"
+        },
+        {
+          "text": "> 2366-04-01.1758  FROM: VERHOEVEN, Sonya        TO: AETHERWORKS, LLC    SUBJECT: Report #349 - Yellow goolike substance found in Mine",
+          "type": "link",
+          "target": "report#549"
+        },
+        {
+          "text": "> 2366-03-20.1225  FROM: VERHOEVEN, Sonya        TO: AETHERWORKS, LLC  SUBJECT: Report #348 - Cargo Manifest from Key Largo",
+          "type": "link",
+          "target": "report#348"
+        },
+        "",
+        "======",
+        {
+          "text": "< BACK",
+          "type": "link",
+          "target": "system"
+        }
+      ]
+    },
+    {
+      "id": "report#549response",
+      "type": "screen",
+      "content": [
+        "Response to [Report #349 - Yellow goolike substance found in Mine]",
+        "==================================================================",
+        "",
+        "We have lost communication with Dr. Giovanni. Please find him, and secure his research AT ALL COST.\nRewards will be given.\nDamages to his research will mean damages to AETHERWORKS, LLC property, and be prosecuted thereafter.\n",
+        "",
+        "======",
+        {
+          "text": "< BACK",
+          "type": "link",
+          "target": "report"
+        }
+      ]
+    },
+    {
+      "id": "report#549",
+      "type": "screen",
+      "content": [
+        "Report #349 - Yellow goolike substance found in Mine",
+        "================================================",
+        "Yellow goo-like substance is found in the mine in several different areas. Maybe some kind of fungi that survives without air? Our lead engineer Mikhail Radimir thought it was important enough to report about.",
+        "",
+        "=======",
+        {
+          "text": "< BACK",
+          "type": "link",
+          "target": "report"
+        }
+      ]
+    },
+    {
+      "id": "report#348",
+      "type": "screen",
+      "content": [
+        " Report #348 - Cargo Manifest from Key Largo",
+        "==========================================",
+        "",
+        "The Cargo manifest is sent by fax to AETHERWORK'S headquarters.",
+        "",
+        "======",
+        {
+          "text": "< BACK",
+          "type": "link",
+          "target": "report"
+        }
+      ]
+    },
+    {
+      "id": "lifesupport",
+      "type": "screen",
+      "content": [
+        "Life Support",
+        "============",
+        "",
+        {
+          "text": "WARNING: Disabling life support is a violation of company policy #2778-A. AETHERWORKS, LLC assumes no responsibilities or liabilities resulting from the improper use of this feature.",
+          "type": "text",
+          "className": "alert"
+        },
+        "",
+        {
+          "type": "toggle",
+          "states": [
+            {
+              "text": "> LIFE SUPPORT :: ENABLED",
+              "active": true
+            },
+            {
+              "text": "> LIFE SUPPORT :: DISABLED",
+              "active": false
+            }
+          ]
+        },
+        "",
+        "======",
+        {
+          "text": "< BACK",
+          "type": "link",
+          "target": "system"
+        }
+      ]
+    },
+    {
+      "id": "selfdestruct",
+      "type": "screen",
+      "content": [
+        "Self-Destruct",
+        "=============",
+        "",
+        {
+          "text": "WARNING: Destruction of corporate property is a violation of company policy #2778-B. AETHERWORKS, LLC assumes no responsibilities or liabilities resulting from the improper use of this feature.",
+          "type": "text",
+          "className": "alert"
+        },
+        "",
+        {
+          "text": "> ACTIVATE SELF-DESTRUCT",
+          "type": "link",
+          "target": "activateselfdestruct"
+        },
+        "",
+        "======",
+        {
+          "text": "< BACK",
+          "type": "link",
+          "target": "system"
+        }
+      ]
+    },
+    {
+      "id": "activateselfdestruct",
+      "type": "screen",
+      "content": [
+        "Activate Self-Destruct",
+        "======================",
+        "",
+        {
+          "text": "THIS WILL INITIATE A 10-MINUTE STATION SELF-DESTRUCT SEQUENCE.",
+          "type": "text",
+          "className": "alert"
+        },
+        "",
+        {
+          "text": "THIS CANNOT BE UNDONE.",
+          "type": "text",
+          "className": "alert"
+        },
+        "",
+        {
+          "type": "prompt",
+          "prompt": "PLEASE ENTER SELF-DESTRUCT CODE TO BEGIN COUNTDOWN: ",
+          "commands": [
+            {
+              "command": "SILENCE",
+              "action": {
+                "type": "link",
+                "target": "evacuate"
+              }
+            },
+            {
+              "command": "silence",
+              "action": {
+                "type": "link",
+                "target": "evacuate"
+              }
+            }
+          ],
+          "className": "alert cursor"
+        },
+        "",
+        "======",
+        {
+          "text": "< BACK",
+          "type": "link",
+          "target": "selfdestruct"
+        }
+      ]
+    },
+    {
+      "id": "evacuate",
+      "type": "screen",
+      "content": [
+        {
+          "text": "SELF-DESTRUCT SEQUENCE INITIATED.",
+          "type": "text",
+          "className": "alert"
+        },
+        {
+          "text": "PLEASE EVACUATE AS SOON AS POSSIBLE.",
+          "type": "text",
+          "className": "alert"
+        },
+        "",
+        "",
+        "",
+        "",
+        {
+          "text": "<",
+          "type": "link",
+          "target": "evacuate_warning"
+        }
+      ]
+    },
+    {
+      "id": "evacuate_warning",
+      "type": "screen",
+      "content": [
+        {
+          "type": "text",
+          "text": "WARNING!",
+          "className": "alert"
+        },
+        {
+          "type": "text",
+          "text": "EVACUATION SEQUENCE HAS BEEN TRIGGERED",
+          "className": "alert"
+        },
+        {
+          "type": "text",
+          "text": "PLEASE EVACUATE ALL PERSONNEL",
+          "className": "alert"
+        },
+        "======================================",
+        "",
+        {
+          "type": "text",
+          "text": "The station will self-destruct in 10 minutes.",
+          "className": "notice"
+        },
+        "",
+        {
+          "type": "text",
+          "text": "AETHERWORKS, LLC has been notified. Any remaining assets will be collected by authorized personnel after a thorough review of the incident.",
+          "className": "notice"
+        },
+        "",
+        "",
+        {
+          "type": "link",
+          "text": ">",
+          "target": "end_of_the_road"
+        }
+      ]
+    },
+    {
+      "id": "end_of_the_road",
+      "type": "screen",
+      "content": [
+        {
+          "type": "text",
+          "text": "Aetherworks, LLC thanks you for your service."
+        },
+        "",
+        "",
+        {
+          "type": "text",
+          "text": "Have a nice day!"
+        },
+        "",
+        "",
+        {
+          "type": "link",
+          "text": "> Home",
+          "target": "evacuate_warning"
+        }
+      ]
+    }
+  ]
+}
